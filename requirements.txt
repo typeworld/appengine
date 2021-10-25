@@ -1,0 +1,24 @@
+bcrypt
+certifi
+CurrencyConverter
+deepdiff
+Flask==1.1.1
+git+https://github.com/typeworld/typeworld.git
+git+https://github.com/yanone/hotmetal.git
+google-api-python-client
+google-cloud-ndb
+google-cloud-secret-manager
+google-cloud-storage
+google-cloud-translate
+
+gunicorn
+keyring
+lxml
+Markdown
+markdown2
+Pygments
+pyzmq
+semver
+
+# https://stripe.com/docs/billing/subscriptions/metered
+stripe>=2.60.0,<3.0

@@ -1,0 +1,59 @@
+# gcloud app deploy index.yaml
+
+indexes:
+
+- kind: Translation_SubCategory
+  ancestor: yes
+  properties:
+  - name: name
+
+- kind: Translation_Keyword
+  properties:
+  - name: categoryKey
+  - name: keyword
+
+- kind: Translation_Keyword
+  properties:
+  - name: base
+  - name: keyword
+
+- kind: Translation_Translation
+  properties:
+  - name: keywordKey
+  - name: touched
+    direction: desc
+
+- kind: Translation_Translation
+  properties:
+  - name: locale
+  - name: touched
+    direction: desc
+
+- kind: AppInstance
+  ancestor: yes
+  properties:
+  - name: lastUsed
+    direction: desc
+
+- kind: APIEndpointBillingIncident
+  ancestor: yes
+  properties:
+  - name: touched
+    direction: desc
+
+- kind: APILog
+  ancestor: yes
+  properties:
+  - name: touched
+    direction: desc
+
+- kind: APILog
+  ancestor: yes
+  properties:
+  - name: command
+
+- kind: APILog
+  properties:
+  - name: command
+  - name: touched
+    direction: desc

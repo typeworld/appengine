@@ -1,0 +1,292 @@
+
+
+
+
+/*---------------clear-------------*/
+.clear:after {
+content: ".";
+display: block;
+height: 0;
+clear: both;
+visibility: hidden;
+}
+.clear {display:inline-block;}
+/* Hide from IE Mac \*/
+.clear { display:block; }
+/* End hide from IE Mac */
+* html .clear {height:1px;}
+/*---------------clear-------------*/
+
+
+/* ################## MAIN ################## */
+
+
+
+* {
+/*	position: relative;  */
+	padding: 0; margin: 0;
+}
+
+html {
+	height: 100%;
+	width: 100%;
+}
+
+body {
+}
+
+a {
+   outline: 0;
+}
+
+body, h1, h2, h3, h4, h5, h6 {
+	margin: 0; padding: 0;
+
+	font-weight: normal;
+	line-height: 130%;
+
+}
+
+h1, h2, h3, h4, h5, h6 {
+	margin-top: 20px;
+	margin-bottom: 10px;
+	padding: none;
+	margin-left: -2px;
+}
+
+
+h1 {
+	font-size: 300%;
+}
+
+h2 {
+	font-size: 200%;
+}
+
+h3 {
+	font-size: 170%;
+}
+
+h4 {
+	font-size: 155%;
+}
+
+h5 {
+	font-size: 140%;
+}
+
+h6 {
+	font-size: 125%;
+}
+
+p + p {
+	margin-top: 20px;
+}
+
+p + ul {
+	margin-top: 10px;
+}
+
+a {
+	text-decoration: none;
+	cursor: pointer;
+}
+
+em {
+	padding-left: 3px;
+	padding-right: 2px;
+}
+
+blockquote {
+    margin-top: 10px;
+	padding: 20px;
+	padding-left: 30px;
+    border-left: 5px solid #555;
+    background-color: rgba(0,0,0,.1);
+}
+
+.hidden {
+	display: none;
+}
+
+.floatleft {
+	float: left;
+}
+
+.floatright {
+	float: right;
+}
+
+.floatcenter {
+    position: absolute;
+    left: 50%;
+    margin-right: -50%;
+    transform: translate(-50%, 0);
+}
+
+.centered {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin: 0;
+    transform: translate(-50%, -50%);
+}
+
+input, textarea, select {
+	font-family: inherit;
+	font-weight: normal;
+	font-size: inherit;
+	line-height: 120%;
+	color: #000;
+	padding: 8px;
+	padding-left: 11px;
+	padding-bottom: 7px;
+	width: 97%;
+/*	word-spacing: -3px; */
+	margin-top: 2px;
+	margin-bottom: 9px;
+	border-radius:5px; -moz-border-radius:5px; -webkit-border-radius:5px; -khtml-border-radius:5px;
+	border: 2px solid #ccc;
+}
+
+select {
+	width: 101%;
+    height: 40px;
+    -moz-padding-start: calc(10px - 3px);
+    font-family: inherit;
+    font-size: 13pt;
+    border-radius: 5px;
+    padding: 7px;
+    padding-left: 7px;
+    padding-top: 2px;
+	background-color: #eee;
+}
+
+textarea {
+	height: 120px;
+}
+
+/* select {
+	font-family: 'Nitti Light', 'Andale Mono', monospace;
+	font-weight: normal;
+	font-size: 11pt;
+	line-height: 130%;
+	color: #444;
+	padding: 3px;
+	width: 97%;
+	margin-bottom: 10px;
+	margin-right: 3px;
+	border-radius:2px; -moz-border-radius:2px; -webkit-border-radius:2px; -khtml-border-radius:2px;
+	border: none;
+	padding-left: 5px;
+
+	background: rgba(255, 255, 255, .3);
+    border: 1px solid rgba(0, 0, 0, .4);
+} */
+
+input[type=checkbox] {
+	width: 20px;
+}
+
+.checkbox {
+	margin-top: 6px;
+	margin-bottom: 0px;
+}
+
+.checkbox input {
+	width: 25px; 
+/*	float: left;
+*/}
+
+input[type=file] {
+	padding: 10px;
+	background-color: #999;
+	margin-right: 10px;
+}
+
+input[type=button], input[type=submit], .button, button {
+	width: auto;
+	padding-top: 6px;
+	padding-bottom: 8px;
+	padding-left: 10px;
+	padding-right: 10px;
+	margin-top: 8px;
+	margin-left: 0px;
+/*	margin-bottom: -5px; */
+	margin-right: 0px;
+	cursor: pointer;
+	background-color: #58585A;
+	border-radius:4px; -moz-border-radius:4px; -webkit-border-radius:4px; -khtml-border-radius:4px;
+	-webkit-appearance: none;
+	font-family: inherit;
+	font-size: inherit;
+	color: #FFF;
+	display: inline-block;
+	border: none;
+}
+
+input[type=button]+input[type=button], input[type=button]+input[type=submit], input[type=button]+.button,
+input[type=submit]+input[type=submit], input[type=submit]+input[type=button], input[type=submit]+.button,
+.button+.button, .button+input[type=button], .button+input[type=submit], button+button,
+
+.no-print input[type=button]+.no-print input[type=button], .no-print input[type=button]+input[type=submit], .no-print input[type=button]+.button,
+input[type=submit]+input[type=submit], input[type=submit]+.no-print input[type=button], input[type=submit]+.button,
+.button+.button, .button+.no-print input[type=button], .button+input[type=submit]
+
+ {
+	margin-left: 10px; 
+}
+
+.button.secondary, a.button.secondary, input[type=button].secondary, button.secondary {
+	background-color: rgba(0, 0, 0, .2) !important;
+	color: rgba(0, 0, 0, .2) !important;
+}
+
+.button.attention, a.button.attention, input[type=button].attention, button.attention {
+	background-color: rgba(255, 85, 0) !important;
+	color: white !important;
+}
+
+.disabled, .dead {
+  pointer-events: none;
+  cursor: default;
+  opacity: 0.5;
+}
+
+
+.separator {
+	height: 70px;
+}
+
+.smallSeparator {
+	height: 11px;
+}
+
+.mediumSeparator {
+	height: 40px;
+}
+
+
+input.requiredmissing {
+	background-color: #ff8746 !important;
+}
+
+.requiredmissing {
+	background-color: #ff8746 !important;
+	border-radius:4px; -moz-border-radius:4px; -webkit-border-radius:4px; -khtml-border-radius:4px;
+	padding: 5px;
+
+	transition: background-color 0.5s ease;
+}
+
+.required {
+	font-size: inherit;
+	color: #0cbaec;
+	padding-left: 6px;
+	top: -3px;
+}
+
+input, select {
+	transition: background-color 0.5s ease;
+
+}
