@@ -1,10 +1,9 @@
 # project
-import main
-import definitions
-import billing_stripe
-from ynlib.strings import Garbage
-import webapp
-import helpers
+import app
+from app import definitions
+from app import billing_stripe
+from app import webapp
+from app import helpers
 
 # other
 import typeworld.client
@@ -25,7 +24,7 @@ from google.cloud import ndb
 import logging
 
 
-main.app.config["modules"].append("classes")
+app.app.config["modules"].append("classes")
 
 
 ###
@@ -104,7 +103,7 @@ class User(TWNDBModel):
 
     def put(self):
         if not self.secretKey:
-            self.secretKey = Garbage(40)
+            self.secretKey = helpers.Garbage(40)
         return super().put()
 
     def invoiceDataComplete(self):
@@ -118,7 +117,7 @@ class User(TWNDBModel):
 
     def stripeGetCustomerId(self):
 
-        if main.STRIPELIVE:
+        if app.STRIPELIVE:
             if not self.stripeCustomerId:
                 customer = stripe.Customer.create(email=self.email)
                 self.stripeCustomerId = customer.id
@@ -143,14 +142,14 @@ class User(TWNDBModel):
             return "exempt"
 
     def stripeUpdateSubscriptions(self):
-        if main.STRIPELIVE:
+        if app.STRIPELIVE:
             self.stripeSubscriptions = stripe.Subscription.list(customer=self.stripeGetCustomerId(), status="all")
         else:
             self.stripeTestSubscriptions = stripe.Subscription.list(customer=self.stripeGetCustomerId(), status="all")
         self.put()
 
     def stripeSubscriptionByProductID(self, productID, statuses=[]):
-        if main.STRIPELIVE:
+        if app.STRIPELIVE:
             subscriptions = self.stripeSubscriptions
         else:
             subscriptions = self.stripeTestSubscriptions
@@ -212,7 +211,7 @@ class User(TWNDBModel):
         Retrieve the number of seconds that a subscription has been previously running.
         Used to reducde trial period for now subscriptions.
         """
-        if main.STRIPELIVE:
+        if app.STRIPELIVE:
             stripeSubscribedProductsHistory = self.stripeSubscribedProductsHistory
         else:
             stripeSubscribedProductsHistory = self.stripeTestSubscribedProductsHistory
@@ -440,7 +439,7 @@ class User(TWNDBModel):
 
         # print("parameters", parameters)
 
-        if g.admin or not main.LIVE:
+        if g.admin or not app.LIVE:
             webapp.reload()
         webapp.reload(style="hidden")
 
@@ -850,7 +849,7 @@ class User(TWNDBModel):
                     " existing customer. Therefore, this number will be a bit higher in"
                     " the beginning of each publisher’s Type.World rollout. In the long"
                     " run, first accesses of existing customers will vanish entirely"
-                    " and only new sales will remain.</p><p><em>Added fonts</em>"
+                    " and only new sales will reapp.</p><p><em>Added fonts</em>"
                     " normally means a new sale for an existing customer where new"
                     " fonts are being added to an existing subscription."
                 ),
@@ -1067,7 +1066,7 @@ class User(TWNDBModel):
     def sendEmailVerificationLink(self):
 
         # TODO: avoid random duplicates
-        self.emailVerificationCode = Garbage(40)
+        self.emailVerificationCode = helpers.Garbage(40)
 
         body = f"""\
 Hello {self.name},
@@ -1257,7 +1256,7 @@ class APIEndpoint(TWNDBModel):
 
     def getAPIKey(self):
         if not self.APIKey:
-            self.APIKey = Garbage(40)
+            self.APIKey = helpers.Garbage(40)
             self.put()
         return self.APIKey
 
@@ -1290,7 +1289,7 @@ class APIEndpoint(TWNDBModel):
                 commercial=True,
                 appID="world.type.app",
             )
-        # client.set("typeworldUserAccount", main.secret("TEST_TYPEWORLDUSERACCOUNTID")) # test@type.world
+        # client.set("typeworldUserAccount", app.secret("TEST_TYPEWORLDUSERACCOUNTID")) # test@type.world
         g.instanceVersion
 
         if g.form._get("testScenario"):

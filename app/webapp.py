@@ -75,11 +75,11 @@ class Translation_Category(WebAppModel):
 """
 
 # project
-import main
-import classes
-import definitions
-import hypertext
-import helpers
+import app
+from app import classes
+from app import definitions
+from app import hypertext
+from app import helpers
 
 # other
 import typeworld.client
@@ -91,12 +91,11 @@ from google.cloud.ndb.model import KeyProperty
 import google.cloud.ndb.model
 import importlib
 import base64
-from ynlib.strings import addAttributeToURL
 from google.cloud import ndb
 from urllib.parse import unquote, urlencode
 import copy
 
-main.app.config["modules"].append("webapp")
+app.app.config["modules"].append("webapp")
 
 
 #####
@@ -203,7 +202,7 @@ def outerContainer(methodName, parameters, inline):
 def innerContainer(methodName, parameters={}, directCallParameters={}):
     method = None
 
-    for moduleName in main.app.config["modules"]:
+    for moduleName in app.app.config["modules"]:
         module = importlib.import_module(moduleName, package=None)
         if hasattr(module, methodName):
             method = getattr(module, methodName)
@@ -238,7 +237,7 @@ class Form(dict):
             return None
 
 
-@main.app.route("/env", methods=["POST", "GET"])
+@app.app.route("/env", methods=["POST", "GET"])
 def env():
 
     if not g.admin:
@@ -264,7 +263,7 @@ def env():
     return g.html.generate()
 
 
-@main.app.before_request
+@app.app.before_request
 def before_request_webapp():
 
     g.form = Form()
@@ -326,7 +325,7 @@ class EmailProperty(ndb.StringProperty, Property):
         g.html.textInput(key, value=value, type="email", placeholder=placeholder)
 
     def valid(self, value):
-        if main.verifyEmail(value):
+        if app.verifyEmail(value):
             return True, None
         else:
             return False, "Invalid email"
@@ -342,11 +341,7 @@ class UserKeyProperty(KeyProperty):
         return True, None
 
     def shape(self, value):
-        user = (
-            classes.User.query()
-            .filter(classes.User.email == value)
-            .get(read_consistency=ndb.STRONG)
-        )
+        user = classes.User.query().filter(classes.User.email == value).get(read_consistency=ndb.STRONG)
         if user:
             return user.key
 
@@ -462,9 +457,7 @@ class EUVATIDProperty(ndb.StringProperty, Property):
             return False, "No VAT ID needed for companies in Germany"
         # Shape
         # Validate
-        url = "https://evatr.bff-online.de/evatrRPC?UstId_1=DE212651941&UstId_2=%s" % (
-            value
-        )
+        url = "https://evatr.bff-online.de/evatrRPC?UstId_1=DE212651941&UstId_2=%s" % (value)
         success, responseContent, response = typeworld.client.request(url)
         if type(responseContent) != str:
             responseContent = responseContent.decode()
@@ -505,8 +498,7 @@ class EUVATIDProperty(ndb.StringProperty, Property):
                 " database."
             ),
             "203": "The VAT ID is valid only starting %s." % (r.Gueltig_ab),
-            "204": "The VAT ID was valid only between %s and %s."
-            % (r.Gueltig_ab, r.Gueltig_bis),
+            "204": "The VAT ID was valid only between %s and %s." % (r.Gueltig_ab, r.Gueltig_bis),
             "205": "The request can’t be processed at the moment. Please try again later.",
             "206": "The German VAT ID of the seller is invalid.",
             "207": "The German VAT ID is not authorized to request VAT ID verifications.",
@@ -669,7 +661,7 @@ class WebAppModel(ndb.Model):
             # Actually save
             if self._contentCacheUpdated is False or self._changed:
 
-                # New behavior: Save on @main.app.after_request
+                # New behavior: Save on @app.app.after_request
                 super(WebAppModel, self).put(**kwargs)
                 if self not in g.ndb_puts:
                     g.ndb_puts.append(self)
@@ -718,10 +710,7 @@ class WebAppModel(ndb.Model):
         for key in self.__class__.__dict__:
             attr = getattr(self.__class__, key)
 
-            if (
-                Property in attr.__class__.__bases__
-                or Property in attr.__class__.__bases__[0].__bases__
-            ):
+            if Property in attr.__class__.__bases__ or Property in attr.__class__.__bases__[0].__bases__:
 
                 # 			if hasattr(attr, 'dialog'):# and isinstance(getattr(attr, 'dialog'), types.FunctionType):
                 _p.append(key)
@@ -743,9 +732,7 @@ class WebAppModel(ndb.Model):
     def viewPermission(self, methodName):
         return False
 
-    def container(
-        self, methodName, parameters={}, directCallParameters={}, inline=False
-    ):
+    def container(self, methodName, parameters={}, directCallParameters={}, inline=False):
         self.outerContainer(methodName, parameters, inline)
         self.innerContainer(methodName, parameters, directCallParameters)
         self._outerContainer()
@@ -799,7 +786,7 @@ class WebAppModel(ndb.Model):
         hiddenValues["class"] = self.__class__.__name__
         hiddenValues["dataContainer"] = dataContainer
         if reloadURL:
-            hiddenValues["reloadURL"] = addAttributeToURL(reloadURL, "inline=true")
+            hiddenValues["reloadURL"] = helpers.addAttributeToURL(reloadURL, "inline=true")
         if parentKey:
             hiddenValues["parentKey"] = parentKey
 
@@ -811,10 +798,7 @@ class WebAppModel(ndb.Model):
             if hasattr(self.__class__, key):
                 attr = getattr(self.__class__, key)
 
-                if (
-                    Property in attr.__class__.__bases__
-                    or Property in attr.__class__.__bases__[0].__bases__
-                ):
+                if Property in attr.__class__.__bases__ or Property in attr.__class__.__bases__[0].__bases__:
                     value = attr.shape(values[key])
                     setattr(self, key, value)
 
@@ -848,8 +832,7 @@ class WebAppModel(ndb.Model):
             )
 
         combinedPropertyNames = [
-            f"{FORM_PREFIX}{x}"
-            for x in list(set(hiddenValues.keys()) | set(visiblePropertyNames))
+            f"{FORM_PREFIX}{x}" for x in list(set(hiddenValues.keys()) | set(visiblePropertyNames))
         ]
 
         # g.html.mediumSeparator()
@@ -935,9 +918,7 @@ class WebAppModel(ndb.Model):
         g.html.T(text or ("+ Add %s" % self.__class__.__name__))
         g.html._A()
 
-    def edit(
-        self, text=None, button=False, propertyNames=[], values={}, hiddenValues={}
-    ):
+    def edit(self, text=None, button=False, propertyNames=[], values={}, hiddenValues={}):
 
         url = "/createDialog?inline=true&class=%s" % (self.__class__.__name__)
         url += "&key=%s" % self.key.urlsafe().decode()
@@ -999,7 +980,7 @@ def getClass(key, className, parentKey=None):
     # Construct object
     item = None
     if key:
-        for moduleName in main.app.config["modules"]:
+        for moduleName in app.app.config["modules"]:
             module = importlib.import_module(moduleName, package=None)
             if hasattr(module, className):
                 item = ndb.Key(urlsafe=key.encode()).get(read_consistency=ndb.STRONG)
@@ -1011,7 +992,7 @@ def getClass(key, className, parentKey=None):
         # new = True
         if parentKey is not None:
             parentKey = ndb.Key(urlsafe=g.form._get("parentKey").encode())
-        for moduleName in main.app.config["modules"]:
+        for moduleName in app.app.config["modules"]:
             module = importlib.import_module(moduleName, package=None)
             if hasattr(module, className):
 
@@ -1024,7 +1005,7 @@ def getClass(key, className, parentKey=None):
     return item
 
 
-@main.app.route("/createDialog", methods=["POST", "GET"])
+@app.app.route("/createDialog", methods=["POST", "GET"])
 def createDialog():
 
     if not g.form._get("class"):
@@ -1114,9 +1095,7 @@ def dataContainerReload(item=None):
     # logging.warning(f'g.form._get("dataContainer"): {g.form._get("dataContainer")}')
     if g.form._get("dataContainer"):
 
-        keyID, methodName, parameters = decodeDataContainer(
-            g.form._get("dataContainer")
-        )
+        keyID, methodName, parameters = decodeDataContainer(g.form._get("dataContainer"))
         if g.form._get("parameters"):
             parameters = json.loads(g.form._get("parameters"))
 
@@ -1131,16 +1110,11 @@ def dataContainerReload(item=None):
                 if message and not item:
                     item = message
 
-                additionalReloadDataContainer = item.reloadDataContainer(
-                    g.form._get("dataContainer"), parameters
-                )
+                additionalReloadDataContainer = item.reloadDataContainer(g.form._get("dataContainer"), parameters)
 
                 # logging.warning('%s.additionalReloadDataContainer()=%s' % (item, additionalReloadDataContainer))
 
-                if (
-                    additionalReloadDataContainer
-                    and additionalReloadDataContainer != g.form._get("dataContainer")
-                ):
+                if additionalReloadDataContainer and additionalReloadDataContainer != g.form._get("dataContainer"):
                     oldHTML = g.html
                     g.html = hypertext.HTML()
 
@@ -1149,9 +1123,7 @@ def dataContainerReload(item=None):
                     html = g.html.generate()
 
                     if "\n" in html:
-                        raise ValueError(
-                            "Returned code contains new line character, which breaks JS handling."
-                        )
+                        raise ValueError("Returned code contains new line character, which breaks JS handling.")
 
                     g.html = oldHTML
                     g.html.SCRIPT()
@@ -1166,17 +1138,14 @@ def dataContainerReload(item=None):
 
     g.html.SCRIPT()
     if not g.form._get("dataContainer") and g.form._get("reloadURL"):
-        g.html.T(
-            "AJAX('#stage', '%s');"
-            % addAttributeToURL(unquote(g.form._get("reloadURL")), "inline=true")
-        )
+        g.html.T("AJAX('#stage', '%s');" % helpers.addAttributeToURL(unquote(g.form._get("reloadURL")), "inline=true"))
     g.html.T("hideDialog();")
     g.html._SCRIPT()
 
     return True, None
 
 
-@main.app.route("/executeMethod", methods=["POST"])
+@app.app.route("/executeMethod", methods=["POST"])
 def executeMethod():
 
     if not g.form._get("class"):
@@ -1199,7 +1168,7 @@ def executeMethod():
     return g.html.generate()
 
 
-@main.app.route("/editProperties", methods=["POST"])
+@app.app.route("/editProperties", methods=["POST"])
 def editProperties():
 
     if not g.form._get("class"):
@@ -1237,8 +1206,7 @@ def editProperties():
                         # Property in attr.__class__.__bases__[0].__bases__ or Property in attr.__class__.__bases__
                         #  or Property in attr.__class__.__bases__[0].__bases__:
                         if (
-                            google.cloud.ndb.model.Property
-                            in attr.__class__.__bases__[0].__bases__
+                            google.cloud.ndb.model.Property in attr.__class__.__bases__[0].__bases__
                             or Property in attr.__class__.__bases__[0].__bases__
                             or Property in attr.__class__.__bases__
                         ):
@@ -1251,9 +1219,7 @@ def editProperties():
 
                             if not success:
                                 g.html.SCRIPT()
-                                g.html.T(
-                                    f"$(.dialogform_{propertyName}).addClass('requiredmissing');"
-                                )
+                                g.html.T(f"$(.dialogform_{propertyName}).addClass('requiredmissing');")
                                 g.html._SCRIPT()
                                 g.html.warning(f"{propertyName}: {message}")
                                 return g.html.generate(), 900
@@ -1264,9 +1230,7 @@ def editProperties():
                         # Required check
                         if attr._required and not value:
                             g.html.SCRIPT()
-                            g.html.T(
-                                f"$('.dialogform_{propertyName}').addClass('requiredmissing');"
-                            )
+                            g.html.T(f"$('.dialogform_{propertyName}').addClass('requiredmissing');")
                             g.html._SCRIPT()
                             g.html.warning(f"{propertyName} is a required value.")
                             return g.html.generate(), 900
@@ -1301,7 +1265,7 @@ def editProperties():
     return html
 
 
-@main.app.route("/reloadContainer", methods=["POST", "GET"])
+@app.app.route("/reloadContainer", methods=["POST", "GET"])
 def reloadContainer():
     """
     Reload a data container using its HTML-encoded reference (`dataContainer` parameter).
@@ -1316,7 +1280,7 @@ def reloadContainer():
     return g.html.generate()
 
 
-@main.app.route("/deleteObject", methods=["POST", "GET"])
+@app.app.route("/deleteObject", methods=["POST", "GET"])
 def deleteObject():
 
     if not g.form._get("class"):
@@ -1332,8 +1296,7 @@ def deleteObject():
         g.html.SCRIPT()
         if g.form._get("reloadURL"):
             g.html.T(
-                "AJAX('#stage', '%s');"
-                % addAttributeToURL(unquote(g.form._get("reloadURL")), "inline=true")
+                "AJAX('#stage', '%s');" % helpers.addAttributeToURL(unquote(g.form._get("reloadURL")), "inline=true")
             )
         g.html._SCRIPT()
 
@@ -1347,8 +1310,8 @@ class PasswordReset(WebAppModel):
     userKey = KeyProperty(required=True)
 
 
-@main.app.route("/resetpassword", methods=["GET"])
-@main.app.route("/resetpassword/<urlsafe>", methods=["GET"])
+@app.app.route("/resetpassword", methods=["GET"])
+@app.app.route("/resetpassword/<urlsafe>", methods=["GET"])
 def resetpassword(urlsafe=None):
 
     g.html.DIV(class_="content")
@@ -1428,7 +1391,7 @@ def resetpassword(urlsafe=None):
     return g.html.generate()
 
 
-@main.app.route("/resetPasswordAction", methods=["POST"])
+@app.app.route("/resetPasswordAction", methods=["POST"])
 def resetPasswordAction():
 
     # if not g.form._get('urlsafe') and not g.form._get('userKey'):
@@ -1444,9 +1407,7 @@ def resetPasswordAction():
 
     # Reset from within user account
     if g.form._get("userKey"):
-        user = ndb.Key(urlsafe=g.form._get("userKey").encode()).get(
-            read_consistency=ndb.STRONG
-        )
+        user = ndb.Key(urlsafe=g.form._get("userKey").encode()).get(read_consistency=ndb.STRONG)
 
         if not user or user != g.user:
             return abort(401)
@@ -1455,9 +1416,7 @@ def resetPasswordAction():
 
     # Reset from email link
     elif g.form._get("urlsafe"):
-        pwr = ndb.Key(urlsafe=g.form._get("urlsafe").encode()).get(
-            read_consistency=ndb.STRONG
-        )
+        pwr = ndb.Key(urlsafe=g.form._get("urlsafe").encode()).get(read_consistency=ndb.STRONG)
 
         if not pwr:
             return abort(401)
@@ -1471,9 +1430,7 @@ def resetPasswordAction():
     if user:
 
         if user.checkPassword(g.form._get("password")):
-            g.html.warning(
-                "Old and new password are identical. Please choose another password."
-            )
+            g.html.warning("Old and new password are identical. Please choose another password.")
             return g.html.generate()
 
         success, message = user.setPassword(g.form._get("password"))
@@ -1499,7 +1456,7 @@ def resetPasswordAction():
     return g.html.generate()
 
 
-@main.app.route("/requestPasswortReset", methods=["POST"])
+@app.app.route("/requestPasswortReset", methods=["POST"])
 def requestPasswortReset():
 
     if not g.form._get("email"):
@@ -1507,9 +1464,7 @@ def requestPasswortReset():
 
     from classes import User
 
-    user = User.query(User.email == g.form._get("email")).get(
-        read_consistency=ndb.STRONG
-    )
+    user = User.query(User.email == g.form._get("email")).get(read_consistency=ndb.STRONG)
 
     if user:
 
@@ -1537,8 +1492,6 @@ Type.World HQ
             body,
         )
 
-    g.html.info(
-        "The email has been sent to you. Please follow the link you’ll find in it."
-    )
+    g.html.info("The email has been sent to you. Please follow the link you’ll find in it.")
 
     return g.html.generate()

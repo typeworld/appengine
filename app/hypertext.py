@@ -1,14 +1,14 @@
 # project
-import main
-import hotmetal
+import app
 
 # other
+import hotmetal
 from flask import request, g
 from google.cloud import ndb
 
 ###
 
-main.app.config["modules"].append("hypertext")
+app.app.config["modules"].append("hypertext")
 
 
 class HTML(hotmetal.HotMetal):
@@ -44,7 +44,7 @@ class HTML(hotmetal.HotMetal):
         )
 
         # Cookie Banner
-        if main.LIVE:
+        if app.LIVE:
             self.HeadT(
                 """<script type="text/javascript">
 var _iub = _iub || [];
@@ -135,9 +135,7 @@ _iub.csConfiguration = {"gdprAppliesGlobally":false,"enableCcpa":true,"countryDe
             self.T("Log In")
             self._A()
             self._SPAN()
-            self.SPAN(
-                class_="createAccountContent floatleft", style="margin-right: 10px;"
-            )
+            self.SPAN(class_="createAccountContent floatleft", style="margin-right: 10px;")
             self.A(
                 class_="button",
                 onclick=(
@@ -225,15 +223,9 @@ _iub.csConfiguration = {"gdprAppliesGlobally":false,"enableCcpa":true,"countryDe
                     self.A(href="/translate")
                 else:
                     self.A(
-                        href="/translate/%s"
-                        % localesForUser[0]
-                        .key.parent()
-                        .get(read_consistency=ndb.STRONG)
-                        .ISO639_1
+                        href="/translate/%s" % localesForUser[0].key.parent().get(read_consistency=ndb.STRONG).ISO639_1
                     )
-                self.T(
-                    '<span class="material-icons-outlined">translate</span> Translate'
-                )
+                self.T('<span class="material-icons-outlined">translate</span> Translate')
                 self._A()
                 self._SPAN()
         self.SPAN(class_="link")
@@ -243,9 +235,7 @@ _iub.csConfiguration = {"gdprAppliesGlobally":false,"enableCcpa":true,"countryDe
         self._SPAN()
         self.SPAN(class_="link")
         self.A(href="/developer")
-        self.T(
-            '<span class="material-icons-outlined">memory</span> Developer Information'
-        )
+        self.T('<span class="material-icons-outlined">memory</span> Developer Information')
         self._A()
         self._SPAN()
 
@@ -272,9 +262,7 @@ _iub.csConfiguration = {"gdprAppliesGlobally":false,"enableCcpa":true,"countryDe
             self._SPAN()
             self.SPAN(class_="link")
             self.A(href="/account")
-            self.T(
-                '<span class="material-icons-outlined">account_circle</span> Account'
-            )
+            self.T('<span class="material-icons-outlined">account_circle</span> Account')
             self._A()
             self._SPAN()
             self.SPAN(class_="link")
@@ -291,9 +279,7 @@ _iub.csConfiguration = {"gdprAppliesGlobally":false,"enableCcpa":true,"countryDe
                 self._SPAN()
                 self.SPAN(class_="link")
                 self.A(onclick="showCreateUserAccount();")
-                self.T(
-                    '<span class="material-icons-outlined">person_add</span> Create Account'
-                )
+                self.T('<span class="material-icons-outlined">person_add</span> Create Account')
                 self._A()
                 self._SPAN()
         self._DIV()

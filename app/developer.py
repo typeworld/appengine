@@ -1,13 +1,13 @@
 # project
-import typeworld.client
-import main
-import definitions
-import webapp
-import helpers
-import classes
-import billing_stripe
+import app
+from app import definitions
+from app import webapp
+from app import helpers
+from app import classes
+from app import billing_stripe
 
 # other
+import typeworld.client
 import markdown2
 import certifi
 import ssl
@@ -26,7 +26,7 @@ import base64
 currencyConverter = CurrencyConverter()
 
 
-main.app.config["modules"].append("developer")
+app.app.config["modules"].append("developer")
 
 GOOGLE_PROJECT_ID = "typeworld2"
 
@@ -173,9 +173,7 @@ class AppBuild(webapp.TWNDBModel):
         # Download file
         if blob:
             g.html.P()
-            g.html.A(
-                href=f"https://{definitions.DOWNLOADSURL}/app/{os.path.basename(blob.name)}?t={time.time()}"
-            )
+            g.html.A(href=f"https://{definitions.DOWNLOADSURL}/app/{os.path.basename(blob.name)}?t={time.time()}")
             g.html.T("Download file")
             g.html._A()
             g.html.T(f" ({int(bytesto(blob.size, 'm'))}MB)")
@@ -205,11 +203,7 @@ class AppBuild(webapp.TWNDBModel):
         for version in versions:
             if semver.compare(self.getParent().version, version.version) >= 0 and i < 5:
                 build = version.build(platform)
-                if (
-                    build.published
-                    or profile == "developer"
-                    and build.publishedForDevelopers
-                ):
+                if build.published or profile == "developer" and build.publishedForDevelopers:
                     notes += f"**Version {version.version}**\n\n{version.notes or '*No description available*'}\n\n\n"
                     i += 1
 
@@ -236,14 +230,10 @@ class AppBuild(webapp.TWNDBModel):
         mainBlob = self.mainBlob()
         if mainBlob:
             mainBlob.delete()
-        main.bucket.copy_blob(
-            self.blob(), main.bucket, new_name=self.mainDownloadFile()
-        )
+        app.bucket.copy_blob(self.blob(), app.bucket, new_name=self.mainDownloadFile())
 
     def blob(self):
-        blob = main.bucket.get_blob(
-            f"app/TypeWorldApp.{self.getParent().version}.{self.ending()}"
-        )
+        blob = app.bucket.get_blob(f"app/TypeWorldApp.{self.getParent().version}.{self.ending()}")
         if blob:
             blob.reload()
         return blob
@@ -252,7 +242,7 @@ class AppBuild(webapp.TWNDBModel):
         return f"app/TypeWorldApp.{self.ending()}"
 
     def mainBlob(self):
-        blob = main.bucket.get_blob(self.mainDownloadFile())
+        blob = app.bucket.get_blob(self.mainDownloadFile())
         if blob:
             blob.reload()
         return blob
@@ -321,9 +311,7 @@ class AppVersion(webapp.TWNDBModel):
 
     def builds(self):
         if not hasattr(self, "_builds"):
-            self._builds = AppBuild.query(ancestor=self.key).fetch(
-                read_consistency=ndb.STRONG
-            )
+            self._builds = AppBuild.query(ancestor=self.key).fetch(read_consistency=ndb.STRONG)
         for i, build in enumerate(self._builds):
             self._builds[i]._parent = self
         return self._builds
@@ -387,21 +375,19 @@ def getLatestUnpublishedVersion(platform, versions=None):
 platforms = ["mac", "windows"]
 
 
-@main.app.route("/latestUnpublishedVersion/<appKey>/<platform>/", methods=["GET"])
+@app.app.route("/latestUnpublishedVersion/<appKey>/<platform>/", methods=["GET"])
 def latestUnpublishedVersion(appKey, platform):
 
-    if g.form._get("APPBUILD_KEY") != main.secret("APPBUILD"):
+    if g.form._get("APPBUILD_KEY") != app.secret("APPBUILD"):
         return abort(401)
 
-    return Response(
-        getLatestUnpublishedVersion(platform), mimetype="text/plain; charset=utf-8"
-    )
+    return Response(getLatestUnpublishedVersion(platform), mimetype="text/plain; charset=utf-8")
 
 
-@main.app.route("/setSparkleSignature", methods=["POST"])
+@app.app.route("/setSparkleSignature", methods=["POST"])
 def setSparkleSignature():
 
-    if g.form._get("APPBUILD_KEY") != main.secret("APPBUILD"):
+    if g.form._get("APPBUILD_KEY") != app.secret("APPBUILD"):
         return abort(401)
 
     if not g.form._get("platform") in platforms:
@@ -433,17 +419,13 @@ def viewLatestUnpublishedBuilds(parameters, directCallParameters):
         versions = getVersions()
 
     g.html.P()
-    g.html.T(
-        f'Build target for Mac: <b>{getLatestUnpublishedVersion("mac", versions)}</b>'
-    )
+    g.html.T(f'Build target for Mac: <b>{getLatestUnpublishedVersion("mac", versions)}</b>')
     g.html.BR()
-    g.html.T(
-        f'Build target for Windows: <b>{getLatestUnpublishedVersion("windows", versions)}</b>'
-    )
+    g.html.T(f'Build target for Windows: <b>{getLatestUnpublishedVersion("windows", versions)}</b>')
     g.html._P()
 
 
-@main.app.route("/admin", methods=["GET", "POST"])
+@app.app.route("/admin", methods=["GET", "POST"])
 def admin():
 
     if not g.admin:
@@ -522,17 +504,15 @@ def admin():
     return g.html.generate()
 
 
-@main.app.route("/user", methods=["GET", "POST"])
-@main.app.route("/user/<userKey>", methods=["GET"])
+@app.app.route("/user", methods=["GET", "POST"])
+@app.app.route("/user/<userKey>", methods=["GET"])
 def user(userKey=None):
 
     if not g.admin:
         return abort(401)
 
     if g.form._get("email"):
-        user = classes.User.query(classes.User.email == g.form._get("email")).get(
-            read_consistency=ndb.STRONG
-        )
+        user = classes.User.query(classes.User.email == g.form._get("email")).get(read_consistency=ndb.STRONG)
         if user:
             return redirect(f"/user/{user.publicID()}")
 
@@ -576,9 +556,7 @@ def user(userKey=None):
             )
             if stripeSubscriptionPreviousRunningPeriodDays:
                 g.html.BR()
-                g.html.T(
-                    f"Previously active: {stripeSubscriptionPreviousRunningPeriodDays} days"
-                )
+                g.html.T(f"Previously active: {stripeSubscriptionPreviousRunningPeriodDays} days")
             g.html._P()
 
         g.html._area()
@@ -615,9 +593,7 @@ def user(userKey=None):
             g.html.TD()
             g.html.T(invitation.url)
             g.html.BR()
-            g.html.T(
-                f"Invited by: {invitation.invitedByAPIEndpointKey or invitation.invitedByUserKey}"
-            )
+            g.html.T(f"Invited by: {invitation.invitedByAPIEndpointKey or invitation.invitedByUserKey}")
             g.html._TD()
             g.html.TD()
             invitation.delete()
@@ -646,32 +622,28 @@ def user(userKey=None):
         return g.html.generate()
 
 
-@main.app.route("/impersonateuser", methods=["GET"])
+@app.app.route("/impersonateuser", methods=["GET"])
 def impersonateuser():
 
     if not g.admin:
         return abort(401)
 
     if g.form._get("userKey"):
-        user = ndb.Key(urlsafe=g.form._get("userKey").encode()).get(
-            read_consistency=ndb.STRONG
-        )
+        user = ndb.Key(urlsafe=g.form._get("userKey").encode()).get(read_consistency=ndb.STRONG)
         if user:
-            main.performLogout()
-            main.performLogin(user)
+            app.performLogout()
+            app.performLogin(user)
             return redirect("/")
 
 
-@main.app.route("/notifyuser", methods=["GET", "POST"])
+@app.app.route("/notifyuser", methods=["GET", "POST"])
 def notifyuser():
 
     if not g.admin:
         return abort(401)
 
     if g.form._get("userKey"):
-        user = ndb.Key(urlsafe=g.form._get("userKey").encode()).get(
-            read_consistency=ndb.STRONG
-        )
+        user = ndb.Key(urlsafe=g.form._get("userKey").encode()).get(read_consistency=ndb.STRONG)
         if user:
             user.announceChange()
             g.html.info("User was notified")
@@ -679,7 +651,7 @@ def notifyuser():
     return g.html.generate()
 
 
-@main.app.route("/app/", methods=["GET", "POST"])
+@app.app.route("/app/", methods=["GET", "POST"])
 def _app():
 
     g.html.DIV(class_="content")
@@ -692,9 +664,7 @@ def _app():
 
         g.html.area("App Versions")
 
-        webapp.container(
-            "viewLatestUnpublishedBuilds", directCallParameters={"versions": versions}
-        )
+        webapp.container("viewLatestUnpublishedBuilds", directCallParameters={"versions": versions})
 
         g.html.smallSeparator()
         g.html.P()
@@ -767,8 +737,7 @@ def _app():
 
                 g.html.P()
                 g.html.IMG(
-                    src="/static/images/machineModels/other/%s.svg"
-                    % (platform.replace("mac", "apple")),
+                    src="/static/images/machineModels/other/%s.svg" % (platform.replace("mac", "apple")),
                     style="height: 100px;",
                 )
                 g.html._P()
@@ -801,9 +770,7 @@ def _app():
                     g.html.T("For Windows 10 or newer.")
                     g.html._P()
                     g.html.P()
-                    g.html.T(
-                        'After the download started, click on "Execute" to start the installer.'
-                    )
+                    g.html.T('After the download started, click on "Execute" to start the installer.')
                     g.html._P()
                     g.html.P()
                     g.html.T(
@@ -828,9 +795,7 @@ def _app():
     g.html._H2()
 
     g.html.DIV(class_="clear")
-    g.html.DIV(
-        class_="floatleft", style="width: 300px; margin-right: 40px; line-height: 12px;"
-    )
+    g.html.DIV(class_="floatleft", style="width: 300px; margin-right: 40px; line-height: 12px;")
     g.html.IMG(
         src="/static/images/jenskutilekssubscriptions/file.svg",
         style="width: 150px; height: 150px; background-color: white;",
@@ -856,9 +821,7 @@ def _app():
     )
     g.html._P()
     g.html.P()
-    g.html.T(
-        "After you have installed the app, click on the button below to load the subscription into the app."
-    )
+    g.html.T("After you have installed the app, click on the button below to load the subscription into the app.")
     g.html._P()
     g.html.P()
     g.html.A(
@@ -894,9 +857,7 @@ def _app():
 
     g.html.P()
     g.html.T("To access a font subscription demo, click ")
-    g.html.A(
-        href="typeworld://json+https//typeworldserver.com/flatapi/bZA2JbWHEAkFjako0Mtz/"
-    )
+    g.html.A(href="typeworld://json+https//typeworldserver.com/flatapi/bZA2JbWHEAkFjako0Mtz/")
     g.html.T("here")
     g.html._A()
     g.html.T(" after installing the app.")
@@ -907,7 +868,7 @@ def _app():
     return g.html.generate()
 
 
-@main.app.route("/appcast/<appKey>/<platform>/<profile>/appcast.xml", methods=["GET"])
+@app.app.route("/appcast/<appKey>/<platform>/<profile>/appcast.xml", methods=["GET"])
 def appcast(appKey, platform, profile):
 
     xml = """<?xml version="1.0" standalone="yes"?>
@@ -976,8 +937,8 @@ developerTabs = [
 ]
 
 
-@main.app.route("/developer/protocol", methods=["POST", "GET"])
-@main.app.route("/developer/protocol/", methods=["POST", "GET"])
+@app.app.route("/developer/protocol", methods=["POST", "GET"])
+@app.app.route("/developer/protocol/", methods=["POST", "GET"])
 def developer_protocol():
 
     tabs(developerTabs, "/developer/protocol")
@@ -1007,22 +968,20 @@ def developer_protocol():
     return g.html.generate()
 
 
-@main.app.route("/developer", methods=["POST", "GET"])
-@main.app.route("/developer/", methods=["POST", "GET"])
+@app.app.route("/developer", methods=["POST", "GET"])
+@app.app.route("/developer/", methods=["POST", "GET"])
 def developer():
 
     tabs(developerTabs, "/developer")
 
     g.html.DIV(class_="content", style="width: 1200px;")
 
-    blob = main.bucket.get_blob("developer/documentation.md")
+    blob = app.bucket.get_blob("developer/documentation.md")
     text = blob.download_as_string().decode()
 
     from markdown.extensions.toc import TocExtension
 
-    html_withtoc = markdown.markdown(
-        "[TOC]\n" + text, extensions=[TocExtension(toc_depth="1-2")]
-    )
+    html_withtoc = markdown.markdown("[TOC]\n" + text, extensions=[TocExtension(toc_depth="1-2")])
 
     i = html_withtoc.find("<h1 id=")
     html = html_withtoc[i:]
@@ -1151,8 +1110,8 @@ track();
     return g.html.generate()
 
 
-@main.app.route("/developer/prices/", methods=["POST", "GET"])
-@main.app.route("/developer/prices", methods=["POST", "GET"])
+@app.app.route("/developer/prices/", methods=["POST", "GET"])
+@app.app.route("/developer/prices", methods=["POST", "GET"])
 def developer_prices():
 
     tabs(developerTabs, "/developer/prices")
@@ -1211,9 +1170,7 @@ $( document ).ready(function() {{
 
     g.html.DIV(class_="content", style="width: 1200px;")
     g.html.DIV(class_="clear")
-    g.html.DIV(
-        style="width: 400px; margin-top: 15px;", class_="floatright stickToTheTop"
-    )  # summary
+    g.html.DIV(style="width: 400px; margin-top: 15px;", class_="floatright stickToTheTop")  # summary
 
     g.html.area("Calculation Summary")
 
@@ -1268,9 +1225,7 @@ $( document ).ready(function() {{
 
             g.html.TR(class_=f"visibilityChange {position[0]}")
             g.html.TD()
-            g.html.A(
-                onclick=f"$('html, body').animate({{scrollTop: $('#{position[0]}').offset().top - 20}}, 500);"
-            )
+            g.html.A(onclick=f"$('html, body').animate({{scrollTop: $('#{position[0]}').offset().top - 20}}, 500);")
             g.html.T(running["positions"][i][1])
             g.html._A()
             g.html._TD()
@@ -1310,10 +1265,7 @@ $( document ).ready(function() {{
         g.html.T(f"Total ex. VAT ({currency})")
         g.html._TD()
         g.html.TD(style="font-style: italic;")
-        g.html.T(
-            "%.2f&thinsp;%s"
-            % (currencyConverter.convert(running["total"], "EUR", currency), currency)
-        )
+        g.html.T("%.2f&thinsp;%s" % (currencyConverter.convert(running["total"], "EUR", currency), currency))
         g.html._TD()
         g.html._TR()
     g.html._TABLE()
@@ -1365,9 +1317,7 @@ $( document ).ready(function() {{
         regionalCurrencies = sorted(regionalCurrencies)
         for currency in regionalCurrencies:
             if currency in currencies:
-                g.html.OPTION(
-                    value=currency, selected=g.form._get("currency") == currency
-                )
+                g.html.OPTION(value=currency, selected=g.form._get("currency") == currency)
                 g.html.T(currency)
                 g.html._OPTION()
                 currencies.remove(currency)
@@ -1431,24 +1381,16 @@ $( document ).ready(function() {{
     for price in prices:
 
         if prices[price]["visible"]:
-            g.html.area(
-                prices[price]["name"], id_=price, class_="scheme1 priceCategories"
-            )
+            g.html.area(prices[price]["name"], id_=price, class_="scheme1 priceCategories")
 
             # Create bill
             quantityByCategory = {}
             quantityByCategory[price] = calculateSum(prices[price])
             actualCalculationBill = contract.billingCalculation(quantityByCategory)
             assert len(actualCalculationBill["positions"]) == 1
-            (
-                category,
-                name,
-                freeQuota,
-                quantity,
-                tiers,
-                singlePrice,
-                singleTotal,
-            ) = actualCalculationBill["positions"][0]
+            (category, name, freeQuota, quantity, tiers, singlePrice, singleTotal,) = actualCalculationBill[
+                "positions"
+            ][0]
 
             if "definition" in prices[price] and prices[price]["definition"]:
                 g.html.P()
@@ -1480,10 +1422,7 @@ $( document ).ready(function() {{
             g.html.T("<b>Example Calculation:</b>")
             g.html._P()
 
-            if (
-                "calculationDescription" in prices[price]
-                and prices[price]["calculationDescription"]
-            ):
+            if "calculationDescription" in prices[price] and prices[price]["calculationDescription"]:
                 g.html.P()
                 g.html.T(prices[price]["calculationDescription"])
                 g.html._P()
@@ -1496,9 +1435,7 @@ $( document ).ready(function() {{
                     g.html.T("▲ ")
                     g.html.T(text)
                     g.html.BR()
-                    g.html.T(
-                        "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(Enter 0 if not applicable)"
-                    )
+                    g.html.T("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(Enter 0 if not applicable)")
                     g.html._SPAN()
                 else:
                     g.html.T(text)
@@ -1562,10 +1499,7 @@ $( document ).ready(function() {{
 
                 if tier["quantity"] > 0:
                     if previousTier:
-                        g.html.T(
-                            "%s to %s"
-                            % (previousTier["quantity"] + 1, tier["quantity"])
-                        )
+                        g.html.T("%s to %s" % (previousTier["quantity"] + 1, tier["quantity"]))
                     else:
                         g.html.T("%s to %s" % (1, tier["quantity"]))
                 else:
@@ -1717,8 +1651,8 @@ track();
     return g.html.generate()
 
 
-@main.app.route("/developer/api/", methods=["POST", "GET"])
-@main.app.route("/developer/api", methods=["POST", "GET"])
+@app.app.route("/developer/api/", methods=["POST", "GET"])
+@app.app.route("/developer/api", methods=["POST", "GET"])
 def developer_api():
 
     tabs(developerTabs, "/developer/api")
@@ -1773,8 +1707,7 @@ def developer_api():
             g.html.mediumSeparator()
 
             g.html.area(
-                ("HIDDEN: " if command["public"] is False and g.admin else "")
-                + commandName,
+                ("HIDDEN: " if command["public"] is False and g.admin else "") + commandName,
                 class_="whitescheme" if command["public"] else "scheme1",
             )
 
@@ -1816,9 +1749,7 @@ def developer_api():
                         g.html.T(markdown.markdown("**Required**"))
                     g.html._TD()
                     g.html.TD()
-                    g.html.T(
-                        markdown.markdown(command["parameters"][key]["description"])
-                    )
+                    g.html.T(markdown.markdown(command["parameters"][key]["description"]))
                     g.html._TD()
                     g.html._TR()
 
@@ -1865,9 +1796,7 @@ def developer_api():
             if "additionalReturn" in command:
 
                 g.html.P()
-                g.html.T(
-                    "<em>Additionally, the response contains the following data: </em>"
-                )
+                g.html.T("<em>Additionally, the response contains the following data: </em>")
                 g.html._P()
 
                 if type(command["additionalReturn"]) == str:
@@ -1897,11 +1826,7 @@ def developer_api():
                         g.html.T(markdown.markdown(f"`{returnValueKey}`"))
                         g.html._TD()
                         g.html.TD()
-                        g.html.T(
-                            markdown.markdown(
-                                command["additionalReturn"][returnValueKey]
-                            )
-                        )
+                        g.html.T(markdown.markdown(command["additionalReturn"][returnValueKey]))
                         g.html._TD()
                         g.html._TR()
                     g.html._TABLE()
@@ -1977,9 +1902,7 @@ print(response)""",
                         g.html.T(
                             highlight(
                                 '{"response": "%s"}'
-                                % list(command["return"].keys())[
-                                    1 if "success" in command["return"] else 0
-                                ],
+                                % list(command["return"].keys())[1 if "success" in command["return"] else 0],
                                 JsonLexer(),
                                 HtmlFormatter(),
                             )
@@ -1992,7 +1915,7 @@ print(response)""",
     return g.html.generate()
 
 
-@main.app.route("/_validateAPIEndpoint", methods=["POST"])
+@app.app.route("/_validateAPIEndpoint", methods=["POST"])
 def _validateAPIEndpoint():
 
     import typeworld.tools.validator
@@ -2138,8 +2061,8 @@ def _validateAPIEndpoint():
     return g.html.generate()
 
 
-@main.app.route("/developer/endpoints/", methods=["POST", "GET"])
-@main.app.route("/developer/endpoints", methods=["POST", "GET"])
+@app.app.route("/developer/endpoints/", methods=["POST", "GET"])
+@app.app.route("/developer/endpoints", methods=["POST", "GET"])
 def developer_endpoints():
 
     tabs(developerTabs, "/developer/endpoints")
@@ -2217,9 +2140,7 @@ def developer_endpoints():
                 g.html._DIV()
                 g.html._TD()
             g.html.TD()
-            g.html.A(
-                href=f"/developer/endpoints/{base64.b64encode(endpoint.key.id().encode()).decode()}"
-            )
+            g.html.A(href=f"/developer/endpoints/{base64.b64encode(endpoint.key.id().encode()).decode()}")
             g.html.T('<span class="material-icons-outlined">edit</span>')
             g.html._A()
             g.html.T(" ")
@@ -2235,7 +2156,7 @@ def developer_endpoints():
     return g.html.generate()
 
 
-@main.app.route("/developer/endpoints/<apiEndpointKey>", methods=["POST", "GET"])
+@app.app.route("/developer/endpoints/<apiEndpointKey>", methods=["POST", "GET"])
 def developer_editapiendpoint(apiEndpointKey):
 
     # Security
@@ -2309,9 +2230,7 @@ def developer_editapiendpoint(apiEndpointKey):
             g.html._TR()
 
             for testUserForAPIEndpoint in testUsersForAPIEndpoint:
-                testUser = testUserForAPIEndpoint.userKey.get(
-                    read_consistency=ndb.STRONG
-                )
+                testUser = testUserForAPIEndpoint.userKey.get(read_consistency=ndb.STRONG)
                 g.html.TR()
                 g.html.TD()
                 g.html.T(testUser.email)
@@ -2320,9 +2239,7 @@ def developer_editapiendpoint(apiEndpointKey):
                 # if testUser == g.user:
                 #     g.html.T("<em>automatically added</em>")
                 # else:
-                testUserForAPIEndpoint.delete(
-                    text='<span class="material-icons-outlined">delete</span>'
-                )
+                testUserForAPIEndpoint.delete(text='<span class="material-icons-outlined">delete</span>')
                 g.html._TD()
                 g.html._TR()
             g.html._TABLE()
@@ -2367,8 +2284,8 @@ def developer_editapiendpoint(apiEndpointKey):
     return g.html.generate()
 
 
-@main.app.route("/developer/billing", methods=["POST", "GET"])
-@main.app.route("/developer/billing/", methods=["POST", "GET"])
+@app.app.route("/developer/billing", methods=["POST", "GET"])
+@app.app.route("/developer/billing/", methods=["POST", "GET"])
 def developer_billing():
 
     tabs(developerTabs, "/developer/billing")
@@ -2378,11 +2295,7 @@ def developer_billing():
         g.html.T("Please log in to the website to access this page.")
     else:
         g.html.T('<script src="https://js.stripe.com/v3/"></script>')
-        g.html.T(
-            '<script src="/static/js/billing-stripe.js?v='
-            + g.instanceVersion
-            + '"></script>'
-        )
+        g.html.T('<script src="/static/js/billing-stripe.js?v=' + g.instanceVersion + '"></script>')
 
         g.html.area("Billing & Subscriptions")
         g.user.container(
@@ -2396,8 +2309,8 @@ def developer_billing():
     return g.html.generate()
 
 
-@main.app.route("/developer/validate/", methods=["POST", "GET"])
-@main.app.route("/developer/validate", methods=["POST", "GET"])
+@app.app.route("/developer/validate/", methods=["POST", "GET"])
+@app.app.route("/developer/validate", methods=["POST", "GET"])
 def developer_validate():
 
     tabs(developerTabs, "/developer/validate")
@@ -2456,9 +2369,7 @@ def developer_validate():
     g.html.OL()
 
     g.html.LI()
-    g.html.T(
-        "Install the Python <b>typeworld</b> module using <code>pip3 install typeworld</code>. "
-    )
+    g.html.T("Install the Python <b>typeworld</b> module using <code>pip3 install typeworld</code>. ")
     g.html.T(
         "Make sure to keep the module up to date by running <code>pip3 install -U"
         " typeworld</code> every time you use it as changes may occur at any time."
@@ -2466,9 +2377,7 @@ def developer_validate():
     g.html._LI()
 
     g.html.LI()
-    g.html.T(
-        "For help, run <code>validateTypeWorldEndpoint -h</code>, which will print the following output:"
-    )
+    g.html.T("For help, run <code>validateTypeWorldEndpoint -h</code>, which will print the following output:")
     g.html._LI()
 
     g.html.LI()
@@ -2673,9 +2582,7 @@ def developer_validate():
 
 def traceBackOutput():
 
-    tracebacks = classes.AppTraceback.query(classes.AppTraceback.fixed is False).fetch(
-        read_consistency=ndb.STRONG
-    )
+    tracebacks = classes.AppTraceback.query(classes.AppTraceback.fixed is False).fetch(read_consistency=ndb.STRONG)
     if tracebacks:
 
         for traceback in tracebacks:
@@ -2692,9 +2599,7 @@ def traceBackOutput():
             g.html._P()
 
             g.html.P()
-            g.html.A(
-                class_="button", href="/tracebacks/" + traceback.key.urlsafe().decode()
-            )
+            g.html.A(class_="button", href="/tracebacks/" + traceback.key.urlsafe().decode())
             g.html.T("View")
             g.html._A()
             g.html.A(
@@ -2708,9 +2613,7 @@ def traceBackOutput():
             )
             g.html.T("Close (traceback will not re-surface)")
             g.html._A()
-            traceback.delete(
-                text="Delete (allow this traceback to re-surface)", button=True
-            )
+            traceback.delete(text="Delete (allow this traceback to re-surface)", button=True)
             g.html._P()
 
             g.html._area()
@@ -2719,8 +2622,8 @@ def traceBackOutput():
         g.html.T("No open tracebacks found")
 
 
-@main.app.route("/tracebacks", defaults={"ID": None}, methods=["GET", "POST"])
-@main.app.route("/tracebacks/<ID>", methods=["GET", "POST"])
+@app.app.route("/tracebacks", defaults={"ID": None}, methods=["GET", "POST"])
+@app.app.route("/tracebacks/<ID>", methods=["GET", "POST"])
 def tracebacks(ID):
 
     if not g.admin:
@@ -2754,9 +2657,7 @@ def tracebacks(ID):
                 )
                 g.html.T("Close (traceback will not re-surface)")
                 g.html._A()
-                traceback.delete(
-                    text="Delete (allow this traceback to re-surface)", button=True
-                )
+                traceback.delete(text="Delete (allow this traceback to re-surface)", button=True)
                 g.html._P()
 
             else:

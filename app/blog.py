@@ -1,16 +1,16 @@
 # project
-import main
-import webapp
+import app
+from app import webapp
 
 # other
 import markdown2
 from flask import g
 
-main.app.config["modules"].append("blog")
+app.app.config["modules"].append("blog")
 
 
-@main.app.route("/blog", methods=["GET", "POST"])
-@main.app.route("/blog/<blogEntryURL>", methods=["GET", "POST"])
+@app.app.route("/blog", methods=["GET", "POST"])
+@app.app.route("/blog/<blogEntryURL>", methods=["GET", "POST"])
 def blog(blogEntryURL=None):
 
     g.html.DIV(class_="content", style="width: 800px;")
@@ -38,9 +38,7 @@ def blog(blogEntryURL=None):
 class BlogEntry(webapp.WebAppModel):
     title = webapp.StringProperty(required=True, verbose_name="Title")
     url = webapp.StringProperty(required=True, verbose_name="URL")
-    content = webapp.TextProperty(
-        required=True, verbose_name="Content (Markdown, HTML allowed), use --break--"
-    )
+    content = webapp.TextProperty(required=True, verbose_name="Content (Markdown, HTML allowed), use --break--")
     live = webapp.BooleanProperty(verbose_name="Live")
 
     def view(self, parameters={}, directCallParameters={}):
@@ -52,9 +50,7 @@ class BlogEntry(webapp.WebAppModel):
         if view == "long":
             g.html.P()
             g.html.A(href="/blog")
-            g.html.T(
-                '<span class="material-icons-outlined">arrow_back</span> Back to Blog'
-            )
+            g.html.T('<span class="material-icons-outlined">arrow_back</span> Back to Blog')
             g.html._A()
             g.html._P()
 
@@ -66,9 +62,7 @@ class BlogEntry(webapp.WebAppModel):
                 class_="permalink",
                 href=f"/blog/{self.url}",
                 title="Perma-Link to This Article",
-                style=(
-                    "color: inherit; position: relative; top: -10px; margin-left: 20px;"
-                ),
+                style="color: inherit; position: relative; top: -10px; margin-left: 20px;",
             )
             g.html.T('<span class="material-icons-outlined">link</span>')
             g.html._A()
@@ -93,9 +87,6 @@ class BlogEntry(webapp.WebAppModel):
         if view == "short" and "--break--" in self.content:
             g.html.P()
             g.html.A(href=f"/blog/{self.url}")
-            g.html.T(
-                '<span class="material-icons-outlined">menu_book</span> Read Full'
-                " Article"
-            )
+            g.html.T('<span class="material-icons-outlined">menu_book</span> Read Full Article')
             g.html._A()
             g.html._P()

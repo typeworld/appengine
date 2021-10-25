@@ -1,5 +1,5 @@
 # project
-import webapp
+from app import webapp
 
 # other
 import copy

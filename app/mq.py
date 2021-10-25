@@ -1,7 +1,7 @@
 # project
-import main
-import classes
-import webapp
+import app
+from app import classes
+from app import webapp
 
 # other
 import typeworld
@@ -12,7 +12,7 @@ from googleapiclient import discovery
 from google.cloud import ndb
 import time
 
-main.app.config["modules"].append("mq")
+app.app.config["modules"].append("mq")
 
 connectiontests = {}
 compute = discovery.build("compute", "v1")
@@ -20,7 +20,7 @@ compute = discovery.build("compute", "v1")
 
 def announceToMQ(parameters):
 
-    parameters["apiKey"] = main.secret("MQ_APIKEY")
+    parameters["apiKey"] = app.secret("MQ_APIKEY")
 
     for instance in availableMQInstances():
         success, response, responseObject = typeworld.client.request(
@@ -49,8 +49,7 @@ def getGCEtemplates(nameFilter=None):
         return [
             x
             for x in instanceTemplates
-            if (nameFilter is not None and x["name"].startswith(nameFilter))
-            or nameFilter is None
+            if (nameFilter is not None and x["name"].startswith(nameFilter)) or nameFilter is None
         ]
     else:
         return []
@@ -64,9 +63,9 @@ def instancesPerTemplate(instanceTemplate):
             if "instances" in zones[zone]:
                 for instance in zones[zone]["instances"]:
                     if instance["status"] == "RUNNING":
-                        thisTemplate = (
-                            "- name: " + instanceTemplate["name"] + "\n"
-                        ) in instance["metadata"]["items"][0]["value"]
+                        thisTemplate = ("- name: " + instanceTemplate["name"] + "\n") in instance["metadata"]["items"][
+                            0
+                        ]["value"]
                         if thisTemplate:
                             yield instance
 
@@ -81,9 +80,7 @@ def getGCEinstances(nameFilter=None):
     for zone in allInstances:
         if "instances" in allInstances[zone]:
             for instance in allInstances[zone]["instances"]:
-                if (
-                    nameFilter is not None and instance["name"].startswith(nameFilter)
-                ) or nameFilter is None:
+                if (nameFilter is not None and instance["name"].startswith(nameFilter)) or nameFilter is None:
                     instances.append(instance)
     return instances
 
@@ -147,9 +144,7 @@ def updateMQInstances(GCEtemplates=[], GCEinstances=[]):
         # Template
         template = None
         for GCEtemplate in GCEtemplates:
-            if ("- name: " + GCEtemplate["name"] + "\n") in GCEinstance["metadata"][
-                "items"
-            ][0]["value"]:
+            if ("- name: " + GCEtemplate["name"] + "\n") in GCEinstance["metadata"]["items"][0]["value"]:
                 template = GCEtemplate["name"]
                 break
 
@@ -195,12 +190,10 @@ def updateMQInstances(GCEtemplates=[], GCEinstances=[]):
 
 
 def availableMQInstances():
-    return MQInstance.query(MQInstance.status == "OK").fetch(
-        read_consistency=ndb.STRONG
-    )
+    return MQInstance.query(MQInstance.status == "OK").fetch(read_consistency=ndb.STRONG)
 
 
-@main.app.route("/mq", methods=["GET", "POST"])
+@app.app.route("/mq", methods=["GET", "POST"])
 def list_mqs():
 
     if not g.admin:
@@ -283,9 +276,7 @@ def list_mqs():
     g.html._TH()
     g.html._TR()
 
-    runningKnownMQInstances, availableKnownMQInstances = updateMQInstances(
-        GCEtemplates, GCEinstances
-    )
+    runningKnownMQInstances, availableKnownMQInstances = updateMQInstances(GCEtemplates, GCEinstances)
     _availableMQInstances = availableMQInstances()
 
     for instance in runningKnownMQInstances:
@@ -355,7 +346,7 @@ def list_mqs():
     return g.html.generate()
 
 
-@main.app.route("/changemqinstance", methods=["GET", "POST"])
+@app.app.route("/changemqinstance", methods=["GET", "POST"])
 def startmq():
 
     # https://developers.google.com/resources/api-libraries/documentation/compute/v1/python/latest/compute_v1.instances.html#insert
@@ -388,8 +379,7 @@ def startmq():
             compute.instances().insert(
                 project="typeworld2",
                 zone=g.form.get("zone"),
-                sourceInstanceTemplate="global/instanceTemplates/"
-                + g.form.get("templateName"),
+                sourceInstanceTemplate="global/instanceTemplates/" + g.form.get("templateName"),
                 body=config,
             ).execute()
 
@@ -415,13 +405,13 @@ def startmq():
     return g.html.generate()
 
 
-@main.app.route("/registerconnectiontest", methods=["POST"])
+@app.app.route("/registerconnectiontest", methods=["POST"])
 def registerconnectiontest():
 
     # Authorization
     if g.form.get("apiKey"):
         FORMAPIKEY = g.form.get("apiKey").strip()
-        if FORMAPIKEY != main.secret("MQ_APIKEY"):
+        if FORMAPIKEY != app.secret("MQ_APIKEY"):
             return abort(401)
     else:
         return abort(401)

@@ -92,11 +92,11 @@ def secret(secret_id, version_id=1):
 # Local imports
 # happen here because of circular imports,
 # as individual modules add to app.config["modules"]
-import mq  # noqa: E402
-import api  # noqa: E402
-import classes  # noqa: E402
-import helpers  # noqa: E402
-import hypertext  # noqa: E402
+from . import mq  # noqa: E402
+from . import api  # noqa: E402
+from . import classes  # noqa: E402
+from . import helpers  # noqa: E402
+from . import hypertext  # noqa: E402
 
 
 @app.before_first_request

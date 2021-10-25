@@ -1,6 +1,6 @@
 # project
-import main
-import classes
+import app
+from app import classes
 
 # other
 import stripe
@@ -10,16 +10,16 @@ import time
 from flask import abort, jsonify, request, g
 from google.cloud import ndb
 
-main.app.config["modules"].append("billing_stripe")
+app.app.config["modules"].append("billing_stripe")
 
 
 # Set your secret key. Remember to switch to your live secret key in production!
 # See your keys here: https://dashboard.stripe.com/account/apikeys
 
 # LIVE
-if main.STRIPELIVE:
-    stripePrivateKey = main.secret("STRIPE_PRIVATEKEY_LIVE")
-    stripePublicKey = main.secret("STRIPE_PUBLICKEY_LIVE")
+if app.STRIPELIVE:
+    stripePrivateKey = app.secret("STRIPE_PRIVATEKEY_LIVE")
+    stripePublicKey = app.secret("STRIPE_PUBLICKEY_LIVE")
     stripeProducts = {
         "world.type.professional_publisher_plan": {
             "ID": "prod_Ix1l3V2SyfLIT4",
@@ -48,10 +48,7 @@ if main.STRIPELIVE:
                 " may pause the plan at any time to resume later."
             ),
             "trial_period_days": 180,
-            "cancelWarning": (
-                "Are you sure? Since this is a metered plan, service will be terminated"
-                " immediately."
-            ),
+            "cancelWarning": "Are you sure? Since this is a metered plan, service will be terminated immediately.",
             "cancelTime": "immediately",  # endOfBillingPeriod/immediately
             "type": "metered",
         },
@@ -61,14 +58,10 @@ if main.STRIPELIVE:
             "prices": [
                 {"id": "price_1IVdenLUOp6Nnz1oBeeKFaGu"},
             ],
-            "description": (
-                "12€/year, billed yearly. Billing starts after %%trial_period_days%%"
-                " days of free trial."
-            ),
+            "description": "12€/year, billed yearly. Billing starts after %%trial_period_days%% days of free trial.",
             "trial_period_days": 30,
             "cancelWarning": (
-                "Are you sure? (Your subscription will remain active until the end of"
-                " the current billing period.)"
+                "Are you sure? (Your subscription will remain active until the end of the current billing period.)"
             ),
             "cancelTime": "endOfBillingPeriod",  # endOfBillingPeriod/immediately
             "type": "fixed",
@@ -80,8 +73,8 @@ if main.STRIPELIVE:
 
 # TEST
 else:
-    stripePrivateKey = main.secret("STRIPE_PRIVATEKEY_TEST")
-    stripePublicKey = main.secret("STRIPE_PUBLICKEY_TEST")
+    stripePrivateKey = app.secret("STRIPE_PRIVATEKEY_TEST")
+    stripePublicKey = app.secret("STRIPE_PUBLICKEY_TEST")
     stripeProducts = {
         "world.type.professional_publisher_plan": {
             "ID": "prod_Iv7lZ5O5Jw9OO5",
@@ -110,10 +103,7 @@ else:
                 " may pause the plan at any time to resume later."
             ),
             "trial_period_days": 180,
-            "cancelWarning": (
-                "Are you sure? Since this is a metered plan, service will be terminated"
-                " immediately."
-            ),
+            "cancelWarning": "Are you sure? Since this is a metered plan, service will be terminated immediately.",
             "cancelTime": "immediately",  # endOfBillingPeriod/immediately
             "type": "metered",
         },
@@ -123,14 +113,10 @@ else:
             "prices": [
                 {"id": "price_1IUbZ8LUOp6Nnz1oURqGvI9N"},
             ],
-            "description": (
-                "12€/year, billed yearly. Billing starts after %%trial_period_days%%"
-                " days of free trial."
-            ),
+            "description": "12€/year, billed yearly. Billing starts after %%trial_period_days%% days of free trial.",
             "trial_period_days": 30,
             "cancelWarning": (
-                "Are you sure? (Your subscription will remain active until the end of"
-                " the current billing period.)"
+                "Are you sure? (Your subscription will remain active until the end of the current billing period.)"
             ),
             "cancelTime": "endOfBillingPeriod",  # endOfBillingPeriod/immediately
             "type": "fixed",
@@ -165,7 +151,7 @@ stripe.api_key = stripePrivateKey
 #
 
 
-@main.app.route("/stripe-config", methods=["POST"])
+@app.app.route("/stripe-config", methods=["POST"])
 def get_config():
     if not g.user:
         return abort(403)
@@ -189,7 +175,7 @@ def get_config():
     )
 
 
-@main.app.route("/create-subscription", methods=["POST"])
+@app.app.route("/create-subscription", methods=["POST"])
 def createSubscription():
     if not g.user:
         return abort(403)
@@ -202,11 +188,7 @@ def createSubscription():
             print("Missing paymentMethodId")
             return jsonify(error={"message": "Missing paymentMethodId"}), 200
 
-        if (
-            not g.user.stripePaymentMethod()
-            and "paymentMethodId" in data
-            and data["paymentMethodId"]
-        ):
+        if not g.user.stripePaymentMethod() and "paymentMethodId" in data and data["paymentMethodId"]:
 
             stripe.PaymentMethod.attach(
                 data["paymentMethodId"],
@@ -256,7 +238,7 @@ def createSubscription():
         return jsonify(error={"message": traceback.format_exc()}), 200
 
 
-@main.app.route("/update-payment-method", methods=["POST"])
+@app.app.route("/update-payment-method", methods=["POST"])
 def updatePaymentMethod():
     if not g.user:
         return abort(403)
@@ -267,13 +249,8 @@ def updatePaymentMethod():
         stripeCustomer = stripe.Customer.retrieve(g.user.stripeGetCustomerId())
 
         # Detach default payment method
-        if (
-            stripeCustomer.invoice_settings
-            and stripeCustomer.invoice_settings.default_payment_method
-        ):
-            stripe.PaymentMethod.detach(
-                stripeCustomer.invoice_settings.default_payment_method
-            )
+        if stripeCustomer.invoice_settings and stripeCustomer.invoice_settings.default_payment_method:
+            stripe.PaymentMethod.detach(stripeCustomer.invoice_settings.default_payment_method)
             print("detached default payment method")
 
         stripe.PaymentMethod.attach(
@@ -289,7 +266,7 @@ def updatePaymentMethod():
             },
         )
 
-        if main.STRIPELIVE:
+        if app.STRIPELIVE:
             subscription = g.user.stripeSubscriptions[0]
         else:
             subscription = g.user.stripeTestSubscriptions[0]
@@ -300,7 +277,7 @@ def updatePaymentMethod():
 
 
 def deleteSubscription(user, stripeSubscription, productId):
-    if main.STRIPELIVE:
+    if app.STRIPELIVE:
         stripeSubscribedProductsHistory = dict(user.stripeSubscribedProductsHistory)
     else:
         stripeSubscribedProductsHistory = dict(user.stripeTestSubscribedProductsHistory)
@@ -313,7 +290,7 @@ def deleteSubscription(user, stripeSubscription, productId):
             "running_period": int(time.time()) - stripeSubscription.created,
         }
     )
-    if main.STRIPELIVE:
+    if app.STRIPELIVE:
         user.stripeSubscribedProductsHistory = stripeSubscribedProductsHistory
     else:
         user.stripeTestSubscribedProductsHistory = stripeSubscribedProductsHistory
@@ -322,7 +299,7 @@ def deleteSubscription(user, stripeSubscription, productId):
     return True, None
 
 
-@main.app.route("/cancel-subscription", methods=["POST"])
+@app.app.route("/cancel-subscription", methods=["POST"])
 def cancelSubscription():
     if not g.user:
         return abort(403)
@@ -348,7 +325,7 @@ def cancelSubscription():
         return jsonify(error=str(e)), 403
 
 
-@main.app.route("/stripe-webhook", methods=["POST"])
+@app.app.route("/stripe-webhook", methods=["POST"])
 def webhook_received():
 
     # You can use webhooks to receive information about asynchronous payment events.
@@ -360,9 +337,7 @@ def webhook_received():
         # if webhook signing is configured.
         signature = request.headers.get("stripe-signature")
         try:
-            event = stripe.Webhook.construct_event(
-                payload=request.data, sig_header=signature, secret=webhook_secret
-            )
+            event = stripe.Webhook.construct_event(payload=request.data, sig_header=signature, secret=webhook_secret)
             data = event["data"]
         except Exception as e:
             return e
@@ -377,28 +352,22 @@ def webhook_received():
     if event_type == "customer.updated":
 
         if data_object["livemode"]:
-            user = classes.User.query(
-                classes.User.stripeCustomerId == data_object["id"]
-            ).get(read_consistency=ndb.STRONG)
+            user = classes.User.query(classes.User.stripeCustomerId == data_object["id"]).get(
+                read_consistency=ndb.STRONG
+            )
         else:
-            user = classes.User.query(
-                classes.User.stripeTestCustomerId == data_object["id"]
-            ).get(read_consistency=ndb.STRONG)
+            user = classes.User.query(classes.User.stripeTestCustomerId == data_object["id"]).get(
+                read_consistency=ndb.STRONG
+            )
 
         print(data_object)
 
         if user:
             if "address" in data_object:
-                if (
-                    "line1" in data_object["address"]
-                    and data_object["address"]["line1"] != user.invoiceStreet
-                ):
+                if "line1" in data_object["address"] and data_object["address"]["line1"] != user.invoiceStreet:
                     user.invoiceStreet = data_object["address"]["line1"]
                     print("Adjusted", "line1")
-                if (
-                    "line2" in data_object["address"]
-                    and data_object["address"]["line2"] != user.invoiceStreet2
-                ):
+                if "line2" in data_object["address"] and data_object["address"]["line2"] != user.invoiceStreet2:
                     user.invoiceStreet2 = data_object["address"]["line2"]
                     print("Adjusted", "line2")
                 if (
@@ -407,22 +376,13 @@ def webhook_received():
                 ):
                     user.invoiceZIPCode = data_object["address"]["postal_code"]
                     print("Adjusted", "postal_code")
-                if (
-                    "city" in data_object["address"]
-                    and data_object["address"]["city"] != user.invoiceCity
-                ):
+                if "city" in data_object["address"] and data_object["address"]["city"] != user.invoiceCity:
                     user.invoiceCity = data_object["address"]["city"]
                     print("Adjusted", "city")
-                if (
-                    "state" in data_object["address"]
-                    and data_object["address"]["state"] != user.invoiceState
-                ):
+                if "state" in data_object["address"] and data_object["address"]["state"] != user.invoiceState:
                     user.invoiceState = data_object["address"]["state"]
                     print("Adjusted", "state")
-                if (
-                    "country" in data_object["address"]
-                    and data_object["address"]["country"] != user.invoiceCountry
-                ):
+                if "country" in data_object["address"] and data_object["address"]["country"] != user.invoiceCountry:
                     user.invoiceCountry = data_object["address"]["country"]
                     print("Adjusted", "country")
                 user.put()
@@ -435,13 +395,13 @@ def webhook_received():
         print(event_type)
 
         if data_object["livemode"]:
-            user = classes.User.query(
-                classes.User.stripeCustomerId == data_object["customer"]
-            ).get(read_consistency=ndb.STRONG)
+            user = classes.User.query(classes.User.stripeCustomerId == data_object["customer"]).get(
+                read_consistency=ndb.STRONG
+            )
         else:
-            user = classes.User.query(
-                classes.User.stripeTestCustomerId == data_object["customer"]
-            ).get(read_consistency=ndb.STRONG)
+            user = classes.User.query(classes.User.stripeTestCustomerId == data_object["customer"]).get(
+                read_consistency=ndb.STRONG
+            )
 
         user.stripeUpdateSubscriptions()
 

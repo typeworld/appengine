@@ -1,6 +1,6 @@
 # project
-import main
-import definitions
+import app
+from app import definitions
 
 # other
 import sys
@@ -40,23 +40,9 @@ def unsecretURL(url):
             + domain
         )
     elif subscriptionID and not secretKey:
-        return (
-            customProtocol
-            + protocol
-            + "+"
-            + transportProtocol.replace("://", "//")
-            + subscriptionID
-            + "@"
-            + domain
-        )
+        return customProtocol + protocol + "+" + transportProtocol.replace("://", "//") + subscriptionID + "@" + domain
     else:
-        return (
-            customProtocol
-            + protocol
-            + "+"
-            + transportProtocol.replace("://", "//")
-            + domain
-        )
+        return customProtocol + protocol + "+" + transportProtocol.replace("://", "//") + domain
 
 
 def email(from_, to, subject, body, replyTo=None):
@@ -78,10 +64,8 @@ def email(from_, to, subject, body, replyTo=None):
     if replyTo:
         parameters["h:Reply-To"] = replyTo
 
-    auth = ("api", main.secret("MAILGUN_PRIVATEKEY"))
-    response = requests.post(
-        url, data=parameters, auth=requests.auth.HTTPBasicAuth(*auth)
-    )
+    auth = ("api", app.secret("MAILGUN_PRIVATEKEY"))
+    response = requests.post(url, data=parameters, auth=requests.auth.HTTPBasicAuth(*auth))
     if response.status_code != 200:
         return False, f"HTTP Error {response.status_code}"
 

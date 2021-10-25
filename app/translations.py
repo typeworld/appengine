@@ -1,6 +1,6 @@
 # project
-import main
-import webapp
+import app
+from app import webapp
 
 # other
 import re
@@ -11,14 +11,14 @@ from google.cloud import translate_v2
 import logging
 import classes
 
-main.app.config["modules"].append("translations")
+app.app.config["modules"].append("translations")
 
 ###
 
 translateClient = translate_v2.Client()
 
 
-@main.app.route("/downloadLocalization", methods=["GET"])
+@app.app.route("/downloadLocalization", methods=["GET"])
 def downloadLocalization():
 
     # Cheap access restriction to block random traffic
@@ -70,23 +70,17 @@ def downloadLocalization():
     return json.dumps(d), 200, {"Content-Type": "application/json; charset=utf-8"}
 
 
-@main.app.route("/googleTranslate", methods=["GET", "POST"])
+@app.app.route("/googleTranslate", methods=["GET", "POST"])
 def googleTranslate():
 
     # print(g.form._get('targetLanguage'), g.form._get('keywordKey'))
 
-    if not g.user and not g.form._get("targetLanguage") in [
-        x.ISO639_1 for x in g.user.isTranslatorForLocales()
-    ]:
+    if not g.user and not g.form._get("targetLanguage") in [x.ISO639_1 for x in g.user.isTranslatorForLocales()]:
         return abort(401)
 
-    keyword = ndb.Key(urlsafe=g.form._get("keywordKey").encode()).get(
-        read_consistency=ndb.STRONG
-    )
+    keyword = ndb.Key(urlsafe=g.form._get("keywordKey").encode()).get(read_consistency=ndb.STRONG)
     source = keyword.currentTranslation("en").replace("\n", "<br />")
-    results = translateClient.translate(
-        source, source_language="en", target_language=g.form._get("targetLanguage")
-    )
+    results = translateClient.translate(source, source_language="en", target_language=g.form._get("targetLanguage"))
 
     # logging.warning('Sent: %s' % source)
     # logging.warning('Received: %s' % results['translatedText'])
@@ -101,9 +95,7 @@ def googleTranslate():
         )
         g.html.P()
         g.html.A(class_="button", onclick="copyGoogleTranslation();")
-        g.html.T(
-            '<span class="material-icons-outlined">content_copy</span>Copy into text field above'
-        )
+        g.html.T('<span class="material-icons-outlined">content_copy</span>Copy into text field above')
         g.html._A()
         g.html._P()
 
@@ -120,7 +112,7 @@ def googleTranslate():
     return g.html.generate()
 
 
-@main.app.route("/uploadTranslationKeywords", methods=["POST"])
+@app.app.route("/uploadTranslationKeywords", methods=["POST"])
 def uploadTranslationKeywords():
 
     returns = []
@@ -178,11 +170,7 @@ def translations_categories(parameters, directCallParameters):
     Translation_Category().new(text="+ Category")
     g.html._P()
 
-    for category in (
-        Translation_Category.query()
-        .order(Translation_Category.name)
-        .fetch(read_consistency=ndb.STRONG)
-    ):
+    for category in Translation_Category.query().order(Translation_Category.name).fetch(read_consistency=ndb.STRONG):
         category.container("view")
 
     g.html._area()
@@ -194,18 +182,14 @@ def translations_uncategorized(parameters, directCallParameters):
 
     Translation_Keyword().new(text="+ Keyword")
 
-    for keyword in (
-        Translation_Keyword.query()
-        .order(Translation_Keyword.keyword)
-        .fetch(read_consistency=ndb.STRONG)
-    ):
+    for keyword in Translation_Keyword.query().order(Translation_Keyword.keyword).fetch(read_consistency=ndb.STRONG):
         if not keyword.categoryKey:
             keyword.view()
 
     g.html._area()
 
 
-@main.app.route("/translations", methods=["GET", "POST"])
+@app.app.route("/translations", methods=["GET", "POST"])
 def translations():
 
     if not g.admin:
@@ -226,9 +210,7 @@ def translations():
 def translations_locales(parameters, directCallParameters):
 
     if not directCallParameters:
-        directCallParameters = {
-            "translators": Translation_User.query().fetch(read_consistency=ndb.STRONG)
-        }
+        directCallParameters = {"translators": Translation_User.query().fetch(read_consistency=ndb.STRONG)}
 
     g.html.area("Languages")
 
@@ -264,9 +246,7 @@ def translations_locales(parameters, directCallParameters):
     # 	opentypeTag = StringProperty()
     # 	ISO639_2_3 = StringProperty(repeated=True)
 
-    for language in (
-        Language.query().order(Language.name).fetch(read_consistency=ndb.STRONG)
-    ):
+    for language in Language.query().order(Language.name).fetch(read_consistency=ndb.STRONG):
 
         g.html.TR()
         g.html.TD()
@@ -299,12 +279,8 @@ def translations_locales(parameters, directCallParameters):
                         user = translationUser.user()
                         if user:
                             g.html.T(translationUser.user().email)
-                        translationUser.edit(
-                            text='<span class="material-icons-outlined">edit</span>'
-                        )
-                        translationUser.delete(
-                            text='<span class="material-icons-outlined">delete</span>'
-                        )
+                        translationUser.edit(text='<span class="material-icons-outlined">edit</span>')
+                        translationUser.delete(text='<span class="material-icons-outlined">delete</span>')
                 g.html._DIV()
         g.html._TD()
         g.html.TD()
@@ -318,7 +294,7 @@ def translations_locales(parameters, directCallParameters):
     g.html._area()
 
 
-@main.app.route("/languages", methods=["GET", "POST"])
+@app.app.route("/languages", methods=["GET", "POST"])
 def languages():
 
     if not g.admin:
@@ -328,9 +304,7 @@ def languages():
 
     webapp.container(
         "translations_locales",
-        directCallParameters={
-            "translators": Translation_User.query().fetch(read_consistency=ndb.STRONG)
-        },
+        directCallParameters={"translators": Translation_User.query().fetch(read_consistency=ndb.STRONG)},
     )
 
     g.html._DIV()
@@ -357,12 +331,7 @@ def translate_keywords(keywords, locale, parameters, directCallParameters):
 
     for keyword in keywords:
         if keyword.active and (
-            (
-                "showBaseKeywords" in parameters
-                and parameters["showBaseKeywords"]
-                and keyword.base
-            )
-            or not keyword.base
+            ("showBaseKeywords" in parameters and parameters["showBaseKeywords"] and keyword.base) or not keyword.base
         ):
 
             originalTranslation = keyword.currentTranslation("en", directCallParameters)
@@ -386,11 +355,7 @@ def translate_keywords(keywords, locale, parameters, directCallParameters):
             g.html.DIV(
                 style="padding: 8px; background-color: white;"
             )  # style=f"padding: 10px; background-color: #ddd;"
-            g.html.T(
-                originalTranslation.replace("<", "&lt;")
-                .replace(">", "&gt;")
-                .replace("\n", "<br />")
-            )
+            g.html.T(originalTranslation.replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br />"))
             g.html._DIV()
             if g.admin and locale != "en":
                 Translation_Translation().new(
@@ -406,9 +371,7 @@ def translate_keywords(keywords, locale, parameters, directCallParameters):
 
             if keyword.description:
                 g.html.DIV()
-                g.html.SPAN(
-                    style="font-size: 10pt; line-height: 10px; text-align: left;"
-                )
+                g.html.SPAN(style="font-size: 10pt; line-height: 10px; text-align: left;")
                 g.html.T("<b>Note:</b>")
                 g.html.BR()
                 g.html.T(keyword.description)
@@ -451,9 +414,7 @@ def translate_normal(parameters, directCallParameters):
         directCallParameters = getTranslationEntities(parameters["locale"])
 
     if not hasattr(g, "translateLocale"):
-        g.translateLocale = Language.query(
-            Language.ISO639_1 == parameters["locale"]
-        ).get(read_consistency=ndb.STRONG)
+        g.translateLocale = Language.query(Language.ISO639_1 == parameters["locale"]).get(read_consistency=ndb.STRONG)
 
     keywords = [x for x in directCallParameters["keywords"] if x.base]
 
@@ -473,20 +434,14 @@ def translate_normal(parameters, directCallParameters):
         keywords = [x for x in directCallParameters["keywords"] if not x.categoryKey]
         parameters["showBaseKeywords"] = False
         if keywords:
-            translate_keywords(
-                keywords, g.translateLocale.ISO639_1, parameters, directCallParameters
-            )
+            translate_keywords(keywords, g.translateLocale.ISO639_1, parameters, directCallParameters)
         g.html._area()
         g.html._DIV()  # .autotoc category
 
         for category in directCallParameters["categories"]:
             g.html.DIV(class_="autotoc category", title=category.name)
             g.html.area(category.name)
-            keywords = [
-                x
-                for x in directCallParameters["keywords"]
-                if x.categoryKey == category.key
-            ]
+            keywords = [x for x in directCallParameters["keywords"] if x.categoryKey == category.key]
             parameters["showBaseKeywords"] = False
             if keywords:
                 translate_keywords(
@@ -496,19 +451,11 @@ def translate_normal(parameters, directCallParameters):
                     directCallParameters,
                 )
 
-            for subCategory in [
-                x
-                for x in directCallParameters["subCategories"]
-                if x.key.parent() == category.key
-            ]:
+            for subCategory in [x for x in directCallParameters["subCategories"] if x.key.parent() == category.key]:
 
                 g.html.DIV(class_="autotoc subcategory", title=subCategory.name)
                 g.html.area(subCategory.name)
-                keywords = [
-                    x
-                    for x in directCallParameters["keywords"]
-                    if x.categoryKey == subCategory.key
-                ]
+                keywords = [x for x in directCallParameters["keywords"] if x.categoryKey == subCategory.key]
                 parameters["showBaseKeywords"] = False
                 if keywords:
                     translate_keywords(
@@ -526,29 +473,21 @@ def translate_normal(parameters, directCallParameters):
 
 def getTranslationEntities(locale):
     return {
-        "keywords": Translation_Keyword.query()
-        .order(Translation_Keyword.keyword)
-        .fetch(read_consistency=ndb.STRONG),
-        "categories": Translation_Category.query()
-        .order(Translation_Category.name)
-        .fetch(read_consistency=ndb.STRONG),
+        "keywords": Translation_Keyword.query().order(Translation_Keyword.keyword).fetch(read_consistency=ndb.STRONG),
+        "categories": Translation_Category.query().order(Translation_Category.name).fetch(read_consistency=ndb.STRONG),
         "subCategories": Translation_SubCategory.query()
         .order(Translation_SubCategory.name)
         .fetch(read_consistency=ndb.STRONG),
-        "translations": Translation_Translation.query(
-            Translation_Translation.locale == locale
-        )
+        "translations": Translation_Translation.query(Translation_Translation.locale == locale)
         .order(-Translation_Translation.touched)
         .fetch(read_consistency=ndb.STRONG),
-        "originalTranslations": Translation_Translation.query(
-            Translation_Translation.locale == "en"
-        )
+        "originalTranslations": Translation_Translation.query(Translation_Translation.locale == "en")
         .order(-Translation_Translation.touched)
         .fetch(read_consistency=ndb.STRONG),
     }
 
 
-@main.app.route("/translationemail", methods=["GET", "POST"])
+@app.app.route("/translationemail", methods=["GET", "POST"])
 def translationEmail():
 
     emails = []
@@ -565,20 +504,13 @@ def translationEmail():
             if keyword.active:
 
                 # originalTranslation = keyword.currentTranslation("en", keywords)
-                originalTranslationObject = keyword.latestTranslationObject(
-                    "en", keywords
-                )
-                latestTranslationObject = keyword.latestTranslationObject(
-                    language.ISO639_1, keywords
-                )
+                originalTranslationObject = keyword.latestTranslationObject("en", keywords)
+                latestTranslationObject = keyword.latestTranslationObject(language.ISO639_1, keywords)
 
                 if latestTranslationObject:
                     outdated = None
                     if latestTranslationObject and originalTranslationObject:
-                        if (
-                            originalTranslationObject.touched
-                            > latestTranslationObject.touched
-                        ):
+                        if originalTranslationObject.touched > latestTranslationObject.touched:
                             outdated = True
                     if outdated:
                         changed += 1
@@ -616,8 +548,8 @@ at https://type.world/translate (link will appear in title bar after login).
     return g.html.generate()
 
 
-@main.app.route("/translate", methods=["GET", "POST"])
-@main.app.route("/translate/<locale>", methods=["GET", "POST"])
+@app.app.route("/translate", methods=["GET", "POST"])
+@app.app.route("/translate/<locale>", methods=["GET", "POST"])
 def translate(locale=None):
 
     # User is translator at all
@@ -626,9 +558,7 @@ def translate(locale=None):
 
     # User is not set to edit this language
     localesForUser = g.user.isTranslatorForLocales()
-    if locale and locale not in [
-        x.key.parent().get(read_consistency=ndb.STRONG).ISO639_1 for x in localesForUser
-    ]:
+    if locale and locale not in [x.key.parent().get(read_consistency=ndb.STRONG).ISO639_1 for x in localesForUser]:
         return abort(401)
 
     g.html.DIV(class_="content", style="width: 1200px;")
@@ -656,10 +586,7 @@ def translate(locale=None):
         g.html._P()
         for u in localesForUser:
             language = u.key.parent().get(read_consistency=ndb.STRONG)
-            g.html.P(
-                style="font-weight: %s"
-                % ("bold" if language.ISO639_1 == locale else "inherit")
-            )
+            g.html.P(style="font-weight: %s" % ("bold" if language.ISO639_1 == locale else "inherit"))
             g.html.A(href=f"/translate/{language.ISO639_1}")
             g.html.T(language.name)
             g.html._A()
@@ -730,17 +657,13 @@ def translate(locale=None):
 
     if locale:
 
-        g.translateLocale = Language.query(Language.ISO639_1 == locale).get(
-            read_consistency=ndb.STRONG
-        )
+        g.translateLocale = Language.query(Language.ISO639_1 == locale).get(read_consistency=ndb.STRONG)
 
         g.html.H2()
         g.html.T(f"Translation for <b>{g.translateLocale.name}</b>")
         g.html._H2()
 
-        g.translateLocale = Language.query(Language.ISO639_1 == locale).get(
-            read_consistency=ndb.STRONG
-        )
+        g.translateLocale = Language.query(Language.ISO639_1 == locale).get(read_consistency=ndb.STRONG)
 
         entities = getTranslationEntities(locale)
 
@@ -766,9 +689,7 @@ class Translation_Category(webapp.WebAppModel):
         g.html._DIV()
 
         g.html.DIV()
-        Translation_Keyword().new(
-            text="+ Keyword", values={"categoryKey": self.publicID()}
-        )
+        Translation_Keyword().new(text="+ Keyword", values={"categoryKey": self.publicID()})
         g.html._DIV()
         for keyword in self.keywords():
             keyword.view()
@@ -819,9 +740,7 @@ class Translation_SubCategory(webapp.WebAppModel):
         # g.html._H5()
         # g.html._DIV()
         g.html.DIV()
-        Translation_Keyword().new(
-            text="+ Keyword", values={"categoryKey": self.publicID()}
-        )
+        Translation_Keyword().new(text="+ Keyword", values={"categoryKey": self.publicID()})
         g.html._DIV()
 
         for keyword in self.keywords():
@@ -847,15 +766,9 @@ class Language(webapp.WebAppModel):
     def users(self, directCallParameters):
 
         if "translators" in directCallParameters:
-            return [
-                x
-                for x in directCallParameters["translators"]
-                if x.key.parent() == self.key
-            ]
+            return [x for x in directCallParameters["translators"] if x.key.parent() == self.key]
         else:
-            return Translation_User.query(ancestor=self.key).fetch(
-                read_consistency=ndb.STRONG
-            )
+            return Translation_User.query(ancestor=self.key).fetch(read_consistency=ndb.STRONG)
 
     def baseKeywords(self, directCallParameters={}):
         if "keywords" in directCallParameters:
@@ -870,10 +783,7 @@ class Language(webapp.WebAppModel):
     def baseKeywordsCompleted(self, locale, directCallParameters={}):
         completed = True
         for keyword in self.baseKeywords(directCallParameters):
-            completed = (
-                completed
-                and keyword.latestTranslation(locale, directCallParameters) is not None
-            )
+            completed = completed and keyword.latestTranslation(locale, directCallParameters) is not None
         return completed
 
 
@@ -888,18 +798,14 @@ class CategoryKeyProperty(webapp.KeyProperty):
         g.html._OPTION()
 
         for category in (
-            Translation_Category.query()
-            .order(Translation_Category.name)
-            .fetch(read_consistency=ndb.STRONG)
+            Translation_Category.query().order(Translation_Category.name).fetch(read_consistency=ndb.STRONG)
         ):
             g.html.OPTION(value=category.publicID(), selected=value == category.key)
             g.html.T(category.name)
             g.html._OPTION()
 
             for subCategory in category.subCategories():
-                g.html.OPTION(
-                    value=subCategory.publicID(), selected=value == subCategory.key
-                )
+                g.html.OPTION(value=subCategory.publicID(), selected=value == subCategory.key)
                 g.html.T("—" + subCategory.name)
                 g.html._OPTION()
         g.html._SELECT()
@@ -929,25 +835,17 @@ class Translation_Keyword(webapp.WebAppModel):
 
     def translationView(self, parameters={}, directCallParameters={}):
 
-        originalTranslationObject = self.latestTranslationObject(
-            "en", directCallParameters
-        )
-        latestTranslationObject = self.latestTranslationObject(
-            parameters["locale"], directCallParameters
-        )
+        originalTranslationObject = self.latestTranslationObject("en", directCallParameters)
+        latestTranslationObject = self.latestTranslationObject(parameters["locale"], directCallParameters)
         outdated = None
         if latestTranslationObject and originalTranslationObject:
             if originalTranslationObject.touched > latestTranslationObject.touched:
                 outdated = True
         if latestTranslationObject:
 
-            g.html.DIV(
-                style=f"padding: 8px; background-color: {'orange' if outdated else 'white'};"
-            )  # padding: 10px;
+            g.html.DIV(style=f"padding: 8px; background-color: {'orange' if outdated else 'white'};")  # padding: 10px;
             g.html.T(
-                latestTranslationObject.translation.replace("<", "&lt;")
-                .replace(">", "&gt;")
-                .replace("\n", "<br />")
+                latestTranslationObject.translation.replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br />")
             )
             g.html._DIV()
             latestTranslationObject.edit(
@@ -987,14 +885,10 @@ class Translation_Keyword(webapp.WebAppModel):
         g.html._DIV()
 
     def currentTranslation(self, locale="en", directCallParameters={}):
-        latestTranslationObject = self.latestTranslationObject(
-            locale, directCallParameters
-        )
+        latestTranslationObject = self.latestTranslationObject(locale, directCallParameters)
         if latestTranslationObject:
             return latestTranslationObject.translation
-        latestTranslationObject = self.latestTranslationObject(
-            "en", directCallParameters
-        )
+        latestTranslationObject = self.latestTranslationObject("en", directCallParameters)
         if latestTranslationObject:
             return latestTranslationObject.translation
         else:
@@ -1004,9 +898,7 @@ class Translation_Keyword(webapp.WebAppModel):
 
         if "translations" in directCallParameters:
             translations = [
-                x
-                for x in directCallParameters["translations"]
-                if x.keywordKey == self.key and x.locale == locale
+                x for x in directCallParameters["translations"] if x.keywordKey == self.key and x.locale == locale
             ]
             if translations:
                 return translations[0]
@@ -1030,17 +922,13 @@ class Translation_Keyword(webapp.WebAppModel):
 
     def latestTranslation(self, locale, directCallParameters={}):
 
-        latestTranslationObject = self.latestTranslationObject(
-            locale, directCallParameters
-        )
+        latestTranslationObject = self.latestTranslationObject(locale, directCallParameters)
         if latestTranslationObject:
             return latestTranslationObject.translation
 
     def reloadDataContainer(self, view, parameters):
 
-        logging.warning(
-            "Translation_Keyword.reloadDataContainer(%s, %s)" % (view, parameters)
-        )
+        logging.warning("Translation_Keyword.reloadDataContainer(%s, %s)" % (view, parameters))
 
         keyID, methodName, parameters = webapp.decodeDataContainer(view)
 
@@ -1048,13 +936,9 @@ class Translation_Keyword(webapp.WebAppModel):
 
             mainCategoryKey = self.mainCategoryKey()
             if mainCategoryKey:
-                return webapp.encodeDataContainer(
-                    mainCategoryKey.urlsafe().decode(), "view", parameters
-                )
+                return webapp.encodeDataContainer(mainCategoryKey.urlsafe().decode(), "view", parameters)
             else:
-                return webapp.encodeDataContainer(
-                    None, "translations_uncategorized", parameters
-                )
+                return webapp.encodeDataContainer(None, "translations_uncategorized", parameters)
 
         if methodName == "translateView" and self.base:
             return webapp.encodeDataContainer(None, "translate_normal", parameters)
@@ -1072,9 +956,7 @@ class Translation_User(webapp.WebAppModel):
 
 def User_IsTranslator(self):
     if g.user:
-        if Translation_User.query(Translation_User.userKey == self.key).fetch(
-            read_consistency=ndb.STRONG
-        ):
+        if Translation_User.query(Translation_User.userKey == self.key).fetch(read_consistency=ndb.STRONG):
             return True
 
     return False
@@ -1084,9 +966,7 @@ classes.User.isTranslator = User_IsTranslator
 
 
 def User_IsTranslatorForLocales(self):
-    return Translation_User.query(Translation_User.userKey == self.key).fetch(
-        read_consistency=ndb.STRONG
-    )
+    return Translation_User.query(Translation_User.userKey == self.key).fetch(read_consistency=ndb.STRONG)
 
 
 classes.User.isTranslatorForLocales = User_IsTranslatorForLocales
@@ -1109,25 +989,16 @@ class TranslationProperty(webapp.TextProperty):
             )
             % (ID, ID),
         )
-        g.html.T(
-            '<span class="material-icons-outlined">translate</span> Pull Google Translation'
-        )
+        g.html.T('<span class="material-icons-outlined">translate</span> Pull Google Translation')
         g.html._A()
         g.html._P()
 
-        keyword = ndb.Key(urlsafe=g.form._get("keywordKey").encode()).get(
-            read_consistency=ndb.STRONG
-        )
+        keyword = ndb.Key(urlsafe=g.form._get("keywordKey").encode()).get(read_consistency=ndb.STRONG)
         g.html.P()
         g.html.T("Original English:")
         g.html.BR()
         g.html.CODE()
-        g.html.T(
-            keyword.currentTranslation("en")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-            .replace("\n", "<br />")
-        )
+        g.html.T(keyword.currentTranslation("en").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br />"))
         g.html._CODE()
         g.html._P()
 
@@ -1143,9 +1014,9 @@ class Translation_Translation(webapp.WebAppModel):
     def editPermission(self, propertyNames):
         # print(propertyNames)
         if "translation" in propertyNames:
-            languagesForUser = Translation_User.query(
-                Translation_User.userKey == g.user.key
-            ).fetch(read_consistency=ndb.STRONG)
+            languagesForUser = Translation_User.query(Translation_User.userKey == g.user.key).fetch(
+                read_consistency=ndb.STRONG
+            )
             if languagesForUser:
                 return True
             # print(self.locale)
@@ -1173,18 +1044,14 @@ class Translation_Translation(webapp.WebAppModel):
 
     def reloadDataContainer(self, view, parameters):
 
-        logging.warning(
-            "Translation_Translation.reloadDataContainer(%s, %s)" % (view, parameters)
-        )
+        logging.warning("Translation_Translation.reloadDataContainer(%s, %s)" % (view, parameters))
 
         keyword = self.keywordKey.get(read_consistency=ndb.STRONG)
 
         keyID, methodName, parameters = webapp.decodeDataContainer(view)
 
         if methodName == "translateView" and keyword.base:
-            return webapp.encodeDataContainer(
-                None, "translate_normal", {"locale": parameters["locale"]}
-            )
+            return webapp.encodeDataContainer(None, "translate_normal", {"locale": parameters["locale"]})
 
     def canSave(self):
 
