@@ -19,15 +19,15 @@ print(sys.version)
 print(url)
 
 commands = (
-    ("Syntax checking", "python3 -m py_compile api.py", True),
-    ("Syntax checking", "python3 -m py_compile classes.py", True),
-    ("Syntax checking", "python3 -m py_compile definitions.py", True),
-    ("Syntax checking", "python3 -m py_compile developer.py", True),
-    ("Syntax checking", "python3 -m py_compile helpers.py", True),
-    ("Syntax checking", "python3 -m py_compile hypertext.py", True),
-    ("Syntax checking", "python3 -m py_compile main.py", True),
-    ("Syntax checking", "python3 -m py_compile billing_stripe.py", True),
-    ("Syntax checking", "python3 -m py_compile mq.py", True),
+    ("Syntax checking", "python3 -m py_compile app/api.py", True),
+    ("Syntax checking", "python3 -m py_compile app/classes.py", True),
+    ("Syntax checking", "python3 -m py_compile app/definitions.py", True),
+    ("Syntax checking", "python3 -m py_compile app/developer.py", True),
+    ("Syntax checking", "python3 -m py_compile app/helpers.py", True),
+    ("Syntax checking", "python3 -m py_compile app/hypertext.py", True),
+    ("Syntax checking", "python3 -m py_compile app/__init__.py", True),
+    ("Syntax checking", "python3 -m py_compile app/billing_stripe.py", True),
+    ("Syntax checking", "python3 -m py_compile app/mq.py", True),
     ("Testing NDB function", "python3 test_ndb.py", True),
     (
         "Deploying Google App Engine",

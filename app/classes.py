@@ -4,6 +4,8 @@ from app import definitions
 from app import billing_stripe
 from app import webapp
 from app import helpers
+from app import mq
+from app import translations
 
 # other
 import typeworld.client
@@ -1009,8 +1011,6 @@ class User(TWNDBModel):
 
     def announceChange(self, sourceAnonymousAppID=""):
 
-        import mq
-
         parameters = {}
         parameters["topic"] = self.pubSubTopicID()
         parameters["command"] = "pullUpdates"
@@ -1097,6 +1097,20 @@ https://type.world/verifyemail/{self.emailVerificationCode}
         self.put()
 
         return success, message
+
+    def isTranslator(self):
+        if g.user:
+            if translations.Translation_User.query(translations.Translation_User.userKey == self.key).fetch(
+                read_consistency=ndb.STRONG
+            ):
+                return True
+
+        return False
+
+    def isTranslatorForLocales(self):
+        return translations.Translation_User.query(translations.Translation_User.userKey == self.key).fetch(
+            read_consistency=ndb.STRONG
+        )
 
 
 class AppInstance(TWNDBModel):
@@ -1397,9 +1411,9 @@ class APIEndpoint(TWNDBModel):
 
         # Find price ID
         priceId = None
-        for productId in billing_stripe.billing_stripe.stripeProducts:
+        for productId in billing_stripe.stripeProducts:
             if productId == "world.type.professional_publisher_plan":
-                for price in billing_stripe.billing_stripe.stripeProducts[productId]["prices"]:
+                for price in billing_stripe.stripeProducts[productId]["prices"]:
                     if price["tw_id"] == category:
                         priceId = price["id"]
                         break
@@ -1739,8 +1753,6 @@ class RawSubscription(TWNDBModel):
         return "subscription-%s" % urllib.parse.quote_plus(typeworld.client.URL(self.secretURL).shortUnsecretURL())
 
     def announceChange(self, delay, sourceAnonymousAppID):
-
-        import mq
 
         parameters = {}
         parameters["topic"] = self.pubSubTopicID()

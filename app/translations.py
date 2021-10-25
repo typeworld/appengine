@@ -9,7 +9,7 @@ from flask import abort, g, redirect
 from google.cloud import ndb
 from google.cloud import translate_v2
 import logging
-import classes
+
 
 app.app.config["modules"].append("translations")
 
@@ -952,24 +952,6 @@ class Translation_User(webapp.WebAppModel):
     def user(self):
         if self.userKey:
             return self.userKey.get(read_consistency=ndb.STRONG)
-
-
-def User_IsTranslator(self):
-    if g.user:
-        if Translation_User.query(Translation_User.userKey == self.key).fetch(read_consistency=ndb.STRONG):
-            return True
-
-    return False
-
-
-classes.User.isTranslator = User_IsTranslator
-
-
-def User_IsTranslatorForLocales(self):
-    return Translation_User.query(Translation_User.userKey == self.key).fetch(read_consistency=ndb.STRONG)
-
-
-classes.User.isTranslatorForLocales = User_IsTranslatorForLocales
 
 
 class TranslationProperty(webapp.TextProperty):

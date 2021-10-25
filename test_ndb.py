@@ -1,5 +1,6 @@
 # project
-from app import webapp
+from app import classes, webapp
+
 
 # other
 import copy
@@ -18,7 +19,7 @@ class WebAppModelDelegate(object):
         pass
 
 
-class Test(webapp.TWNDBModel):
+class Test(classes.TWNDBModel):
     string = webapp.StringProperty()
     json = webapp.JsonProperty()
 

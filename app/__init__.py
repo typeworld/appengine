@@ -14,7 +14,6 @@
 
 import logging
 import os
-import sys
 import time
 import urllib
 import urllib.parse
@@ -28,8 +27,11 @@ from google.cloud import secretmanager
 from flask import Flask, Response, g, redirect, request
 from flask import session as flaskSession
 
+# from google.appengine.api import urlfetch_stub
+# from google.appengine.api import apiproxy_stub_map
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "lib"))
+
+# sys.path.insert(0, os.path.join(os.path.dirname(__file__), "lib"))
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -50,6 +52,11 @@ STRIPELIVE = True  # LIVE
 print("LIVE:", LIVE)
 print("STRIPELIVE:", STRIPELIVE)
 
+# if not LIVE:
+#     # https://stackoverflow.com/a/51227333/1209986
+
+#     apiproxy_stub_map.apiproxy = apiproxy_stub_map.APIProxyStubMap()
+#     apiproxy_stub_map.apiproxy.RegisterStub("urlfetch", urlfetch_stub.URLFetchServiceStub())
 
 # Flask
 global app

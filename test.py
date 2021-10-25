@@ -1,5 +1,5 @@
 # project
-import main
+import app
 
 # other
 import sys
@@ -32,7 +32,7 @@ def http(url, data=None):
 class TestServer(unittest.TestCase):
     def test_server(self):
         url = f"{MOTHERSHIP}/setBuildStatusChange/world.type.guiapp/windows/test"
-        r = http(f"{url}?APPBUILD_KEY={main.secret('APPBUILD')}")
+        r = http(f"{url}?APPBUILD_KEY={app.secret('APPBUILD')}")
         self.assertEqual(r, "ok")
 
     def test_cronsjobs(self):
