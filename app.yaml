@@ -16,5 +16,5 @@ handlers:
 - url: /.*
   secure: always
   script: auto
-entrypoint: gunicorn -t 0 -b :$PORT main:app
+entrypoint: gunicorn -t 0 -b :$PORT app:app
 app_engine_apis: true
