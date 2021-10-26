@@ -46,6 +46,25 @@ STRIPELIVE = True  # LIVE
 print("LIVE:", LIVE)
 print("STRIPELIVE:", STRIPELIVE)
 
+if not LIVE:
+    try:
+        from google.appengine.api import urlfetch
+    except ImportError:
+        urlfetch = None
+
+    if urlfetch is not None:
+        print(
+            """
+WARNING:
+It seems that you’re running outside of Google App Engine,
+but GAE’s urlfetch method is available via the `appengine-python-standard` package.
+This doesn’t play well with the `stripe` module that will prioritize urlfetch
+over requests for transport.
+Consider removing the `appengine-python-standard` package from your system.
+"""
+        )
+
+
 # if not LIVE:
 #     # https://stackoverflow.com/a/51227333/1209986
 
