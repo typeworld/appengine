@@ -1,6 +1,6 @@
 # project
-import app
-from app import webapp
+import typeworldserver
+from typeworldserver import web
 
 # other
 import re
@@ -11,14 +11,14 @@ from google.cloud import translate_v2
 import logging
 
 
-app.app.config["modules"].append("translations")
+typeworldserver.app.config["modules"].append("translations")
 
 ###
 
 translateClient = translate_v2.Client()
 
 
-@app.app.route("/downloadLocalization", methods=["GET"])
+@typeworldserver.app.route("/downloadLocalization", methods=["GET"])
 def downloadLocalization():
 
     # Cheap access restriction to block random traffic
@@ -70,7 +70,7 @@ def downloadLocalization():
     return json.dumps(d), 200, {"Content-Type": "application/json; charset=utf-8"}
 
 
-@app.app.route("/googleTranslate", methods=["GET", "POST"])
+@typeworldserver.app.route("/googleTranslate", methods=["GET", "POST"])
 def googleTranslate():
 
     # print(g.form._get('targetLanguage'), g.form._get('keywordKey'))
@@ -112,7 +112,7 @@ def googleTranslate():
     return g.html.generate()
 
 
-@app.app.route("/uploadTranslationKeywords", methods=["POST"])
+@typeworldserver.app.route("/uploadTranslationKeywords", methods=["POST"])
 def uploadTranslationKeywords():
 
     returns = []
@@ -189,7 +189,7 @@ def translations_uncategorized(parameters, directCallParameters):
     g.html._area()
 
 
-@app.app.route("/translations", methods=["GET", "POST"])
+@typeworldserver.app.route("/translations", methods=["GET", "POST"])
 def translations():
 
     if not g.admin:
@@ -199,8 +199,8 @@ def translations():
 
     g.html.DIV(class_="content")
 
-    webapp.container("translations_uncategorized")
-    webapp.container("translations_categories")
+    web.container("translations_uncategorized")
+    web.container("translations_categories")
 
     g.html._DIV()
 
@@ -294,7 +294,7 @@ def translations_locales(parameters, directCallParameters):
     g.html._area()
 
 
-@app.app.route("/languages", methods=["GET", "POST"])
+@typeworldserver.app.route("/languages", methods=["GET", "POST"])
 def languages():
 
     if not g.admin:
@@ -302,7 +302,7 @@ def languages():
 
     g.html.DIV(class_="content")
 
-    webapp.container(
+    web.container(
         "translations_locales",
         directCallParameters={"translators": Translation_User.query().fetch(read_consistency=ndb.STRONG)},
     )
@@ -487,7 +487,7 @@ def getTranslationEntities(locale):
     }
 
 
-@app.app.route("/translationemail", methods=["GET", "POST"])
+@typeworldserver.app.route("/translationemail", methods=["GET", "POST"])
 def translationEmail():
 
     emails = []
@@ -548,8 +548,8 @@ at https://type.world/translate (link will appear in title bar after login).
     return g.html.generate()
 
 
-@app.app.route("/translate", methods=["GET", "POST"])
-@app.app.route("/translate/<locale>", methods=["GET", "POST"])
+@typeworldserver.app.route("/translate", methods=["GET", "POST"])
+@typeworldserver.app.route("/translate/<locale>", methods=["GET", "POST"])
 def translate(locale=None):
 
     # User is translator at all
@@ -667,7 +667,7 @@ def translate(locale=None):
 
         entities = getTranslationEntities(locale)
 
-        webapp.container("translate_normal", {"locale": locale}, entities)
+        web.container("translate_normal", {"locale": locale}, entities)
 
     g.html._DIV()  # .doc
     g.html._DIV()  # .content
@@ -675,8 +675,8 @@ def translate(locale=None):
     return g.html.generate()
 
 
-class Translation_Category(webapp.WebAppModel):
-    name = webapp.StringProperty(required=True)
+class Translation_Category(web.WebAppModel):
+    name = web.StringProperty(required=True)
 
     def view(self, parameters={}, directCallParameters={}):
 
@@ -719,8 +719,8 @@ class Translation_Category(webapp.WebAppModel):
         )
 
 
-class Translation_SubCategory(webapp.WebAppModel):
-    name = webapp.StringProperty(required=True, indexed=True)
+class Translation_SubCategory(web.WebAppModel):
+    name = web.StringProperty(required=True, indexed=True)
 
     def view(self, parameters={}, directCallParameters={}):
 
@@ -757,11 +757,11 @@ class Translation_SubCategory(webapp.WebAppModel):
         )
 
 
-class Language(webapp.WebAppModel):
-    ISO639_1 = webapp.StringProperty()
-    name = webapp.StringProperty(required=True)
-    opentypeTag = webapp.StringProperty()
-    ISO639_2_3 = webapp.StringProperty(repeated=True)
+class Language(web.WebAppModel):
+    ISO639_1 = web.StringProperty()
+    name = web.StringProperty(required=True)
+    opentypeTag = web.StringProperty()
+    ISO639_2_3 = web.StringProperty(repeated=True)
 
     def users(self, directCallParameters):
 
@@ -787,13 +787,13 @@ class Language(webapp.WebAppModel):
         return completed
 
 
-class CategoryKeyProperty(webapp.KeyProperty):
+class CategoryKeyProperty(web.KeyProperty):
     def dialog(self, key, value, placeholder=None):
 
         g.html.DIV(style="display: block;")
 
         g.html.SELECT(name=key, id=key, onchange="deRequiredMissing($(this));")
-        g.html.OPTION(value=webapp.EMPTY, selected=value is None)
+        g.html.OPTION(value=web.EMPTY, selected=value is None)
         g.html.T("&lt;undefined&gt;")
         g.html._OPTION()
 
@@ -813,12 +813,12 @@ class CategoryKeyProperty(webapp.KeyProperty):
         g.html._DIV()
 
 
-class Translation_Keyword(webapp.WebAppModel):
-    keyword = webapp.StringProperty(required=True)
-    active = webapp.BooleanProperty(default=True)
-    base = webapp.BooleanProperty(default=False)
+class Translation_Keyword(web.WebAppModel):
+    keyword = web.StringProperty(required=True)
+    active = web.BooleanProperty(default=True)
+    base = web.BooleanProperty(default=False)
     categoryKey = CategoryKeyProperty()
-    description = webapp.TextProperty()
+    description = web.TextProperty()
 
     def viewPermission(self, methodName):
         if methodName in ["translationView"]:
@@ -930,31 +930,31 @@ class Translation_Keyword(webapp.WebAppModel):
 
         logging.warning("Translation_Keyword.reloadDataContainer(%s, %s)" % (view, parameters))
 
-        keyID, methodName, parameters = webapp.decodeDataContainer(view)
+        keyID, methodName, parameters = web.decodeDataContainer(view)
 
         if methodName == "view":
 
             mainCategoryKey = self.mainCategoryKey()
             if mainCategoryKey:
-                return webapp.encodeDataContainer(mainCategoryKey.urlsafe().decode(), "view", parameters)
+                return web.encodeDataContainer(mainCategoryKey.urlsafe().decode(), "view", parameters)
             else:
-                return webapp.encodeDataContainer(None, "translations_uncategorized", parameters)
+                return web.encodeDataContainer(None, "translations_uncategorized", parameters)
 
         if methodName == "translateView" and self.base:
-            return webapp.encodeDataContainer(None, "translate_normal", parameters)
+            return web.encodeDataContainer(None, "translate_normal", parameters)
 
 
-class Translation_User(webapp.WebAppModel):
+class Translation_User(web.WebAppModel):
     # parent = language
-    userKey = webapp.UserKeyProperty(required=True)
-    publiclyCredited = webapp.BooleanProperty()
+    userKey = web.UserKeyProperty(required=True)
+    publiclyCredited = web.BooleanProperty()
 
     def user(self):
         if self.userKey:
             return self.userKey.get(read_consistency=ndb.STRONG)
 
 
-class TranslationProperty(webapp.TextProperty):
+class TranslationProperty(web.TextProperty):
     def dialog(self, key, value, placeholder=None):
         g.html.textInput(key, value=value, type="textarea", placeholder=placeholder)
 
@@ -985,11 +985,11 @@ class TranslationProperty(webapp.TextProperty):
         g.html._P()
 
 
-class Translation_Translation(webapp.WebAppModel):
-    keywordKey = webapp.KeyProperty(required=True)
-    userKey = webapp.KeyProperty(required=True)
+class Translation_Translation(web.WebAppModel):
+    keywordKey = web.KeyProperty(required=True)
+    userKey = web.KeyProperty(required=True)
     translation = TranslationProperty(required=True)
-    locale = webapp.StringProperty(required=True)
+    locale = web.StringProperty(required=True)
 
     defaultValues = {"translation": "latestTranslation()"}
 
@@ -1030,10 +1030,10 @@ class Translation_Translation(webapp.WebAppModel):
 
         keyword = self.keywordKey.get(read_consistency=ndb.STRONG)
 
-        keyID, methodName, parameters = webapp.decodeDataContainer(view)
+        keyID, methodName, parameters = web.decodeDataContainer(view)
 
         if methodName == "translateView" and keyword.base:
-            return webapp.encodeDataContainer(None, "translate_normal", {"locale": parameters["locale"]})
+            return web.encodeDataContainer(None, "translate_normal", {"locale": parameters["locale"]})
 
     def canSave(self):
 

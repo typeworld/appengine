@@ -1,6 +1,6 @@
 # project
-import app
-from app import classes
+import typeworldserver
+from typeworldserver import classes
 
 # other
 import stripe
@@ -10,16 +10,16 @@ import time
 from flask import abort, jsonify, request, g
 from google.cloud import ndb
 
-app.app.config["modules"].append("billing_stripe")
+typeworldserver.app.config["modules"].append("billing_stripe")
 
 
 # Set your secret key. Remember to switch to your live secret key in production!
 # See your keys here: https://dashboard.stripe.com/account/apikeys
 
 # LIVE
-if app.STRIPELIVE:
-    stripePrivateKey = app.secret("STRIPE_PRIVATEKEY_LIVE")
-    stripePublicKey = app.secret("STRIPE_PUBLICKEY_LIVE")
+if typeworldserver.STRIPELIVE:
+    stripePrivateKey = typeworldserver.secret("STRIPE_PRIVATEKEY_LIVE")
+    stripePublicKey = typeworldserver.secret("STRIPE_PUBLICKEY_LIVE")
     stripeProducts = {
         "world.type.professional_publisher_plan": {
             "ID": "prod_Ix1l3V2SyfLIT4",
@@ -73,8 +73,8 @@ if app.STRIPELIVE:
 
 # TEST
 else:
-    stripePrivateKey = app.secret("STRIPE_PRIVATEKEY_TEST")
-    stripePublicKey = app.secret("STRIPE_PUBLICKEY_TEST")
+    stripePrivateKey = typeworldserver.secret("STRIPE_PRIVATEKEY_TEST")
+    stripePublicKey = typeworldserver.secret("STRIPE_PUBLICKEY_TEST")
     stripeProducts = {
         "world.type.professional_publisher_plan": {
             "ID": "prod_Iv7lZ5O5Jw9OO5",
@@ -151,7 +151,7 @@ stripe.api_key = stripePrivateKey
 #
 
 
-@app.app.route("/stripe-config", methods=["POST"])
+@typeworldserver.app.route("/stripe-config", methods=["POST"])
 def get_config():
     if not g.user:
         return abort(403)
@@ -175,7 +175,7 @@ def get_config():
     )
 
 
-@app.app.route("/create-subscription", methods=["POST"])
+@typeworldserver.app.route("/create-subscription", methods=["POST"])
 def createSubscription():
     if not g.user:
         return abort(403)
@@ -238,7 +238,7 @@ def createSubscription():
         return jsonify(error={"message": traceback.format_exc()}), 200
 
 
-@app.app.route("/update-payment-method", methods=["POST"])
+@typeworldserver.app.route("/update-payment-method", methods=["POST"])
 def updatePaymentMethod():
     if not g.user:
         return abort(403)
@@ -266,7 +266,7 @@ def updatePaymentMethod():
             },
         )
 
-        if app.STRIPELIVE:
+        if typeworldserver.STRIPELIVE:
             subscription = g.user.stripeSubscriptions[0]
         else:
             subscription = g.user.stripeTestSubscriptions[0]
@@ -277,7 +277,7 @@ def updatePaymentMethod():
 
 
 def deleteSubscription(user, stripeSubscription, productId):
-    if app.STRIPELIVE:
+    if typeworldserver.STRIPELIVE:
         stripeSubscribedProductsHistory = dict(user.stripeSubscribedProductsHistory)
     else:
         stripeSubscribedProductsHistory = dict(user.stripeTestSubscribedProductsHistory)
@@ -290,7 +290,7 @@ def deleteSubscription(user, stripeSubscription, productId):
             "running_period": int(time.time()) - stripeSubscription.created,
         }
     )
-    if app.STRIPELIVE:
+    if typeworldserver.STRIPELIVE:
         user.stripeSubscribedProductsHistory = stripeSubscribedProductsHistory
     else:
         user.stripeTestSubscribedProductsHistory = stripeSubscribedProductsHistory
@@ -299,7 +299,7 @@ def deleteSubscription(user, stripeSubscription, productId):
     return True, None
 
 
-@app.app.route("/cancel-subscription", methods=["POST"])
+@typeworldserver.app.route("/cancel-subscription", methods=["POST"])
 def cancelSubscription():
     if not g.user:
         return abort(403)
@@ -325,7 +325,7 @@ def cancelSubscription():
         return jsonify(error=str(e)), 403
 
 
-@app.app.route("/stripe-webhook", methods=["POST"])
+@typeworldserver.app.route("/stripe-webhook", methods=["POST"])
 def webhook_received():
 
     # You can use webhooks to receive information about asynchronous payment events.

@@ -1,7 +1,7 @@
 # project
-import app
-from app import classes
-from app import webapp
+import typeworldserver
+from typeworldserver import classes
+from typeworldserver import web
 
 # other
 import typeworld
@@ -12,7 +12,7 @@ from googleapiclient import discovery
 from google.cloud import ndb
 import time
 
-app.app.config["modules"].append("mq")
+typeworldserver.app.config["modules"].append("mq")
 
 connectiontests = {}
 compute = discovery.build("compute", "v1")
@@ -20,7 +20,7 @@ compute = discovery.build("compute", "v1")
 
 def announceToMQ(parameters):
 
-    parameters["apiKey"] = app.secret("MQ_APIKEY")
+    parameters["apiKey"] = typeworldserver.secret("MQ_APIKEY")
 
     for instance in availableMQInstances():
         success, response, responseObject = typeworld.client.request(
@@ -91,12 +91,12 @@ class MQInstance(classes.TWNDBModel):
     https://github.com/typeworld/messagequeue-docker
     """
 
-    ip = webapp.StringProperty()
-    template = webapp.StringProperty()
-    status = webapp.StringProperty()
-    statusJson = webapp.JsonProperty()
-    GCEinstance = webapp.JsonProperty()
-    GCEtemplate = webapp.JsonProperty()
+    ip = web.StringProperty()
+    template = web.StringProperty()
+    status = web.StringProperty()
+    statusJson = web.JsonProperty()
+    GCEinstance = web.JsonProperty()
+    GCEtemplate = web.JsonProperty()
 
     def updateStatus(self, GCEinstances):
 
@@ -193,7 +193,7 @@ def availableMQInstances():
     return MQInstance.query(MQInstance.status == "OK").fetch(read_consistency=ndb.STRONG)
 
 
-@app.app.route("/mq", methods=["GET", "POST"])
+@typeworldserver.app.route("/mq", methods=["GET", "POST"])
 def list_mqs():
 
     if not g.admin:
@@ -346,7 +346,7 @@ def list_mqs():
     return g.html.generate()
 
 
-@app.app.route("/changemqinstance", methods=["GET", "POST"])
+@typeworldserver.app.route("/changemqinstance", methods=["GET", "POST"])
 def startmq():
 
     # https://developers.google.com/resources/api-libraries/documentation/compute/v1/python/latest/compute_v1.instances.html#insert
@@ -405,13 +405,13 @@ def startmq():
     return g.html.generate()
 
 
-@app.app.route("/registerconnectiontest", methods=["POST"])
+@typeworldserver.app.route("/registerconnectiontest", methods=["POST"])
 def registerconnectiontest():
 
     # Authorization
     if g.form.get("apiKey"):
         FORMAPIKEY = g.form.get("apiKey").strip()
-        if FORMAPIKEY != app.secret("MQ_APIKEY"):
+        if FORMAPIKEY != typeworldserver.secret("MQ_APIKEY"):
             return abort(401)
     else:
         return abort(401)

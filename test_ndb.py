@@ -1,5 +1,5 @@
 # project
-from app import classes, webapp
+from typeworldserver import classes, web
 
 
 # other
@@ -20,8 +20,8 @@ class WebAppModelDelegate(object):
 
 
 class Test(classes.TWNDBModel):
-    string = webapp.StringProperty()
-    json = webapp.JsonProperty()
+    string = web.StringProperty()
+    json = web.JsonProperty()
 
 
 class TestNDB(unittest.TestCase):
@@ -45,7 +45,7 @@ class TestNDB(unittest.TestCase):
             self.assertTrue(test._contentCacheUpdated)
             self.assertEqual(test._changed, ["string", "json"])
 
-            super(webapp.WebAppModel, test).put()
+            super(web.WebAppModel, test).put()
             self.assertTrue(test.key)
 
             test._cleanupPut()
@@ -76,7 +76,7 @@ class TestNDB(unittest.TestCase):
             self.assertTrue(test._contentCacheUpdated)
             self.assertEqual(test._changed, ["string", "json"])
 
-            super(webapp.WebAppModel, test).put()
+            super(web.WebAppModel, test).put()
             self.assertTrue(test.key)
 
             test._cleanupPut()

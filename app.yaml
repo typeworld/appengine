@@ -10,11 +10,11 @@ automatic_scaling:
   # min_pending_latency: 6s
 handlers:
 - url: /.well-known
-  static_dir: app/static
+  static_dir: typeworldserver/static
 - url: /static
-  static_dir: app/static
+  static_dir: typeworldserver/static
 - url: /.*
   secure: always
   script: auto
-entrypoint: gunicorn -t 0 -b :$PORT app:app
+entrypoint: gunicorn -t 0 -b :$PORT typeworldserver:app
 app_engine_apis: true

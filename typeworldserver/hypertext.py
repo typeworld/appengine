@@ -1,5 +1,5 @@
 # project
-import app
+import typeworldserver
 
 # other
 import hotmetal
@@ -8,7 +8,7 @@ from google.cloud import ndb
 
 ###
 
-app.app.config["modules"].append("hypertext")
+typeworldserver.app.config["modules"].append("hypertext")
 
 
 class HTML(hotmetal.HotMetal):
@@ -44,7 +44,7 @@ class HTML(hotmetal.HotMetal):
         )
 
         # Cookie Banner
-        if app.LIVE:
+        if typeworldserver.LIVE:
             self.HeadT(
                 """<script type="text/javascript">
 var _iub = _iub || [];

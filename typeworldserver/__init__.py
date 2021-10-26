@@ -112,11 +112,21 @@ def secret(secret_id, version_id=1):
 # Local imports
 # happen here because of circular imports,
 # as individual modules add to app.config["modules"]
-from . import mq  # noqa: E402
+#
+# All sub-modules need to be loaded here, even if unused,
+# as otherwise they are invisible to the @app router.
+#
 from . import api  # noqa: E402
+from . import billing_stripe  # noqa: E402,F401
+from . import blog  # noqa: E402,F401
 from . import classes  # noqa: E402
+from . import definitions  # noqa: E402,F401
+from . import developer  # noqa: E402,F401
 from . import helpers  # noqa: E402
 from . import hypertext  # noqa: E402
+from . import mq  # noqa: E402
+from . import translations  # noqa: E402,F401
+from . import web  # noqa: E402,F401
 
 
 @app.before_first_request

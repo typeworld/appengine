@@ -1,16 +1,16 @@
 # project
-import app
-from app import webapp
+import typeworldserver
+from typeworldserver import web
 
 # other
 import markdown2
 from flask import g
 
-app.app.config["modules"].append("blog")
+typeworldserver.app.config["modules"].append("blog")
 
 
-@app.app.route("/blog", methods=["GET", "POST"])
-@app.app.route("/blog/<blogEntryURL>", methods=["GET", "POST"])
+@typeworldserver.app.route("/blog", methods=["GET", "POST"])
+@typeworldserver.app.route("/blog/<blogEntryURL>", methods=["GET", "POST"])
 def blog(blogEntryURL=None):
 
     g.html.DIV(class_="content", style="width: 800px;")
@@ -35,11 +35,11 @@ def blog(blogEntryURL=None):
     return g.html.generate()
 
 
-class BlogEntry(webapp.WebAppModel):
-    title = webapp.StringProperty(required=True, verbose_name="Title")
-    url = webapp.StringProperty(required=True, verbose_name="URL")
-    content = webapp.TextProperty(required=True, verbose_name="Content (Markdown, HTML allowed), use --break--")
-    live = webapp.BooleanProperty(verbose_name="Live")
+class BlogEntry(web.WebAppModel):
+    title = web.StringProperty(required=True, verbose_name="Title")
+    url = web.StringProperty(required=True, verbose_name="URL")
+    content = web.TextProperty(required=True, verbose_name="Content (Markdown, HTML allowed), use --break--")
+    live = web.BooleanProperty(verbose_name="Live")
 
     def view(self, parameters={}, directCallParameters={}):
 

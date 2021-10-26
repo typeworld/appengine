@@ -75,11 +75,12 @@ class Translation_Category(WebAppModel):
 """
 
 # project
-import app
-from app import classes
-from app import definitions
-from app import hypertext
-from app import helpers
+import typeworldserver
+from typeworldserver import classes
+from typeworldserver import definitions
+from typeworldserver import hypertext
+from typeworldserver import helpers
+from typeworldserver import api
 
 # other
 import typeworld.client
@@ -95,7 +96,7 @@ from google.cloud import ndb
 from urllib.parse import unquote, urlencode
 import copy
 
-app.app.config["modules"].append("webapp")
+typeworldserver.app.config["modules"].append("web")
 
 
 #####
@@ -202,8 +203,11 @@ def outerContainer(methodName, parameters, inline):
 def innerContainer(methodName, parameters={}, directCallParameters={}):
     method = None
 
-    for moduleName in app.app.config["modules"]:
-        module = importlib.import_module(moduleName, package=None)
+    for moduleName in typeworldserver.app.config["modules"]:
+        if moduleName == "__main__":
+            module = importlib.import_module(moduleName, package=None)
+        else:
+            module = importlib.import_module("typeworldserver." + moduleName, package=None)
         if hasattr(module, methodName):
             method = getattr(module, methodName)
             break
@@ -237,7 +241,7 @@ class Form(dict):
             return None
 
 
-@app.app.route("/env", methods=["POST", "GET"])
+@typeworldserver.app.route("/env", methods=["POST", "GET"])
 def env():
 
     if not g.admin:
@@ -263,8 +267,8 @@ def env():
     return g.html.generate()
 
 
-@app.app.before_request
-def before_request_webapp():
+@typeworldserver.app.before_request
+def before_request_web():
 
     g.form = Form()
 
@@ -325,7 +329,7 @@ class EmailProperty(ndb.StringProperty, Property):
         g.html.textInput(key, value=value, type="email", placeholder=placeholder)
 
     def valid(self, value):
-        if app.verifyEmail(value):
+        if api.verifyEmail(value):
             return True, None
         else:
             return False, "Invalid email"
@@ -661,7 +665,7 @@ class WebAppModel(ndb.Model):
             # Actually save
             if self._contentCacheUpdated is False or self._changed:
 
-                # New behavior: Save on @app.app.after_request
+                # New behavior: Save on @typeworldserver.app.after_request
                 super(WebAppModel, self).put(**kwargs)
                 if self not in g.ndb_puts:
                     g.ndb_puts.append(self)
@@ -980,8 +984,11 @@ def getClass(key, className, parentKey=None):
     # Construct object
     item = None
     if key:
-        for moduleName in app.app.config["modules"]:
-            module = importlib.import_module(moduleName, package=None)
+        for moduleName in typeworldserver.app.config["modules"]:
+            if moduleName == "__main__":
+                module = importlib.import_module(moduleName, package=None)
+            else:
+                module = importlib.import_module("typeworldserver." + moduleName, package=None)
             if hasattr(module, className):
                 item = ndb.Key(urlsafe=key.encode()).get(read_consistency=ndb.STRONG)
                 break
@@ -992,8 +999,11 @@ def getClass(key, className, parentKey=None):
         # new = True
         if parentKey is not None:
             parentKey = ndb.Key(urlsafe=g.form._get("parentKey").encode())
-        for moduleName in app.app.config["modules"]:
-            module = importlib.import_module(moduleName, package=None)
+        for moduleName in typeworldserver.app.config["modules"]:
+            if moduleName == "__main__":
+                module = importlib.import_module(moduleName, package=None)
+            else:
+                module = importlib.import_module("typeworldserver." + moduleName, package=None)
             if hasattr(module, className):
 
                 if parentKey:
@@ -1005,7 +1015,7 @@ def getClass(key, className, parentKey=None):
     return item
 
 
-@app.app.route("/createDialog", methods=["POST", "GET"])
+@typeworldserver.app.route("/createDialog", methods=["POST", "GET"])
 def createDialog():
 
     if not g.form._get("class"):
@@ -1145,7 +1155,7 @@ def dataContainerReload(item=None):
     return True, None
 
 
-@app.app.route("/executeMethod", methods=["POST"])
+@typeworldserver.app.route("/executeMethod", methods=["POST"])
 def executeMethod():
 
     if not g.form._get("class"):
@@ -1168,7 +1178,7 @@ def executeMethod():
     return g.html.generate()
 
 
-@app.app.route("/editProperties", methods=["POST"])
+@typeworldserver.app.route("/editProperties", methods=["POST"])
 def editProperties():
 
     if not g.form._get("class"):
@@ -1265,7 +1275,7 @@ def editProperties():
     return html
 
 
-@app.app.route("/reloadContainer", methods=["POST", "GET"])
+@typeworldserver.app.route("/reloadContainer", methods=["POST", "GET"])
 def reloadContainer():
     """
     Reload a data container using its HTML-encoded reference (`dataContainer` parameter).
@@ -1280,7 +1290,7 @@ def reloadContainer():
     return g.html.generate()
 
 
-@app.app.route("/deleteObject", methods=["POST", "GET"])
+@typeworldserver.app.route("/deleteObject", methods=["POST", "GET"])
 def deleteObject():
 
     if not g.form._get("class"):
@@ -1310,8 +1320,8 @@ class PasswordReset(WebAppModel):
     userKey = KeyProperty(required=True)
 
 
-@app.app.route("/resetpassword", methods=["GET"])
-@app.app.route("/resetpassword/<urlsafe>", methods=["GET"])
+@typeworldserver.app.route("/resetpassword", methods=["GET"])
+@typeworldserver.app.route("/resetpassword/<urlsafe>", methods=["GET"])
 def resetpassword(urlsafe=None):
 
     g.html.DIV(class_="content")
@@ -1391,7 +1401,7 @@ def resetpassword(urlsafe=None):
     return g.html.generate()
 
 
-@app.app.route("/resetPasswordAction", methods=["POST"])
+@typeworldserver.app.route("/resetPasswordAction", methods=["POST"])
 def resetPasswordAction():
 
     # if not g.form._get('urlsafe') and not g.form._get('userKey'):
@@ -1456,7 +1466,7 @@ def resetPasswordAction():
     return g.html.generate()
 
 
-@app.app.route("/requestPasswortReset", methods=["POST"])
+@typeworldserver.app.route("/requestPasswortReset", methods=["POST"])
 def requestPasswortReset():
 
     if not g.form._get("email"):

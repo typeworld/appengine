@@ -19,15 +19,18 @@ print(sys.version)
 print(url)
 
 commands = (
-    ("Syntax checking", "python3 -m py_compile app/api.py", True),
-    ("Syntax checking", "python3 -m py_compile app/classes.py", True),
-    ("Syntax checking", "python3 -m py_compile app/definitions.py", True),
-    ("Syntax checking", "python3 -m py_compile app/developer.py", True),
-    ("Syntax checking", "python3 -m py_compile app/helpers.py", True),
-    ("Syntax checking", "python3 -m py_compile app/hypertext.py", True),
-    ("Syntax checking", "python3 -m py_compile app/__init__.py", True),
-    ("Syntax checking", "python3 -m py_compile app/billing_stripe.py", True),
-    ("Syntax checking", "python3 -m py_compile app/mq.py", True),
+    ("Syntax checking", "python3 -m py_compile typeworldserver/__init__.py", True),
+    ("Syntax checking", "python3 -m py_compile typeworldserver/api.py", True),
+    ("Syntax checking", "python3 -m py_compile typeworldserver/billing_stripe.py", True),
+    ("Syntax checking", "python3 -m py_compile typeworldserver/blog.py", True),
+    ("Syntax checking", "python3 -m py_compile typeworldserver/classes.py", True),
+    ("Syntax checking", "python3 -m py_compile typeworldserver/definitions.py", True),
+    ("Syntax checking", "python3 -m py_compile typeworldserver/developer.py", True),
+    ("Syntax checking", "python3 -m py_compile typeworldserver/helpers.py", True),
+    ("Syntax checking", "python3 -m py_compile typeworldserver/hypertext.py", True),
+    ("Syntax checking", "python3 -m py_compile typeworldserver/mq.py", True),
+    ("Syntax checking", "python3 -m py_compile typeworldserver/translations.py", True),
+    ("Syntax checking", "python3 -m py_compile typeworldserver/web.py", True),
     ("Testing NDB function", "python3 test_ndb.py", True),
     (
         "Deploying Google App Engine",

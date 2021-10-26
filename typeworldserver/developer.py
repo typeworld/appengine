@@ -1,10 +1,10 @@
 # project
-import app
-from app import definitions
-from app import webapp
-from app import helpers
-from app import classes
-from app import billing_stripe
+import typeworldserver
+from typeworldserver import definitions
+from typeworldserver import web
+from typeworldserver import helpers
+from typeworldserver import classes
+from typeworldserver import billing_stripe
 
 # other
 import typeworld.client
@@ -26,7 +26,7 @@ import base64
 currencyConverter = CurrencyConverter()
 
 
-app.app.config["modules"].append("developer")
+typeworldserver.app.config["modules"].append("developer")
 
 GOOGLE_PROJECT_ID = "typeworld2"
 
@@ -35,16 +35,16 @@ GOOGLE_PROJECT_ID = "typeworld2"
 
 SSLCONTEXT = ssl.create_default_context(cafile=certifi.where())
 
-# class AppBuild(webapp.TWNDBModel):
-# 	appID = webapp.StringProperty(required = True)
-# 	platform = webapp.StringProperty(required = True)
-# 	version = webapp.StringProperty(required = True)
-# 	published = webapp.BooleanProperty(default = False)
+# class AppBuild(classes.TWNDBModel):
+# 	appID = web.StringProperty(required = True)
+# 	platform = web.StringProperty(required = True)
+# 	version = web.StringProperty(required = True)
+# 	published = web.BooleanProperty(default = False)
 
-# 	sparkleSignature = webapp.StringProperty()
+# 	sparkleSignature = web.StringProperty()
 
 
-class AppIDProperty(ndb.webapp.StringProperty, webapp.Property):
+class AppIDProperty(web.StringProperty, web.Property):
     def dialog(self, key, value, placeholder=None):
         g.html.textInput(key, value=value, type="text", placeholder=placeholder)
 
@@ -55,7 +55,7 @@ class AppIDProperty(ndb.webapp.StringProperty, webapp.Property):
             return True, None
 
 
-class BuildPlatformProperty(ndb.webapp.StringProperty, webapp.Property):
+class BuildPlatformProperty(web.StringProperty, web.Property):
     def dialog(self, key, value, placeholder=None):
         g.html.textInput(key, value=value, type="text", placeholder=placeholder)
 
@@ -66,13 +66,13 @@ class BuildPlatformProperty(ndb.webapp.StringProperty, webapp.Property):
             return True, None
 
 
-class AppBuild(webapp.TWNDBModel):
+class AppBuild(classes.TWNDBModel):
     platform = BuildPlatformProperty(required=True)
-    active = webapp.BooleanProperty(default=False)
-    published = webapp.BooleanProperty(default=False)
-    publishedForDevelopers = webapp.BooleanProperty(default=False)
-    sparkleSignature = webapp.StringProperty()
-    buildCompletedTime = webapp.DateTimeProperty()
+    active = web.BooleanProperty(default=False)
+    published = web.BooleanProperty(default=False)
+    publishedForDevelopers = web.BooleanProperty(default=False)
+    sparkleSignature = web.StringProperty()
+    buildCompletedTime = web.DateTimeProperty()
 
     def ending(self):
         if self.platform == "mac":
@@ -84,7 +84,7 @@ class AppBuild(webapp.TWNDBModel):
         return self.published is False and self.active is True and not self.blob()
 
     def reloadDataContainer(self, view, parameters):
-        return webapp.encodeDataContainer(None, "viewLatestUnpublishedBuilds")
+        return web.encodeDataContainer(None, "viewLatestUnpublishedBuilds")
 
     def getParent(self):
         if not hasattr(self, "_parent"):
@@ -230,10 +230,10 @@ class AppBuild(webapp.TWNDBModel):
         mainBlob = self.mainBlob()
         if mainBlob:
             mainBlob.delete()
-        app.bucket.copy_blob(self.blob(), app.bucket, new_name=self.mainDownloadFile())
+        typeworldserver.bucket.copy_blob(self.blob(), typeworldserver.bucket, new_name=self.mainDownloadFile())
 
     def blob(self):
-        blob = app.bucket.get_blob(f"app/TypeWorldApp.{self.getParent().version}.{self.ending()}")
+        blob = typeworldserver.bucket.get_blob(f"app/TypeWorldApp.{self.getParent().version}.{self.ending()}")
         if blob:
             blob.reload()
         return blob
@@ -242,7 +242,7 @@ class AppBuild(webapp.TWNDBModel):
         return f"app/TypeWorldApp.{self.ending()}"
 
     def mainBlob(self):
-        blob = app.bucket.get_blob(self.mainDownloadFile())
+        blob = typeworldserver.bucket.get_blob(self.mainDownloadFile())
         if blob:
             blob.reload()
         return blob
@@ -272,10 +272,10 @@ class AppBuild(webapp.TWNDBModel):
         ndb.delete_multi(deletes)
 
 
-class AppVersion(webapp.TWNDBModel):
+class AppVersion(classes.TWNDBModel):
     appID = AppIDProperty(required=True)
-    version = webapp.SemVerProperty(required=True)
-    notes = webapp.TextProperty()
+    version = web.SemVerProperty(required=True)
+    notes = web.TextProperty()
 
     def view(self, parameters={}, directCallParameters={}):
 
@@ -375,19 +375,19 @@ def getLatestUnpublishedVersion(platform, versions=None):
 platforms = ["mac", "windows"]
 
 
-@app.app.route("/latestUnpublishedVersion/<appKey>/<platform>/", methods=["GET"])
+@typeworldserver.app.route("/latestUnpublishedVersion/<appKey>/<platform>/", methods=["GET"])
 def latestUnpublishedVersion(appKey, platform):
 
-    if g.form._get("APPBUILD_KEY") != app.secret("APPBUILD"):
+    if g.form._get("APPBUILD_KEY") != typeworldserver.secret("APPBUILD"):
         return abort(401)
 
     return Response(getLatestUnpublishedVersion(platform), mimetype="text/plain; charset=utf-8")
 
 
-@app.app.route("/setSparkleSignature", methods=["POST"])
+@typeworldserver.app.route("/setSparkleSignature", methods=["POST"])
 def setSparkleSignature():
 
-    if g.form._get("APPBUILD_KEY") != app.secret("APPBUILD"):
+    if g.form._get("APPBUILD_KEY") != typeworldserver.secret("APPBUILD"):
         return abort(401)
 
     if not g.form._get("platform") in platforms:
@@ -425,7 +425,7 @@ def viewLatestUnpublishedBuilds(parameters, directCallParameters):
     g.html._P()
 
 
-@app.app.route("/admin", methods=["GET", "POST"])
+@typeworldserver.app.route("/admin", methods=["GET", "POST"])
 def admin():
 
     if not g.admin:
@@ -504,8 +504,8 @@ def admin():
     return g.html.generate()
 
 
-@app.app.route("/user", methods=["GET", "POST"])
-@app.app.route("/user/<userKey>", methods=["GET"])
+@typeworldserver.app.route("/user", methods=["GET", "POST"])
+@typeworldserver.app.route("/user/<userKey>", methods=["GET"])
 def user(userKey=None):
 
     if not g.admin:
@@ -622,7 +622,7 @@ def user(userKey=None):
         return g.html.generate()
 
 
-@app.app.route("/impersonateuser", methods=["GET"])
+@typeworldserver.app.route("/impersonateuser", methods=["GET"])
 def impersonateuser():
 
     if not g.admin:
@@ -631,12 +631,12 @@ def impersonateuser():
     if g.form._get("userKey"):
         user = ndb.Key(urlsafe=g.form._get("userKey").encode()).get(read_consistency=ndb.STRONG)
         if user:
-            app.performLogout()
-            app.performLogin(user)
+            typeworldserver.performLogout()
+            typeworldserver.performLogin(user)
             return redirect("/")
 
 
-@app.app.route("/notifyuser", methods=["GET", "POST"])
+@typeworldserver.app.route("/notifyuser", methods=["GET", "POST"])
 def notifyuser():
 
     if not g.admin:
@@ -651,7 +651,7 @@ def notifyuser():
     return g.html.generate()
 
 
-@app.app.route("/app/", methods=["GET", "POST"])
+@typeworldserver.app.route("/app/", methods=["GET", "POST"])
 def _app():
 
     g.html.DIV(class_="content")
@@ -664,7 +664,7 @@ def _app():
 
         g.html.area("App Versions")
 
-        webapp.container("viewLatestUnpublishedBuilds", directCallParameters={"versions": versions})
+        web.container("viewLatestUnpublishedBuilds", directCallParameters={"versions": versions})
 
         g.html.smallSeparator()
         g.html.P()
@@ -868,7 +868,7 @@ def _app():
     return g.html.generate()
 
 
-@app.app.route("/appcast/<appKey>/<platform>/<profile>/appcast.xml", methods=["GET"])
+@typeworldserver.app.route("/appcast/<appKey>/<platform>/<profile>/appcast.xml", methods=["GET"])
 def appcast(appKey, platform, profile):
 
     xml = """<?xml version="1.0" standalone="yes"?>
@@ -937,8 +937,8 @@ developerTabs = [
 ]
 
 
-@app.app.route("/developer/protocol", methods=["POST", "GET"])
-@app.app.route("/developer/protocol/", methods=["POST", "GET"])
+@typeworldserver.app.route("/developer/protocol", methods=["POST", "GET"])
+@typeworldserver.app.route("/developer/protocol/", methods=["POST", "GET"])
 def developer_protocol():
 
     tabs(developerTabs, "/developer/protocol")
@@ -968,15 +968,15 @@ def developer_protocol():
     return g.html.generate()
 
 
-@app.app.route("/developer", methods=["POST", "GET"])
-@app.app.route("/developer/", methods=["POST", "GET"])
+@typeworldserver.app.route("/developer", methods=["POST", "GET"])
+@typeworldserver.app.route("/developer/", methods=["POST", "GET"])
 def developer():
 
     tabs(developerTabs, "/developer")
 
     g.html.DIV(class_="content", style="width: 1200px;")
 
-    blob = app.bucket.get_blob("developer/documentation.md")
+    blob = typeworldserver.bucket.get_blob("developer/documentation.md")
     text = blob.download_as_string().decode()
 
     from markdown.extensions.toc import TocExtension
@@ -1110,8 +1110,8 @@ track();
     return g.html.generate()
 
 
-@app.app.route("/developer/prices/", methods=["POST", "GET"])
-@app.app.route("/developer/prices", methods=["POST", "GET"])
+@typeworldserver.app.route("/developer/prices/", methods=["POST", "GET"])
+@typeworldserver.app.route("/developer/prices", methods=["POST", "GET"])
 def developer_prices():
 
     tabs(developerTabs, "/developer/prices")
@@ -1651,8 +1651,8 @@ track();
     return g.html.generate()
 
 
-@app.app.route("/developer/api/", methods=["POST", "GET"])
-@app.app.route("/developer/api", methods=["POST", "GET"])
+@typeworldserver.app.route("/developer/api/", methods=["POST", "GET"])
+@typeworldserver.app.route("/developer/api", methods=["POST", "GET"])
 def developer_api():
 
     tabs(developerTabs, "/developer/api")
@@ -1915,7 +1915,7 @@ print(response)""",
     return g.html.generate()
 
 
-@app.app.route("/_validateAPIEndpoint", methods=["POST"])
+@typeworldserver.app.route("/_validateAPIEndpoint", methods=["POST"])
 def _validateAPIEndpoint():
 
     import typeworld.tools.validator
@@ -2061,8 +2061,8 @@ def _validateAPIEndpoint():
     return g.html.generate()
 
 
-@app.app.route("/developer/endpoints/", methods=["POST", "GET"])
-@app.app.route("/developer/endpoints", methods=["POST", "GET"])
+@typeworldserver.app.route("/developer/endpoints/", methods=["POST", "GET"])
+@typeworldserver.app.route("/developer/endpoints", methods=["POST", "GET"])
 def developer_endpoints():
 
     tabs(developerTabs, "/developer/endpoints")
@@ -2156,7 +2156,7 @@ def developer_endpoints():
     return g.html.generate()
 
 
-@app.app.route("/developer/endpoints/<apiEndpointKey>", methods=["POST", "GET"])
+@typeworldserver.app.route("/developer/endpoints/<apiEndpointKey>", methods=["POST", "GET"])
 def developer_editapiendpoint(apiEndpointKey):
 
     # Security
@@ -2284,8 +2284,8 @@ def developer_editapiendpoint(apiEndpointKey):
     return g.html.generate()
 
 
-@app.app.route("/developer/billing", methods=["POST", "GET"])
-@app.app.route("/developer/billing/", methods=["POST", "GET"])
+@typeworldserver.app.route("/developer/billing", methods=["POST", "GET"])
+@typeworldserver.app.route("/developer/billing/", methods=["POST", "GET"])
 def developer_billing():
 
     tabs(developerTabs, "/developer/billing")
@@ -2309,8 +2309,8 @@ def developer_billing():
     return g.html.generate()
 
 
-@app.app.route("/developer/validate/", methods=["POST", "GET"])
-@app.app.route("/developer/validate", methods=["POST", "GET"])
+@typeworldserver.app.route("/developer/validate/", methods=["POST", "GET"])
+@typeworldserver.app.route("/developer/validate", methods=["POST", "GET"])
 def developer_validate():
 
     tabs(developerTabs, "/developer/validate")
@@ -2622,8 +2622,8 @@ def traceBackOutput():
         g.html.T("No open tracebacks found")
 
 
-@app.app.route("/tracebacks", defaults={"ID": None}, methods=["GET", "POST"])
-@app.app.route("/tracebacks/<ID>", methods=["GET", "POST"])
+@typeworldserver.app.route("/tracebacks", defaults={"ID": None}, methods=["GET", "POST"])
+@typeworldserver.app.route("/tracebacks/<ID>", methods=["GET", "POST"])
 def tracebacks(ID):
 
     if not g.admin:

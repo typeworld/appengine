@@ -1,11 +1,11 @@
 # project
-import app
-from app import definitions
-from app import billing_stripe
-from app import webapp
-from app import helpers
-from app import mq
-from app import translations
+import typeworldserver
+from typeworldserver import definitions
+from typeworldserver import billing_stripe
+from typeworldserver import web
+from typeworldserver import helpers
+from typeworldserver import mq
+from typeworldserver import translations
 
 # other
 import typeworld.client
@@ -26,48 +26,48 @@ from google.cloud import ndb
 import logging
 
 
-app.app.config["modules"].append("classes")
+typeworldserver.app.config["modules"].append("classes")
 
 
 ###
 
 
-class TWNDBModel(webapp.WebAppModel):
+class TWNDBModel(web.WebAppModel):
     pass
 
 
 class User(TWNDBModel):
-    email = webapp.EmailProperty(required=True, verbose_name="Email Address")
-    name = webapp.StringProperty(required=True, verbose_name="Human Readable Name")
-    passwordHash = webapp.StringProperty(required=True)
-    secretKey = webapp.StringProperty(required=True)
-    websiteToken = webapp.StringProperty()
-    timezone = webapp.StringProperty()
-    emailVerified = webapp.BooleanProperty(default=False)
-    emailVerificationCode = webapp.StringProperty()
-    emailToChange = webapp.EmailProperty(verbose_name="New Email Address")
-    lastSeenOnline = webapp.DateTimeProperty()
+    email = web.EmailProperty(required=True, verbose_name="Email Address")
+    name = web.StringProperty(required=True, verbose_name="Human Readable Name")
+    passwordHash = web.StringProperty(required=True)
+    secretKey = web.StringProperty(required=True)
+    websiteToken = web.StringProperty()
+    timezone = web.StringProperty()
+    emailVerified = web.BooleanProperty(default=False)
+    emailVerificationCode = web.StringProperty()
+    emailToChange = web.EmailProperty(verbose_name="New Email Address")
+    lastSeenOnline = web.DateTimeProperty()
 
     # Rights Management
-    admin = webapp.BooleanProperty(default=False)
-    blog = webapp.BooleanProperty(default=False)
+    admin = web.BooleanProperty(default=False)
+    blog = web.BooleanProperty(default=False)
 
-    stripeCustomerId = webapp.StringProperty()
-    stripeSubscribedProductsHistory = webapp.JsonProperty(default={})
-    stripeSubscriptions = webapp.JsonProperty(default={})
+    stripeCustomerId = web.StringProperty()
+    stripeSubscribedProductsHistory = web.JsonProperty(default={})
+    stripeSubscriptions = web.JsonProperty(default={})
 
-    stripeTestCustomerId = webapp.StringProperty()
-    stripeTestSubscriptions = webapp.JsonProperty(default={})
-    stripeTestSubscribedProductsHistory = webapp.JsonProperty(default={})
+    stripeTestCustomerId = web.StringProperty()
+    stripeTestSubscriptions = web.JsonProperty(default={})
+    stripeTestSubscribedProductsHistory = web.JsonProperty(default={})
 
-    invoiceName = webapp.StringProperty(verbose_name="Name or Company")
-    invoiceStreet = webapp.StringProperty(verbose_name="Street and Building Number")
-    invoiceStreet2 = webapp.StringProperty(verbose_name="Additional Street Information <em>(optional)</em>")
-    invoiceZIPCode = webapp.StringProperty(verbose_name="ZIP Code")
-    invoiceCity = webapp.StringProperty(verbose_name="City")
-    invoiceState = webapp.StringProperty(verbose_name="State <em>(optional)</em>")
-    invoiceCountry = webapp.CountryProperty(verbose_name="Country")
-    invoiceEUVATID = webapp.EUVATIDProperty(
+    invoiceName = web.StringProperty(verbose_name="Name or Company")
+    invoiceStreet = web.StringProperty(verbose_name="Street and Building Number")
+    invoiceStreet2 = web.StringProperty(verbose_name="Additional Street Information <em>(optional)</em>")
+    invoiceZIPCode = web.StringProperty(verbose_name="ZIP Code")
+    invoiceCity = web.StringProperty(verbose_name="City")
+    invoiceState = web.StringProperty(verbose_name="State <em>(optional)</em>")
+    invoiceCountry = web.CountryProperty(verbose_name="Country")
+    invoiceEUVATID = web.EUVATIDProperty(
         verbose_name="VAT ID <em>(Only for businesses in the European Union excl. Germany)</em>"
     )
 
@@ -119,7 +119,7 @@ class User(TWNDBModel):
 
     def stripeGetCustomerId(self):
 
-        if app.STRIPELIVE:
+        if typeworldserver.STRIPELIVE:
             if not self.stripeCustomerId:
                 customer = stripe.Customer.create(email=self.email)
                 self.stripeCustomerId = customer.id
@@ -144,14 +144,14 @@ class User(TWNDBModel):
             return "exempt"
 
     def stripeUpdateSubscriptions(self):
-        if app.STRIPELIVE:
+        if typeworldserver.STRIPELIVE:
             self.stripeSubscriptions = stripe.Subscription.list(customer=self.stripeGetCustomerId(), status="all")
         else:
             self.stripeTestSubscriptions = stripe.Subscription.list(customer=self.stripeGetCustomerId(), status="all")
         self.put()
 
     def stripeSubscriptionByProductID(self, productID, statuses=[]):
-        if app.STRIPELIVE:
+        if typeworldserver.STRIPELIVE:
             subscriptions = self.stripeSubscriptions
         else:
             subscriptions = self.stripeTestSubscriptions
@@ -213,7 +213,7 @@ class User(TWNDBModel):
         Retrieve the number of seconds that a subscription has been previously running.
         Used to reducde trial period for now subscriptions.
         """
-        if app.STRIPELIVE:
+        if typeworldserver.STRIPELIVE:
             stripeSubscribedProductsHistory = self.stripeSubscribedProductsHistory
         else:
             stripeSubscribedProductsHistory = self.stripeTestSubscribedProductsHistory
@@ -441,9 +441,9 @@ class User(TWNDBModel):
 
         # print("parameters", parameters)
 
-        if g.admin or not app.LIVE:
-            webapp.reload()
-        webapp.reload(style="hidden")
+        if g.admin or not typeworldserver.LIVE:
+            web.reload()
+        web.reload(style="hidden")
 
         g.html.DIV(class_="clear")
         g.html.FORM(id="payment-form")
@@ -851,7 +851,7 @@ class User(TWNDBModel):
                     " existing customer. Therefore, this number will be a bit higher in"
                     " the beginning of each publisher’s Type.World rollout. In the long"
                     " run, first accesses of existing customers will vanish entirely"
-                    " and only new sales will reapp.</p><p><em>Added fonts</em>"
+                    " and only new sales will count.</p><p><em>Added fonts</em>"
                     " normally means a new sale for an existing customer where new"
                     " fonts are being added to an existing subscription."
                 ),
@@ -1115,22 +1115,22 @@ https://type.world/verifyemail/{self.emailVerificationCode}
 
 class AppInstance(TWNDBModel):
     # key = anonymousAppID
-    # 	userKey = webapp.KeyProperty(required = True)
-    machineModelIdentifier = webapp.StringProperty()
-    machineHumanReadableName = webapp.StringProperty()
-    machineSpecsDescription = webapp.StringProperty()
-    machineOSVersion = webapp.StringProperty()
-    machineNodeName = webapp.StringProperty()
-    lastUsed = webapp.DateTimeProperty(required=True)
+    # 	userKey = web.KeyProperty(required = True)
+    machineModelIdentifier = web.StringProperty()
+    machineHumanReadableName = web.StringProperty()
+    machineSpecsDescription = web.StringProperty()
+    machineOSVersion = web.StringProperty()
+    machineNodeName = web.StringProperty()
+    lastUsed = web.DateTimeProperty(required=True)
 
-    X_Appengine_City = webapp.StringProperty()
-    X_Appengine_Country = webapp.StringProperty()
-    X_Appengine_Region = webapp.StringProperty()
-    X_Appengine_Citylatlong = webapp.GeoPtProperty()
+    X_Appengine_City = web.StringProperty()
+    X_Appengine_Country = web.StringProperty()
+    X_Appengine_Region = web.StringProperty()
+    X_Appengine_Citylatlong = web.GeoPtProperty()
 
-    revoked = webapp.BooleanProperty()
-    revokeResponse = webapp.StringProperty()
-    revokedTime = webapp.DateTimeProperty()
+    revoked = web.BooleanProperty()
+    revokeResponse = web.StringProperty()
+    revokedTime = web.DateTimeProperty()
 
     # def put(self):
     # 	if self.userKey:
@@ -1222,11 +1222,11 @@ class AppInstance(TWNDBModel):
 
 class APILog(TWNDBModel):
     # parent = APIEndpoint
-    command = webapp.StringProperty(required=True)
-    reason = webapp.StringProperty()
-    incoming = webapp.JsonProperty(required=True)
-    response = webapp.JsonProperty(required=True)
-    billedAs = webapp.StringProperty()
+    command = web.StringProperty(required=True)
+    reason = web.StringProperty()
+    incoming = web.JsonProperty(required=True)
+    response = web.JsonProperty(required=True)
+    billedAs = web.StringProperty()
 
 
 class APIEndpoint(TWNDBModel):
@@ -1237,11 +1237,11 @@ class APIEndpoint(TWNDBModel):
     """
 
     # ID = url
-    endpointCommand = webapp.JsonProperty()
-    userKey = webapp.KeyProperty()
-    APIKey = webapp.StringProperty()
+    endpointCommand = web.JsonProperty()
+    userKey = web.KeyProperty()
+    APIKey = web.StringProperty()
 
-    # sentInvitationSubscriptionKeys = webapp.KeyProperty(repeated = True)
+    # sentInvitationSubscriptionKeys = web.KeyProperty(repeated = True)
     # aliveSeconds = 1 * 7 * 24 * 60 * 60 # older than one week
 
     def viewPermission(self, methodName):
@@ -1303,7 +1303,8 @@ class APIEndpoint(TWNDBModel):
                 commercial=True,
                 appID="world.type.app",
             )
-        # client.set("typeworldUserAccount", app.secret("TEST_TYPEWORLDUSERACCOUNTID")) # test@type.world
+        # client.set("typeworldUserAccount", typeworldserver.secret("TEST_TYPEWORLDUSERACCOUNTID"))
+        # # test@type.world
         g.instanceVersion
 
         if g.form._get("testScenario"):
@@ -1480,7 +1481,7 @@ class APIEndpoint(TWNDBModel):
         buttonColor = "purple"
         g.html.P()
         g.html.T("Load/reload: ")
-        webapp.reload(
+        web.reload(
             text="All",
             style="button",
             backgroundColor=buttonColor if "command" not in parameters else None,
@@ -1493,7 +1494,7 @@ class APIEndpoint(TWNDBModel):
 
         # g.html.P()
         for command in commands:
-            webapp.reload(
+            web.reload(
                 text=command,
                 style="button",
                 parameters={"command": command},
@@ -1569,16 +1570,16 @@ class TestUserForAPIEndpoint(TWNDBModel):
     They will be hung to the APIEndpoint by parent property.
     """
 
-    userKey = webapp.KeyProperty(required=True)
+    userKey = web.KeyProperty(required=True)
 
     def deletePermission(self):
         return g.user == self.key.parent().get(read_consistency=ndb.STRONG).userKey.get(read_consistency=ndb.STRONG)
 
 
 class APIEndpointContract(TWNDBModel):
-    keyword = webapp.StringProperty(required=True)
-    name = webapp.StringProperty(required=True)
-    priceStructure = webapp.JsonProperty(required=True)
+    keyword = web.StringProperty(required=True)
+    name = web.StringProperty(required=True)
+    priceStructure = web.JsonProperty(required=True)
 
     def calculatePrices(self, category, quantity):
         def Interpolate(a, b, p, limit=False):
@@ -1729,15 +1730,15 @@ class RawSubscription(TWNDBModel):
     They are referenced from Subscription objects which are held by users.
     """
 
-    secretURL = webapp.StringProperty()
-    canonicalURL = webapp.StringProperty()
-    subscriptionName = webapp.JsonProperty()
-    fonts = webapp.IntegerProperty(default=0)
-    families = webapp.IntegerProperty(default=0)
-    foundries = webapp.IntegerProperty(default=0)
-    contentLastUpdated = webapp.DateTimeProperty()
-    installableFontsCommand = webapp.JsonProperty()
-    lastErrorReported = webapp.DateTimeProperty()  # by api.type.world/v1/reportAPIEndpointError
+    secretURL = web.StringProperty()
+    canonicalURL = web.StringProperty()
+    subscriptionName = web.JsonProperty()
+    fonts = web.IntegerProperty(default=0)
+    families = web.IntegerProperty(default=0)
+    foundries = web.IntegerProperty(default=0)
+    contentLastUpdated = web.DateTimeProperty()
+    installableFontsCommand = web.JsonProperty()
+    lastErrorReported = web.DateTimeProperty()  # by api.type.world/v1/reportAPIEndpointError
 
     def __repr__(self):
         return f"<RawSubscription '{self.key.urlsafe().decode()}'>"
@@ -1801,6 +1802,8 @@ class RawSubscription(TWNDBModel):
 
     def updateJSON(self, force=False, save=True):
 
+        print("updateJSON() 1")
+
         if (
             force
             or not self.contentLastUpdated
@@ -1808,6 +1811,8 @@ class RawSubscription(TWNDBModel):
         ):  # 1 day
 
             # start = time.time()
+
+            print("updateJSON() 2")
 
             client = self.client()
             success, message, publisher, subscription = client.addSubscription(self.secretURL, remotely=True)
@@ -1818,6 +1823,8 @@ class RawSubscription(TWNDBModel):
                 ):
                     message = message.getText()
                 return False, message, {}
+
+            print("updateJSON() 3")
 
             # Previously saved
             if self.installableFontsCommand:
@@ -1831,6 +1838,8 @@ class RawSubscription(TWNDBModel):
                     oldInstallableFontsCommand = None
             else:
                 oldInstallableFontsCommand = None
+
+            print("updateJSON() 4")
 
             # Save installableFontsCommand
             (
@@ -1849,6 +1858,8 @@ class RawSubscription(TWNDBModel):
                 f"typeworld://{subscription.protocol.url.protocol}+{endpointCommand.canonicalURL.replace('://', '//')}"
             )
 
+            print("updateJSON() 5")
+
             # Save subscription name
             if installableFontsCommand.name.getText():
                 self.subscriptionName = installableFontsCommand.name.dumpDict(validate=False)
@@ -1860,6 +1871,8 @@ class RawSubscription(TWNDBModel):
                 )
             else:
                 changes = {}
+
+            print("updateJSON() 6")
 
             # Parse details
             foundries = len(installableFontsCommand.foundries)
@@ -1877,6 +1890,8 @@ class RawSubscription(TWNDBModel):
 
             if save:
                 self.put()
+
+            print("updateJSON() 7")
 
             return True, None, changes
 
@@ -1946,18 +1961,18 @@ class Subscription(TWNDBModel):
     """
 
     # parent = user.key
-    url = webapp.StringProperty(required=True)
+    url = web.StringProperty(required=True)
 
     # Invitations
-    type = webapp.StringProperty()
-    confirmed = webapp.BooleanProperty(default=False)
-    invitedByUserKey = webapp.KeyProperty()
-    invitedByAPIEndpointKey = webapp.KeyProperty()
-    invitedTime = webapp.DateTimeProperty()
-    invitationAcceptedTime = webapp.DateTimeProperty()
-    invitationRevokedByUserKey = webapp.KeyProperty()
-    invitationRevokedByAPIEndpointKey = webapp.KeyProperty()
-    endpointKey = webapp.KeyProperty()
+    type = web.StringProperty()
+    confirmed = web.BooleanProperty(default=False)
+    invitedByUserKey = web.KeyProperty()
+    invitedByAPIEndpointKey = web.KeyProperty()
+    invitedTime = web.DateTimeProperty()
+    invitationAcceptedTime = web.DateTimeProperty()
+    invitationRevokedByUserKey = web.KeyProperty()
+    invitationRevokedByAPIEndpointKey = web.KeyProperty()
+    endpointKey = web.KeyProperty()
 
     def rawSubscription(self):
         if not hasattr(self, "_rawSubscription"):
@@ -2198,7 +2213,7 @@ Here are the details:
 
 
 class Session(TWNDBModel):
-    userKey = webapp.KeyProperty(required=True)
+    userKey = web.KeyProperty(required=True)
 
     def getUser(self):
         if self.userKey:
@@ -2206,18 +2221,18 @@ class Session(TWNDBModel):
 
 
 class AppTraceback(TWNDBModel):
-    payload = webapp.StringProperty(required=True)
-    supplementary = webapp.BlobProperty()
-    fixed = webapp.BooleanProperty(default=False)
+    payload = web.StringProperty(required=True)
+    supplementary = web.BlobProperty()
+    fixed = web.BooleanProperty(default=False)
 
 
 class Preference(TWNDBModel):
-    name = webapp.StringProperty(required=True)
-    content = webapp.TextProperty()
+    name = web.StringProperty(required=True)
+    content = web.TextProperty()
 
 
 class SystemStatistics(TWNDBModel):
-    jsonStats = webapp.JsonProperty()
+    jsonStats = web.JsonProperty()
 
     def bump(self, keys, addition=0, equals=None):
 

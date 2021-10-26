@@ -1,9 +1,9 @@
 # project
-import app
-from app import mq
-from app import definitions
-from app import classes
-from app import helpers
+import typeworldserver
+from typeworldserver import mq
+from typeworldserver import definitions
+from typeworldserver import classes
+from typeworldserver import helpers
 
 # other
 from google.cloud import ndb
@@ -18,7 +18,7 @@ import semver
 import requests
 from flask import abort, g, redirect, Response, request
 
-app.app.config["modules"].append("api")
+typeworldserver.app.config["modules"].append("api")
 
 
 def verifyEmail(email):
@@ -28,7 +28,7 @@ def verifyEmail(email):
 
     response = requests.get(
         "https://api.mailgun.net/v4/address/validate",
-        auth=("api", app.secret("MAILGUN_PRIVATEKEY")),
+        auth=("api", typeworldserver.secret("MAILGUN_PRIVATEKEY")),
         params={"address": email},
     ).json()
 
@@ -51,7 +51,7 @@ def getStat(domain="api"):
     return stat
 
 
-@app.app.route("/registerNewAPIEndpoint", methods=["POST"])
+@typeworldserver.app.route("/registerNewAPIEndpoint", methods=["POST"])
 def registerNewAPIEndpoint():
 
     if not g.user:
@@ -89,7 +89,7 @@ def registerNewAPIEndpoint():
     return g.html.generate()
 
 
-@app.app.route("/account", methods=["POST", "GET"])
+@typeworldserver.app.route("/account", methods=["POST", "GET"])
 def account():
 
     if not g.user:
@@ -127,7 +127,7 @@ def account():
     return g.html.generate()
 
 
-@app.app.route("/addTestUserForAPIEndpoint", methods=["POST", "GET"])
+@typeworldserver.app.route("/addTestUserForAPIEndpoint", methods=["POST", "GET"])
 def addTestUserForAPIEndpoint():
 
     # Security
@@ -174,8 +174,8 @@ def addTestUserForAPIEndpoint():
     return g.html.generate()
 
 
-@app.app.route("/stat", defaults={"month": None}, methods=["GET", "POST"])
-@app.app.route("/stat/<month>", methods=["GET", "POST"])
+@typeworldserver.app.route("/stat", defaults={"month": None}, methods=["GET", "POST"])
+@typeworldserver.app.route("/stat/<month>", methods=["GET", "POST"])
 def statistics(month):
 
     if not g.admin:
@@ -188,9 +188,9 @@ def statistics(month):
     g.html.area("Server")
 
     g.html.P()
-    g.html.T(f"GAE: {app.GAE}")
+    g.html.T(f"GAE: {typeworldserver.GAE}")
     g.html.BR()
-    g.html.T(f"LIVE: {app.LIVE}")
+    g.html.T(f"LIVE: {typeworldserver.LIVE}")
     g.html._P()
 
     g.html._area()
@@ -238,7 +238,7 @@ def saveStatistics():
     return "done"
 
 
-@app.app.route("/verifyemail/<code>", methods=["GET"])
+@typeworldserver.app.route("/verifyemail/<code>", methods=["GET"])
 def verifyemail(code):
     user = classes.User.query(classes.User.emailVerificationCode == code).get(read_consistency=ndb.STRONG)
 
@@ -261,7 +261,7 @@ def verifyemail(code):
     return g.html.generate()
 
 
-@app.app.route("/v1/<commandName>", methods=["POST"])
+@typeworldserver.app.route("/v1/<commandName>", methods=["POST"])
 def v1(commandName):
 
     # import cProfile
@@ -501,7 +501,7 @@ def createUserAccount(responses):
     user.name = g.form._get("name")
 
     # Email verification
-    if g.form._get("SECRETKEY") == app.secret("TEST"):
+    if g.form._get("SECRETKEY") == typeworldserver.secret("TEST"):
         user.emailVerified = True
     else:
         user.emailToChange = g.form._get("email")
@@ -873,7 +873,7 @@ def verifyCredentials(responses):
         log.incoming = dict(g.form)
 
         # User
-        if g.form._get("anonymousTypeWorldUserID") == app.secret("TEST_TYPEWORLDUSERACCOUNTID"):
+        if g.form._get("anonymousTypeWorldUserID") == typeworldserver.secret("TEST_TYPEWORLDUSERACCOUNTID"):
             pass  # simulate success
 
         else:
@@ -1656,6 +1656,8 @@ def updateSubscription(responses):
     log.command = "updateSubscription"
     log.incoming = dict(g.form)
 
+    print("1")
+
     # Check URL
     url = urllib.parse.unquote(g.form._get("subscriptionURL"))
     success, message = typeworld.client.urlIsValid(url)
@@ -1665,6 +1667,8 @@ def updateSubscription(responses):
         log.response = responses
         log.put()
         return
+
+    print("2")
 
     delay = g.form._get("timeStretch")
     if delay:
@@ -1678,6 +1682,8 @@ def updateSubscription(responses):
     else:
         delay = 0
 
+    print("3")
+
     # Quota
     if not endpoint.hasSubscriptionUpdateQuota():
         responses["response"] = "paidSubscriptionRequired"
@@ -1690,6 +1696,8 @@ def updateSubscription(responses):
         log.put()
         return
 
+    print("4")
+
     rawSubscription = classes.RawSubscription.get_or_insert(
         classes.RawSubscription.keyURL(g.form._get("subscriptionURL"))
     )  # , read_consistency=ndb.STRONG
@@ -1698,6 +1706,8 @@ def updateSubscription(responses):
         new = False
     else:
         new = True
+
+    print("5")
 
     # Update content
     success, message, changes = rawSubscription.updateJSON(force=True, save=True)
@@ -1710,6 +1720,8 @@ def updateSubscription(responses):
         log.put()
         return
 
+    print("6")
+
     # Announce change
     success, message = rawSubscription.announceChange(int(delay), g.form._get("sourceAnonymousAppID") or "")
     if not success:
@@ -1721,6 +1733,8 @@ def updateSubscription(responses):
         log.response = responses
         log.put()
         return
+
+    print("7")
 
     # Billing
     if "addedFonts" in changes or new:
@@ -1739,7 +1753,7 @@ def updateSubscription(responses):
             log.put()
             return
 
-    # print("8")
+    print("8")
 
     if "fontsWithAddedVersions" in changes:
         log.billedAs = "subscriptionUpdateWithAddedFontVersions"
@@ -1753,10 +1767,12 @@ def updateSubscription(responses):
             log.put()
             return
 
-    # print("9")
+    print("9")
 
     log.response = responses
     log.put()
+
+    print("10")
 
 
 def handleTraceback(responses):

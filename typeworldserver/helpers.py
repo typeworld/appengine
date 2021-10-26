@@ -1,6 +1,6 @@
 # project
-import app
-from app import definitions
+import typeworldserver
+from typeworldserver import definitions
 
 # other
 import sys
@@ -64,7 +64,7 @@ def email(from_, to, subject, body, replyTo=None):
     if replyTo:
         parameters["h:Reply-To"] = replyTo
 
-    auth = ("api", app.secret("MAILGUN_PRIVATEKEY"))
+    auth = ("api", typeworldserver.secret("MAILGUN_PRIVATEKEY"))
     response = requests.post(url, data=parameters, auth=requests.auth.HTTPBasicAuth(*auth))
     if response.status_code != 200:
         return False, f"HTTP Error {response.status_code}"
