@@ -437,7 +437,7 @@ def linkRedirect():
 @app.route("/cron/daily", methods=["GET", "POST"])
 def cron_daily():
     api.saveStatistics()
-    classes.billNonCumulativeMetrics()
+    api.billNonCumulativeMetrics()
     return Response("ok", mimetype="text/plain")
 
 
