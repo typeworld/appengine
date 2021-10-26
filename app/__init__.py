@@ -27,12 +27,6 @@ from google.cloud import secretmanager
 from flask import Flask, Response, g, redirect, request
 from flask import session as flaskSession
 
-# from google.appengine.api import urlfetch_stub
-# from google.appengine.api import apiproxy_stub_map
-
-
-# sys.path.insert(0, os.path.join(os.path.dirname(__file__), "lib"))
-
 logging.basicConfig(level=logging.WARNING)
 
 # Google
