@@ -10,6 +10,7 @@ google-cloud-ndb
 google-cloud-secret-manager
 google-cloud-storage
 google-cloud-translate
+# appengine-python-standard # for urlfetch
 
 gunicorn
 keyring
