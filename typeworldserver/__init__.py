@@ -432,13 +432,8 @@ def cron_hourly():
     return Response("ok", mimetype="text/plain")
 
 
-emailedLastAboutMQ = 0
-
-
 @app.route("/cron/10minutely", methods=["GET", "POST"])
 def cron_10minutely():
-
-    global emailedLastAboutMQ
 
     # MQ test
     for instance in mq.availableMQInstances():
@@ -453,7 +448,6 @@ def cron_10minutely():
                 "Type.World: MQ is offline",
                 f"MQ {instance.ip} is offline. Message: {response}",
             )
-            emailedLastAboutMQ = time.time()
 
     return Response("ok", mimetype="text/plain")
 
