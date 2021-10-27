@@ -730,3 +730,19 @@ tr.highlight {
 .button .material-icons-outlined {
 	font-size: 20px;
 }
+
+
+.blogentry {
+    background-color: white;
+    padding: 100px;
+    margin-bottom: 100px;
+    padding-top: 30px;
+}
+
+p.date {
+    color: #ff9aff;
+}
+
+.blogentry h1.title {
+    margin-top: 70px;
+}

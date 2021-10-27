@@ -13,7 +13,7 @@ typeworldserver.app.config["modules"].append("blog")
 @typeworldserver.app.route("/blog/<blogEntryURL>", methods=["GET", "POST"])
 def blog(blogEntryURL=None):
 
-    g.html.DIV(class_="content", style="width: 800px;")
+    g.html.DIV(class_="content", style="width: 1000px;")
 
     if g.admin:
         g.html.P()
@@ -43,6 +43,12 @@ class BlogEntry(web.WebAppModel):
 
     def view(self, parameters={}, directCallParameters={}):
 
+        g.html.DIV(class_="blogentry")
+
+        g.html.P(class_="date")
+        g.html.T(self.created.strftime("%A %d %B %Y"))
+        g.html._P()
+
         view = "long"
         if "view" in directCallParameters:
             view = directCallParameters["view"]
@@ -54,7 +60,7 @@ class BlogEntry(web.WebAppModel):
             g.html._A()
             g.html._P()
 
-        g.html.H1()
+        g.html.H1(class_="title")
         g.html.T(self.title)
         if view != "long":
             g.html.SPAN()
@@ -90,3 +96,5 @@ class BlogEntry(web.WebAppModel):
             g.html.T('<span class="material-icons-outlined">menu_book</span> Read Full Article')
             g.html._A()
             g.html._P()
+
+        g.html._DIV()  # .blogentry
