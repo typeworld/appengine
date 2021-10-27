@@ -613,3 +613,5 @@ if __name__ == "__main__":
     # can be configured by adding an `entrypoint` to app.yaml.
     app.run(host="0.0.0.0", port=8080, debug=False)
     # [END gae_python37_app]
+
+print("READY...")
