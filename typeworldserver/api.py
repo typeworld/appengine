@@ -16,7 +16,7 @@ import random
 import json
 import semver
 import requests
-from flask import abort, g, redirect, Response, request
+from flask import abort, g, redirect, Response
 
 typeworldserver.app.config["modules"].append("api")
 
@@ -409,35 +409,7 @@ def linkTypeWorldUserAccount(responses):
 
         # Exists
         appInstance = classes.AppInstance(parent=userKey, id=g.form._get("anonymousAppID"))
-
-        # Machine descriptor
-        for keyword in (
-            "machineModelIdentifier",
-            "machineHumanReadableName",
-            "machineSpecsDescription",
-            "machineOSVersion",
-            "machineNodeName",
-        ):
-            if g.form._get(keyword):
-                setattr(appInstance, keyword, g.form._get(keyword))
-
-        # AppEngine HTTP headers
-        headers = dict(request.headers)
-        for keyword in (
-            "X-Appengine-City",
-            "X-Appengine-Country",
-            "X-Appengine-Region",
-            "X-Appengine-Citylatlong",
-        ):
-            if keyword in headers:
-                value = headers[keyword]
-                if keyword == "X-Appengine-Citylatlong":
-                    latitude, longitude = [float(x) for x in value.split(",")]
-                    value = ndb.GeoPt(latitude, longitude)
-                setattr(appInstance, keyword.replace("-", "_"), value)
-
-        # Update timestamp
-        appInstance.lastUsed = helpers.now()
+        appInstance.updateUsage()
         appInstance.put()
 
         responses["userEmail"] = user.email
@@ -626,7 +598,7 @@ def syncUserSubscriptions(responses):
         responses["subscriptions"] = completeURLs
 
         # Update timestamp
-        appInstance.lastUsed = helpers.now()
+        appInstance.updateUsage()
         appInstance.put()
 
         if user.stripeSubscriptionReceivesService("world.type.professional_user_plan"):
@@ -722,7 +694,7 @@ def uploadUserSubscriptions(responses):
         g.form._get("anonymousAppID"), parent=user.key, read_consistency=ndb.STRONG
     )
     if appInstance:
-        appInstance.lastUsed = helpers.now()
+        appInstance.updateUsage()
         appInstance.put()
 
     if user.stripeSubscriptionReceivesService("world.type.professional_user_plan"):
@@ -857,7 +829,7 @@ def downloadUserSubscriptions(responses):
             responses["sentInvitations"].append(s)
 
         # Update timestamp
-        appInstance.lastUsed = helpers.now()
+        appInstance.updateUsage()
         appInstance.put()
 
 

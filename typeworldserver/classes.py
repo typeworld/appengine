@@ -21,7 +21,7 @@ import datetime
 from pygments import highlight
 from pygments.lexers import PythonLexer
 from pygments.formatters import HtmlFormatter
-from flask import g
+from flask import g, request
 from google.cloud import ndb
 import logging
 
@@ -1150,6 +1150,37 @@ class AppInstance(TWNDBModel):
     # 				user = self.userKey.get(read_consistency=ndb.STRONG)
     # 				user.appInstanceKeys.remove(self.key)
     # 				user.put()
+
+    def updateUsage(self):
+
+        # Machine
+        for keyword in (
+            "machineModelIdentifier",
+            "machineHumanReadableName",
+            "machineSpecsDescription",
+            "machineOSVersion",
+            "machineNodeName",
+        ):
+            if g.form._get(keyword):
+                setattr(self, keyword, g.form._get(keyword))
+
+        # Location
+        headers = dict(request.headers)
+        for keyword in (
+            "X-Appengine-City",
+            "X-Appengine-Country",
+            "X-Appengine-Region",
+            "X-Appengine-Citylatlong",
+        ):
+            if keyword in headers:
+                value = headers[keyword]
+                if keyword == "X-Appengine-Citylatlong":
+                    latitude, longitude = [float(x) for x in value.split(",")]
+                    value = ndb.GeoPt(latitude, longitude)
+                setattr(self, keyword.replace("-", "_"), value)
+
+        # Time
+        self.lastUsed = helpers.now()
 
     def isVM(self):
         return (
