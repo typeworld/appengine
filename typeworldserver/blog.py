@@ -24,12 +24,14 @@ def blog(blogEntryURL=None):
     # Find post
     blogEntry = BlogEntry.query(BlogEntry.url == blogEntryURL).get()
     if blogEntry:
+
         blogEntry.container("view", directCallParameters={"view": "long"})
 
     # All posts
     else:
         for blogEntry in BlogEntry.query().order(-BlogEntry.touched).fetch():
-            blogEntry.container("view", directCallParameters={"view": "short"})
+            if blogEntry.live or g.admin:
+                blogEntry.container("view", directCallParameters={"view": "short"})
 
     g.html._DIV()
 
