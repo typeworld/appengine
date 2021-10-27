@@ -1,6 +1,7 @@
 # project
 import typeworldserver
 from typeworldserver import web
+from typeworldserver import helpers
 
 # other
 import markdown2
@@ -40,6 +41,12 @@ class BlogEntry(web.WebAppModel):
     url = web.StringProperty(required=True, verbose_name="URL")
     content = web.TextProperty(required=True, verbose_name="Content (Markdown, HTML allowed), use --break--")
     live = web.BooleanProperty(verbose_name="Live")
+
+    def beforePut(self):
+        # Set new date when put live
+        if "live" in self._changed and self.live and self._contentCache["live"] is False:
+            self.created = helpers.now()
+            self._changed.append("created")
 
     def view(self, parameters={}, directCallParameters={}):
 
