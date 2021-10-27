@@ -95,17 +95,6 @@ def account():
     if not g.user:
         return redirect("/")
 
-    # g.html.DIV(class_="tabs clear")
-    # g.html.DIV(class_="tab selected")
-    # g.html.T('<span class="material-icons-outlined">account_circle</span> General')
-    # g.html._DIV()
-    # g.html.DIV(class_="tab")
-    # g.html.A(href="/account/developer")
-    # g.html.T('<span class="material-icons-outlined">memory</span> Developer')
-    # g.html._A()
-    # g.html._DIV()
-    # g.html._DIV()
-
     g.html.DIV(class_="content")
 
     g.html.area("Type.World Account")
@@ -491,8 +480,6 @@ def deleteUserAccount(responses):
     if user:
         if user.checkPassword(g.form._get("password")):
             # Delete
-
-            # with client.transaction():
             user.key.delete()
             print("deleted key", user.key)
 
@@ -511,8 +498,6 @@ def deleteUserAccount(responses):
 
 
 def logInUserAccount(responses):
-
-    # time.sleep(5)
 
     user = classes.User.query(classes.User.email == g.form._get("email")).get(read_consistency=ndb.STRONG)
     if user:
@@ -698,8 +683,6 @@ def uploadUserSubscriptions(responses):
         appInstance.put()
 
     if user.stripeSubscriptionReceivesService("world.type.professional_user_plan"):
-        # if set(oldConfirmedURLs) != set([x.url for x in user.confirmedSubscriptions()
-        #  if x]):
         if changes:
             success, message = user.announceChange(g.form._get("sourceAnonymousAppID"))
             if not success:
@@ -746,8 +729,6 @@ def downloadUserSubscriptions(responses):
         # Last seen online
         user.lastSeenOnline = helpers.now()
         user.put()
-
-        # subscriptions = user.subscriptions()
 
         # Normal subscriptions
         oldSubscriptions = user.confirmedSubscriptions()
@@ -1024,9 +1005,6 @@ def inviteUserToSubscription(responses):
 
     tempSubscription = classes.Subscription()  # parent=targetUser.key leads to error down the stream
     tempSubscription.url = url
-
-    # success, endpoint = subscription.rawSubscription().APIEndpoint()
-    # endpoint.updateJSON()
 
     success, endpoint = tempSubscription.rawSubscription().APIEndpoint()
     if not success:
@@ -1463,21 +1441,6 @@ def userAppInstances(responses):
         responses["appInstances"].append(i)
 
 
-# class AppInstance(TWNDBModel):
-# 	# key = anonymousAppID
-# #	userKey = KeyProperty(required = True)
-# 	machineModelIdentifier = StringProperty()
-# 	machineHumanReadableName = StringProperty()
-# 	machineSpecsDescription = StringProperty()
-# 	machineOSVersion = StringProperty()
-# 	machineNodeName = StringProperty()
-# 	lastUsed = DateTimeProperty(required = True)
-
-# 	revoked = BooleanProperty()
-# 	revokeResponse = StringProperty()
-# 	revokedTime = DateTimeProperty()
-
-
 def revokeAppInstance(responses):
 
     if not g.form._get("anonymousUserID"):
@@ -1580,8 +1543,6 @@ def addAPIEndpointToUserAccount(responses):
         endpoint.userKey = user.key
         endpoint.updateJSON()
         endpoint.put()
-        # user.APIEndpointKeys.append(endpoint.key)
-        # user.put()
 
 
 def listAPIEndpointsForUserAccount(responses):
@@ -1628,8 +1589,6 @@ def updateSubscription(responses):
     log.command = "updateSubscription"
     log.incoming = dict(g.form)
 
-    print("1")
-
     # Check URL
     url = urllib.parse.unquote(g.form._get("subscriptionURL"))
     success, message = typeworld.client.urlIsValid(url)
@@ -1639,8 +1598,6 @@ def updateSubscription(responses):
         log.response = responses
         log.put()
         return
-
-    print("2")
 
     delay = g.form._get("timeStretch")
     if delay:
@@ -1654,8 +1611,6 @@ def updateSubscription(responses):
     else:
         delay = 0
 
-    print("3")
-
     # Quota
     if not endpoint.hasSubscriptionUpdateQuota():
         responses["response"] = "paidSubscriptionRequired"
@@ -1668,8 +1623,6 @@ def updateSubscription(responses):
         log.put()
         return
 
-    print("4")
-
     rawSubscription = classes.RawSubscription.get_or_insert(
         classes.RawSubscription.keyURL(g.form._get("subscriptionURL"))
     )  # , read_consistency=ndb.STRONG
@@ -1678,8 +1631,6 @@ def updateSubscription(responses):
         new = False
     else:
         new = True
-
-    print("5")
 
     # Update content
     success, message, changes = rawSubscription.updateJSON(force=True, save=True)
@@ -1692,8 +1643,6 @@ def updateSubscription(responses):
         log.put()
         return
 
-    print("6")
-
     # Announce change
     success, message = rawSubscription.announceChange(int(delay), g.form._get("sourceAnonymousAppID") or "")
     if not success:
@@ -1705,8 +1654,6 @@ def updateSubscription(responses):
         log.response = responses
         log.put()
         return
-
-    print("7")
 
     # Billing
     if "addedFonts" in changes or new:
@@ -1725,8 +1672,6 @@ def updateSubscription(responses):
             log.put()
             return
 
-    print("8")
-
     if "fontsWithAddedVersions" in changes:
         log.billedAs = "subscriptionUpdateWithAddedFontVersions"
         success, message = endpoint.bill("subscriptionUpdateWithAddedFontVersions", g.form._get("subscriptionURL"))
@@ -1739,12 +1684,8 @@ def updateSubscription(responses):
             log.put()
             return
 
-    print("9")
-
     log.response = responses
     log.put()
-
-    print("10")
 
 
 def handleTraceback(responses):
