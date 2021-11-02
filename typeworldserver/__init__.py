@@ -160,7 +160,7 @@ def after_request(response):
 
         html = hypertext.HTML()
 
-        if g.form._get("inline") == "true":
+        if g.form._get("inline") == "true" or "</body>" in response.get_data().decode():
 
             # html.SCRIPT()
             # html.T(f"pushState(null, '{request.path}');")
