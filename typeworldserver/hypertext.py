@@ -307,6 +307,13 @@ _iub.csConfiguration = {"gdprAppliesGlobally":false,"enableCcpa":true,"countryDe
         self._A()
         self._SPAN()
 
+        # Map
+        self.SPAN(class_="link floatleft")
+        self.A(href="/map")
+        self.T("Map")
+        self._A()
+        self._SPAN()
+
         # Impressum
         self.SPAN(class_="link floatleft")
         self.A(href="/impressum")

@@ -2698,3 +2698,252 @@ def tracebacks(ID):
     g.html._DIV()
 
     return g.html.generate()
+
+
+@typeworldserver.app.route("/map", methods=["GET", "POST"])
+def map():
+
+    query_set = classes.AppInstance.query(projection=["X_Appengine_Citylatlong"], distinct=True)
+    geoPoints = [data.X_Appengine_Citylatlong for data in query_set]
+
+    g.html.T(
+        """
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Type.World Network Map</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+      <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      #stage {
+        height: 100%;
+      }
+
+#legend {
+  font-family: Arial, sans-serif;
+  background: #1B1B1B;
+  padding: 15px;
+  margin: 10px;
+  color: #666;
+}
+
+#legend h3 {
+  margin-top: 0;
+}
+
+#legend img {
+  vertical-align: middle;
+}
+
+#legend div {
+  margin-bottom: 3px;
+}
+
+    </style>
+  </head>
+  <body>
+
+    <div id="map"></div>
+    <div id="legend">
+    <div style="text-align: center; margin-bottom: 10px;">
+    <a href="/">
+    <img style="width:200px;" src="/static/images/logowithlogotype.svg">
+    </a>
+    </div>
+    <h3>Legend</h3></div>
+    <script>
+      var map;
+      function initMap() {
+        const map = new google.maps.Map(document.getElementById('map'), {
+          center: {lat: 15, lng: 0},
+          zoom: Math.ceil(Math.log2(window.outerWidth)) - 8.5,
+          mapId: 'ea29f9a01d8af362',
+          disableDefaultUI: true,
+          fullscreenControl: true,
+        });
+
+    """
+    )
+
+    g.html.T(
+        """
+const iconBase = "/static/images/map/";
+const icons = {
+    edgenode: {
+      icon: {
+          url: iconBase + "edgenode.png",
+          size: new google.maps.Size(16, 16),
+          anchor: new google.maps.Point(8, 8),
+          name: "Google Cloud Network Endpoint",
+      },
+    },
+    typeworldserver: {
+      icon: {
+          url: iconBase + "typeworldserver.png",
+          size: new google.maps.Size(16, 16),
+          anchor: new google.maps.Point(8, 8),
+          name: "Type.World Network Server",
+      },
+    },
+    placewithusers: {
+      icon: {
+          url: iconBase + "placewithusers.png",
+          size: new google.maps.Size(16, 16),
+          anchor: new google.maps.Point(8, 8),
+          name: "Town With Type.World User(s)",
+      },
+    },
+  };
+const features = ["""
+    )
+
+    for city in definitions.GCPedgenodes:
+        g.html.T(
+            f"""
+    {{
+      position: new google.maps.LatLng({definitions.GCPedgenodes[city][0]}, {definitions.GCPedgenodes[city][1]}),
+      type: "edgenode",
+      title: "{city}",
+    }},
+    """
+        )
+
+    # Type.World Servers
+    # type.world
+    g.html.T(
+        f"""
+    {{
+      position: new google.maps.LatLng({definitions.GCPzones["us-east"]["geolocation"][0]},
+      {definitions.GCPzones["us-east"]["geolocation"][1]}),
+      type: "typeworldserver",
+      title: "Type.World Central Server, {definitions.GCPzones['us-east']['name']}"
+    }},
+    """
+    )
+
+    # Draw app instances
+    for appInstance in geoPoints:
+
+        g.html.T(
+            f"""
+    {{
+      position: new google.maps.LatLng({appInstance.latitude}, {appInstance.longitude}),
+      type: "placewithusers",
+    }},
+    """
+        )
+
+    g.html.T(
+        """
+  ];
+
+  var markers = new Array();
+
+  // Create markers.
+  for (let i = 0; i < features.length; i++) {
+    var marker = new google.maps.Marker({
+      position: features[i].position,
+      icon: icons[features[i].type].icon,
+      map: map,
+      title: features[i].title,
+    });
+    markers.push(marker);
+  }
+
+
+function setIcons() {
+    //change the size of the icon
+    markers.forEach(element => setIcon(element));
+
+}
+
+setIcons();
+
+function setIcon(marker) {
+    var zoom = map.getZoom();
+    var iconSize = zoom * 2;
+    marker.icon.size = new google.maps.Size(iconSize, iconSize);
+    marker.icon.scaledSize = new google.maps.Size(iconSize, iconSize);
+    marker.icon.anchor = new google.maps.Point(iconSize/2, iconSize/2);
+}
+
+
+//when the map zoom changes, resize the icon based on the zoom level so the marker covers the same geographic area
+google.maps.event.addListener(map, 'zoom_changed', function() {
+    setIcons();
+});
+
+
+
+    """
+    )
+
+    for link in definitions.GCPlinks:
+        g.html.T("flightPlanCoordinates = [")
+        for leg in link:
+            if type(leg) == str:
+                g.html.T(
+                    f"new google.maps.LatLng({definitions.GCPedgenodes[leg][0]}, {definitions.GCPedgenodes[leg][1]}),"
+                )
+            else:
+                for lat, long in leg:
+                    g.html.T(f"new google.maps.LatLng({lat}, {long}),")
+        g.html.T("];")
+        g.html.T(
+            """
+flightPath = new google.maps.Polyline({
+    path: flightPlanCoordinates,
+    geodesic: true,
+    strokeColor: "#3C3C3B",
+    strokeOpacity: 1.0,
+    strokeWeight: 1,
+  });
+
+  flightPath.setMap(map);
+"""
+        )
+
+    g.html.T(
+        """
+
+
+const legend = document.getElementById("legend");
+
+  for (const key in icons) {
+    const type = icons[key];
+    const name = type.icon.name;
+    const icon = type.icon.url;
+
+    const div = document.createElement("div");
+    div.innerHTML = '<img src="' + icon + '" style="width: 12px; height: 12px; margin: 2px;"> ' + name;
+    legend.appendChild(div);
+  }
+
+  map.controls[google.maps.ControlPosition.LEFT_TOP].push(legend);
+
+
+
+
+      }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2fuNLbyk3CbvFBpxCF_UBIduP8NO0MaE&callback=initMap"
+    async defer></script>
+</body>
+</html>
+
+    """
+    )
+
+    return g.html.GenerateBody()
