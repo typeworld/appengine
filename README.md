@@ -5,7 +5,7 @@ Deploy unsafely: `gcloud app deploy --quiet`
 
 Logs: `gcloud app logs tail`
 
-Run locally: `gunicorn -b :80 main:app`
+Run locally: `gunicorn -b :80 typeworldserver:app`
 
 Test locally (in `typeworld folder`): `python Lib/typeworld/test.py http://0.0.0.0/v1`
 
