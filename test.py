@@ -56,6 +56,7 @@ class TestServer(unittest.TestCase):
             "/developer/billing",
             "/developer/protocol",
             "/blog",
+            "/map",
         ]
 
         for url in urls:
