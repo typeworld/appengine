@@ -15,27 +15,9 @@ import re
 import random
 import json
 import semver
-import requests
 from flask import abort, g, redirect, Response
 
 typeworldserver.app.config["modules"].append("api")
-
-
-def verifyEmail(email):
-
-    if email in definitions.KNOWNEMAILADDRESSES:
-        return True
-
-    response = requests.get(
-        "https://api.mailgun.net/v4/address/validate",
-        auth=("api", typeworldserver.secret("MAILGUN_PRIVATEKEY")),
-        params={"address": email},
-    ).json()
-
-    if response["result"] in ("deliverable", "unknown") and response["is_disposable_address"] is False:
-        return True
-    else:
-        return False
 
 
 a = 10
@@ -447,7 +429,7 @@ def createUserAccount(responses):
         return
 
     # verify
-    if verifyEmail(g.form._get("email")) is False:
+    if helpers.verifyEmail(g.form._get("email")) is False:
         responses["response"] = "emailInvalid"
         return
 

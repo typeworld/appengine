@@ -12,6 +12,23 @@ import requests
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "lib"))
 
 
+def verifyEmail(email):
+
+    if email in definitions.KNOWNEMAILADDRESSES:
+        return True
+
+    response = requests.get(
+        "https://api.mailgun.net/v4/address/validate",
+        auth=("api", typeworldserver.secret("MAILGUN_PRIVATEKEY")),
+        params={"address": email},
+    ).json()
+
+    if response["result"] in ("deliverable", "unknown") and response["is_disposable_address"] is False:
+        return True
+    else:
+        return False
+
+
 def now():
     return datetime.datetime.now()
 
