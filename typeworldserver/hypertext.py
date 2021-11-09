@@ -26,6 +26,7 @@ class HTML(hotmetal.HotMetal):
     def header(self):
 
         self.JSLink("https://code.jquery.com/jquery-3.4.1.min.js")
+        self.RSSLink("https://type.world/blog.rss")
         self.CSSLink("/static/css/default.css?v=" + g.instanceVersion)
         self.CSSLink("/static/css/typeworld.css?v=" + g.instanceVersion)
         self.CSSLink("https://fonts.googleapis.com/icon?family=Material+Icons+Outlined")

@@ -56,6 +56,7 @@ class TestServer(unittest.TestCase):
             "/developer/billing",
             "/developer/protocol",
             "/blog",
+            "/blog.rss",
             "/map",
         ]
 
