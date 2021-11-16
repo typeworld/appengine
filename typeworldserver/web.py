@@ -335,6 +335,28 @@ class EmailProperty(ndb.StringProperty, Property):
             return False, "Invalid email"
 
 
+class HTTPURLProperty(ndb.StringProperty, Property):
+    def valid(self, value):
+        if value.startswith("http://") or value.startswith("https://"):
+            return True, None
+        else:
+            return False, "Needs to start with http:// or https://"
+
+    def dialog(self, key, value, placeholder=None):
+        g.html.textInput(key, value=value, type="text", placeholder="http://")
+
+
+class HTTPSURLProperty(ndb.StringProperty, Property):
+    def valid(self, value):
+        if value.startswith("https://"):
+            return True, None
+        else:
+            return False, "Needs to start with https://"
+
+    def dialog(self, key, value, placeholder=None):
+        g.html.textInput(key, value=value, type="text", placeholder="https://")
+
+
 class UserKeyProperty(KeyProperty):
     def valid(self, value):
         if value is None:
