@@ -918,8 +918,8 @@ developerTabs = [
         '<span class="material-icons-outlined">schema</span> Protocol',
     ],
     [
-        "/developer/endpoints",
-        '<span class="material-icons-outlined">domain</span> My Endpoints',
+        "/developer/myapps",
+        '<span class="material-icons-outlined">app_registration</span> My Apps',
     ],
     ["/developer/api", '<span class="material-icons-outlined">smart_toy</span> API'],
     [
@@ -1130,7 +1130,7 @@ textfields = ['{"', '".join(textfields)}'];
 
 function url() {{
     parts = [];
-    url = window.location.href.split("?")[0] + '?';
+    make_url = window.location.href.split("?")[0] + '?';
     textfields.forEach(element => {{
         if ($("#"+element).val()) {{
             parts.push(element + "=" + $("#"+element).val());
@@ -1139,15 +1139,15 @@ function url() {{
     if ($("#currencyConverter").val() != "undefined") {{
         parts.push("currency=" + $("#currencyConverter").val())
     }}
-    url += parts.join("&");
-    return url;
+    make_url += parts.join("&");
+    return make_url;
 }}
 
 function reloadPage() {{
-    url = url();
-    AJAX("#stage", url + "&inline=true");
+    make_url = url();
+    AJAX("#stage", make_url + "&inline=true");
 
-     window.history.pushState({{"html":null,"pageTitle":null}},"", url);
+     window.history.pushState({{"html":null,"pageTitle":null}},"", make_url);
 
 }}
 
@@ -2061,11 +2061,11 @@ def _validateAPIEndpoint():
     return g.html.generate()
 
 
-@typeworldserver.app.route("/developer/endpoints/", methods=["POST", "GET"])
-@typeworldserver.app.route("/developer/endpoints", methods=["POST", "GET"])
-def developer_endpoints():
+@typeworldserver.app.route("/developer/myapps/", methods=["POST", "GET"])
+@typeworldserver.app.route("/developer/myapps", methods=["POST", "GET"])
+def developer_myapps():
 
-    tabs(developerTabs, "/developer/endpoints")
+    tabs(developerTabs, "/developer/myapps")
 
     g.html.DIV(class_="content")
 
@@ -2148,6 +2148,44 @@ def developer_endpoints():
             g.html._TD()
             g.html._TR()
         g.html._TABLE()
+
+        g.html._area()
+
+        g.html.area("My Sign-In Apps")
+        g.html.P()
+        print(
+            "g.user.stripeSubscriptionReceivesService()",
+            g.user.stripeSubscriptionReceivesService("world.type.signin_service_plan"),
+        )
+        if g.user.stripeSubscriptionReceivesService("world.type.signin_service_plan"):
+            classes.SignInApp().new(
+                text="Register New App/Website",
+                hiddenValues={"userKey": g.user.publicID()},
+                button=True,
+                propertyNames=["name", "websiteURL", "logoURL", "redirectURL", "oauthScopes"],
+            )
+        else:
+            g.html.T(
+                "Please activate the <em>Type.World Sign-In Service</em> plan on the <a"
+                ' href="/developer/billing">billing page</a> in order to add apps here.'
+            )
+        g.html._P()
+
+        signinApps = classes.SignInApp.query(classes.SignInApp.userKey == g.user.key).fetch()
+
+        if signinApps:
+            g.html.mediumSeparator()
+            g.html.TABLE()
+            g.html.TR()
+            g.html.TH()
+            g.html.T("Name")
+            g.html._TH()
+            g.html.TH(style="width: 20%;")
+            g.html._TH()
+            g.html._TR()
+            g.html._TABLE()
+            for signinApp in signinApps:
+                signinApp.container("overview")
 
         g.html._area()
 
@@ -2300,7 +2338,7 @@ def developer_billing():
         g.html.area("Billing & Subscriptions")
         g.user.container(
             "accountSubscriptionsView",
-            parameters={"products": ["world.type.professional_publisher_plan"]},
+            parameters={"products": ["world.type.professional_publisher_plan", "world.type.signin_service_plan"]},
         )
         g.html._area()
 

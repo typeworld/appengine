@@ -1655,3 +1655,15 @@ GCPedgenodes = {
 GCPzones = {
     "us-east": {"name": "Moncks Corner, South Carolina, USA", "geolocation": [33.1960027, -80.01313739999999]},
 }
+
+
+SIGNINSCOPES = {
+    "account": {
+        "name": "Account Information",
+        "description": "Basic user account information such as the display name and email address",
+    },
+    "billingaddress": {
+        "name": "Billing Address",
+        "description": "Official billing address including tax number, if applicable",
+    },
+}

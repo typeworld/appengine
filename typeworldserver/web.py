@@ -594,6 +594,49 @@ class EUVATIDProperty(ndb.StringProperty, Property):
         return False, responseText
 
 
+class ChoicesProperty(ndb.StringProperty, Property):
+    def __init__(self, *args, **kwargs):
+        self.choicesData = kwargs["choices"]
+        kwargs["choices"] = list(self.choicesData.keys())
+        kwargs["repeated"] = True
+        super().__init__(*args, **kwargs)
+
+    def shape(self, value):
+        if value in (UNDEFINED, ""):
+            return []
+        elif "," in value:
+            return [x for x in value.split(",") if x.strip()]
+        else:
+            return [value]
+        return value
+
+    def dialog(self, key, value, placeholder=None):
+        g.html.INPUT(type="hidden", id=key, value=",".join(value))
+        g.html.DIV(style="margin: 5px;", class_="clear")
+        for choice in self.choicesData:
+            g.html.DIV(style="margin-bottom: 5px; width: 30px;", class_="floatleft")
+            id = f"choice_{key}_{choice}"
+            g.html.INPUT(
+                type="checkbox",
+                id=id,
+                checked=choice in value,
+                onchange=(
+                    f"handleChoiceValue($('#{key}'), $('#{id}:checked'), '{choice}'); deRequiredMissing($(this));"
+                ),
+            )
+            g.html._DIV()
+            g.html.DIV(style="margin-bottom: 5px; width: calc(100% - 30px)", class_="floatleft")
+            g.html.LABEL(for_=id)
+            g.html.T(self.choicesData[choice]["name"])
+            g.html._LABEL()
+            if "description" in self.choicesData[choice]:
+                g.html.DIV(style="font-size: 80%; opacity: 0.5;")
+                g.html.T(self.choicesData[choice]["description"])
+                g.html._DIV()
+            g.html._DIV()
+        g.html._DIV()
+
+
 # class WebAppModelDelegate(object):
 #     def before__init__(self):
 #         pass
@@ -1132,10 +1175,13 @@ def dataContainerReload(item=None):
     if g.form._get("dataContainer"):
 
         keyID, methodName, parameters = decodeDataContainer(g.form._get("dataContainer"))
+
         if g.form._get("parameters"):
             parameters = json.loads(g.form._get("parameters"))
 
         success, message = dataContainerReloadSpecific(g.form._get("dataContainer"))
+
+        # print("dataContainerReload", keyID, methodName, parameters, success, message)
 
         if not success:
             return success, message

@@ -1,4 +1,5 @@
 # project
+from typeworld.client.helpers import Garbage
 import typeworldserver
 from typeworldserver import definitions
 from typeworldserver import billing_stripe
@@ -81,6 +82,21 @@ class User(TWNDBModel):
         "invoiceCountry",
         "invoiceEUVATID",
     ]
+
+    def oauth(self, scope):
+        if scope == "account":
+            return {"name": self.name, "email": self.email}
+        elif scope == "billingaddress":
+            return {
+                "name": self.invoiceName or "",
+                "street": self.invoiceStreet or "",
+                "street2": self.invoiceStreet2 or "",
+                "zipcode": self.invoiceZIPCode or "",
+                "city": self.invoiceCity or "",
+                "state": self.invoiceState or "",
+                "country": self.invoiceCountry or "",
+                "euvatid": self.invoiceEUVATID or "",
+            }
 
     def editPermission(self, propertyNames=[]):
         allowed = list(set(["name", "email", "emailToChange"]) | set(self.invoiceFields))
@@ -170,20 +186,21 @@ class User(TWNDBModel):
 
     def stripeSubscriptionReceivesService(self, productID):
 
+        product = billing_stripe.stripeProducts[productID]
+
         if g.form._get("testScenario") == "simulateTestUser1IsPro" and self.email == "test1@type.world":
             return True
         if g.form._get("testScenario") == "simulateTestUser2IsPro" and self.email == "test2@type.world":
             return True
 
         # Test User
-        if TestUserForAPIEndpoint.query(TestUserForAPIEndpoint.userKey == self.key).count():
-            return True
+        if product["allowTestUsers"]:
+            if TestUserForAPIEndpoint.query(TestUserForAPIEndpoint.userKey == self.key).count():
+                return True
 
         subscription = self.stripeSubscriptionByProductID(productID)
         if not subscription:
             return False
-
-        product = billing_stripe.stripeProducts[productID]
 
         if subscription["status"] in ("active", "trialing"):
             return True
@@ -762,6 +779,8 @@ class User(TWNDBModel):
                 g.html._A()
                 g.html._P()
 
+            g.html.separator()
+
         g.html._DIV()  # .floatleft
         g.html._FORM()
         g.html._DIV()  # .clear
@@ -938,7 +957,7 @@ class User(TWNDBModel):
                 "name": "Active Users",
                 "type": "maximal",
                 "visible": True,
-                "definition": "Number of active users",
+                "definition": "Number of monthly active users",
                 "description": (
                     "Active users are users that open their Type.World App at least"
                     " once per month and who hold at least one subscription originating"
@@ -972,6 +991,38 @@ class User(TWNDBModel):
                     {
                         "quantity": -1,
                         "price": 0.001,
+                    },
+                ],
+            },
+            "typeworldsignins": {
+                "name": "Type.World Sign-Ins",
+                "type": "cumulative",
+                "visible": True,
+                "definition": "Number of monthly sign-ins with the Type.World Sign-In service",
+                "description": (
+                    "If you offer Type.World Sign-In to the users of your app or website, these are the sign-ins per"
+                    " month. Normally, this number should correlate strongly with your monthly font sales."
+                ),
+                "textfields": [
+                    ["signins", "Number of monthly sign-ins"],
+                ],
+                "calculation": "signins",
+                "tiers": [
+                    {
+                        "quantity": 100,
+                        "price": 0.06,
+                    },
+                    {
+                        "quantity": 200,
+                        "price": 0.03,
+                    },
+                    {
+                        "quantity": 1000,
+                        "price": 0.015,
+                    },
+                    {
+                        "quantity": -1,
+                        "price": 0.01,
                     },
                 ],
             },
@@ -2302,3 +2353,62 @@ class SystemStatistics(TWNDBModel):
 
     def setDomain(self, args):
         self.domain = args
+
+
+class SignInApp(TWNDBModel):
+
+    # User editable
+    name = web.StringProperty(required=True, verbose_name="Application/Website Name")
+    websiteURL = web.HTTPSURLProperty(required=True, verbose_name="Website URL")
+    logoURL = web.HTTPSURLProperty(required=True, verbose_name="Logo URL")
+    redirectURL = web.HTTPSURLProperty(required=True, verbose_name="Redirect URL")
+    oauthScopes = web.ChoicesProperty(choices=definitions.SIGNINSCOPES, verbose_name="OAuth Scopes")
+
+    # Internal
+    userKey = web.KeyProperty(required=True)
+    clientID = web.StringProperty(required=True)
+    clientSecret = web.StringProperty(required=True)
+
+    def beforePut(self):
+        if not self.clientID:
+            self.clientID = Garbage(40)
+        if not self.clientSecret:
+            self.clientSecret = Garbage(40)
+
+    def viewPermission(self, methodName):
+        if methodName in ["overview"] and self.userKey == g.user.key:
+            return True
+        return False
+
+    def editPermission(self, propertyNames=[]):
+        allowed = ["name", "websiteURL", "logoURL", "redirectURL", "userKey", "oauthScopes"]
+        return (
+            (propertyNames and set(allowed) & set(propertyNames)) or not propertyNames
+        ) and g.user.key == self.userKey
+
+    def deletePermission(self):
+        return g.user.key == self.userKey
+
+    def overview(self, parameters={}, directCallParameters={}):
+        g.html.TABLE()
+        g.html.TR()
+        g.html.TD()
+        g.html.B()
+        g.html.T(self.name)
+        g.html._B()
+        g.html.BR()
+        g.html.smallSeparator()
+        g.html.DIV()
+        g.html.T(f"Client ID: <code>{self.clientID}</code>")
+        g.html.BR()
+        g.html.T(f"Client Secret: <code>{self.clientSecret}</code>")
+        g.html.BR()
+        g.html.T(f"OAuth Scopes: <code>{' '.join(self.oauthScopes)}</code>")
+        g.html._DIV()
+        g.html._TD()
+        g.html.TD(style="width: 20%;")
+        self.edit(propertyNames=["name", "websiteURL", "logoURL", "redirectURL", "oauthScopes"])
+        self.delete(text='<span class="material-icons-outlined">delete</span>')
+        g.html._TD()
+        g.html._TR()
+        g.html._TABLE()

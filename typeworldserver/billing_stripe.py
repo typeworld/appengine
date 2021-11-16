@@ -23,7 +23,7 @@ if typeworldserver.STRIPELIVE:
     stripeProducts = {
         "world.type.professional_publisher_plan": {
             "ID": "prod_Ix1l3V2SyfLIT4",
-            "name": "Professional Publisher Plan",
+            "name": "Font Publishing Through Type.World",
             "prices": [
                 {
                     "id": "price_1IlCzHLUOp6Nnz1oCvGD8bt2",
@@ -51,6 +51,29 @@ if typeworldserver.STRIPELIVE:
             "cancelWarning": "Are you sure? Since this is a metered plan, service will be terminated immediately.",
             "cancelTime": "immediately",  # endOfBillingPeriod/immediately
             "type": "metered",
+            "allowTestUsers": True,
+        },
+        "world.type.signin_service_plan": {
+            "ID": "prod_KbHcDcTYOYYmRS",
+            "name": "Type.World Sign-In Service",
+            "prices": [
+                {
+                    "id": "price_1Jw533LUOp6Nnz1oTrmsGA9A",
+                    "tw_id": "signins",
+                    "name": "Sign-Ins",
+                },
+            ],
+            "description": (
+                "Offer Type.World user accounts to the users of your app/website as a sign-in service, as per <a"
+                " href='/developer/prices'>price list</a>. Billed monthly per usage."
+                " Billing starts after %%trial_period_days%% days of free trial. You"
+                " may pause the plan at any time to resume later."
+            ),
+            "trial_period_days": 180,
+            "cancelWarning": "Are you sure? Since this is a metered plan, service will be terminated immediately.",
+            "cancelTime": "immediately",  # endOfBillingPeriod/immediately
+            "type": "metered",
+            "allowTestUsers": False,
         },
         "world.type.professional_user_plan": {
             "ID": "prod_J7tRVmx5BDoocH",
@@ -65,6 +88,7 @@ if typeworldserver.STRIPELIVE:
             ),
             "cancelTime": "endOfBillingPeriod",  # endOfBillingPeriod/immediately
             "type": "fixed",
+            "allowTestUsers": True,
         },
     }
     stripeTaxRecord = "txr_1IL88pLUOp6Nnz1o92HkWpAN"

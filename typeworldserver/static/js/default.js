@@ -1,5 +1,5 @@
 
-function AJAX(container, url, data = {}, propertyNames = [], callback = null) {  
+function AJAX(container, url, data = {}, propertyNames = [], callback = null) {
 
 	// console.log('AJAX(' + [container, url, data, propertyNames, callback] + ')');
 	// startAnimation();
@@ -12,8 +12,8 @@ function AJAX(container, url, data = {}, propertyNames = [], callback = null) {
 
 		// Process values
 		key = propertyNames[i];
-		if (typeof(key) != 'function') {
-			
+		if (typeof (key) != 'function') {
+
 			if ($('#' + key).is('input:checkbox')) {
 				if ($('#' + key + ':checked').val()) {
 					value = 'on';
@@ -45,49 +45,68 @@ function AJAX(container, url, data = {}, propertyNames = [], callback = null) {
 
 
 	$.post(url, data)
-	.done(function(response, statusText, xhr) {
+		.done(function (response, statusText, xhr) {
 
-		// console.log(response);
+			// console.log(response);
 
-		if (xhr.status == 204) {
-			hideDialog();
-		}
-		else if (xhr.status == 200) {
-			if (container) {
-				$(container).html(response);
-
-
+			if (xhr.status == 204) {
+				hideDialog();
 			}
-			else if (callback) {
-				callback(response);
+			else if (xhr.status == 200) {
+				if (container) {
+					$(container).html(response);
+
+
+				}
+				else if (callback) {
+					callback(response);
+				}
 			}
-		}
 
-		enableButtons();
-		// stopAnimation();
-		documentReady();
+			enableButtons();
+			// stopAnimation();
+			documentReady();
 
-	})
-	.fail(function(xhr, textStatus, errorThrown) {
+		})
+		.fail(function (xhr, textStatus, errorThrown) {
 
-		if (xhr.status == 500) {
-			warning(xhr.responseText);
-		}
+			if (xhr.status == 500) {
+				warning(xhr.responseText);
+			}
 
-		else if (xhr.status == 900) {
-			$('#action').html(xhr.responseText);
-		}
+			else if (xhr.status == 900) {
+				$('#action').html(xhr.responseText);
+			}
 
-		enableButtons();
-		stopAnimation();
-		documentReady();
-	
-	})
+			enableButtons();
+			stopAnimation();
+			documentReady();
+
+		})
 
 }
 
+function handleChoiceValue(actualItem, choiceItem, choiceValue) {
+	val = choiceItem.val();
+	values = actualItem.val().split(',');
+	if (val) {
+		if (!values.includes(choiceValue)) {
+			values.push(choiceValue);
+		}
+	}
+	else {
+		if (values.includes(choiceValue)) {
+			var index = values.indexOf(choiceValue);
+			if (index !== -1) {
+				values.splice(index, 1);
+			}
+		}
+	}
+	actualItem.val(values.join(","));
+}
+
 function dialogConfirm(message, container, URL) {
-	if(confirm(message)) {
+	if (confirm(message)) {
 		AJAX($(container), URL);
 		enableButtons();
 		return true;
@@ -169,14 +188,14 @@ function dialog(url) {
 }
 
 function hideDialog() {
-	$('#dialog').fadeOut( function() { enableButtons(); $('body').css('overflow', 'auto'); } );
+	$('#dialog').fadeOut(function () { enableButtons(); $('body').css('overflow', 'auto'); });
 
 	// $('body').css('position', 'static');
-	
+
 }
 
 function login(username, password) {
-	AJAX('#action', '/login', {'username': username, 'password': password, 'inline': 'true'});
+	AJAX('#action', '/login', { 'username': username, 'password': password, 'inline': 'true' });
 }
 
 function logout() {
@@ -185,7 +204,7 @@ function logout() {
 
 function enableButtons() {
 	$('.disabled').removeClass('disabled');
-	$('.button,button').click( function () {
+	$('.button,button').click(function () {
 		$(this).addClass('disabled');
 	});
 }
@@ -207,7 +226,7 @@ function createUserAccount(name, email, password1, password2) {
 	}
 
 	else {
-		AJAX(null, '/v1/createUserAccount', {'name': name, 'email': email, 'password': password1, 'inline': 'true'}, null,  processCreateUserAccount);
+		AJAX(null, '/v1/createUserAccount', { 'name': name, 'email': email, 'password': password1, 'inline': 'true' }, null, processCreateUserAccount);
 	}
 
 }
@@ -243,16 +262,16 @@ function dataContainerJavaScriptIdentifier(element) {
 }
 
 function reload(element, parameters) {
-    url = '/reloadContainer?inline=true&dataContainer=' + dataContainerJavaScriptIdentifier(element);
+	url = '/reloadContainer?inline=true&dataContainer=' + dataContainerJavaScriptIdentifier(element);
 	if (parameters != undefined) {
 		url += "&parameters=" + JSON.stringify(parameters)
 	}
 	AJAX('.' + dataContainerJavaScriptIdentifier(element), url);
 }
 
-$( document ).ready(function() {
-	$('.button,button').click( function () {
-		if (! $(this).attr("href")) {
+$(document).ready(function () {
+	$('.button,button').click(function () {
+		if (!$(this).attr("href")) {
 			$(this).addClass('disabled');
 		}
 	});
@@ -263,7 +282,7 @@ function documentReady() {
 	makeTOC();
 	resize();
 
-	$("#autotoc a").click( function () {
+	$("#autotoc a").click(function () {
 		if ($(".autotoc.category[title='" + $(this).attr('title') + "']").length) {
 			el = $(".autotoc.category[title='" + $(this).attr('title') + "']");
 		}
@@ -272,9 +291,9 @@ function documentReady() {
 		}
 
 		if (el) {
-			$("html, body").animate({scrollTop: el.offset().top - 20}, 500);
+			$("html, body").animate({ scrollTop: el.offset().top - 20 }, 500);
 		}
-		
+
 	});
 }
 
@@ -283,7 +302,7 @@ function makeTOC() {
 
 	if ($("#autotoc").length) {
 		previous = null;
-		$(".autotoc.category, .autotoc.subcategory").each(function(index) {
+		$(".autotoc.category, .autotoc.subcategory").each(function (index) {
 
 			html += '<ul>';
 			if ($(this).hasClass("category")) {
@@ -344,147 +363,147 @@ function makeTOC() {
 //     // Bind to StateChange Event
 //     History.Adapter.bind(window,'statechange',function() { // Note: We are using statechange instead of popstate
 //         var State = History.getState();
-		
+
 // 		if (! State.url.indexOf("locale") > -1) {
-		
+
 // 			_currentURL = window.location.protocol + '//' + window.location.host + currentURL
 // //			_currentURL = currentURL
 
 // //			Debug('History Adapter:\nCurrent URL' + _currentURL + '\nState.url: ' + State.url);
-		
+
 // 			if (_currentURL != State.url) {
 // //				Debug('Reload triggered by History Adapter. currentURL: ' + _currentURL + ', State.url: ' + State.url);
 // //				Debug('loadPage(' + State.url.URLfolder() + ')');
 // 				loadPage(State.url.URLfolder(), true);
-				
+
 // 			}
-			
+
 // 			else {
 // //				Debug('History Adapter is not reloading.');
 // 			}
 
 // //		loadPage(State.url.URLfolder(), true);
 
-			
-			
+
+
 // 		}
 // 	});
 
 // 	documentReady();
-	
+
 // });
 
 
-$.fn.isInViewport = function() {
-    var elementTop = $(this).offset().top;
-    var elementBottom = elementTop + $(this).outerHeight();
+$.fn.isInViewport = function () {
+	var elementTop = $(this).offset().top;
+	var elementBottom = elementTop + $(this).outerHeight();
 
-    var viewportTop = $(window).scrollTop();
-    var viewportBottom = viewportTop + $(window).height();
+	var viewportTop = $(window).scrollTop();
+	var viewportBottom = viewportTop + $(window).height();
 
-    return elementBottom > viewportTop && elementTop < viewportBottom;
+	return elementBottom > viewportTop && elementTop < viewportBottom;
 };
 
-$.fn.viewportPart = function() {
-    var elementTop = $(this).offset().top;
-    var elementBottom = elementTop + $(this).outerHeight();
+$.fn.viewportPart = function () {
+	var elementTop = $(this).offset().top;
+	var elementBottom = elementTop + $(this).outerHeight();
 
-    var viewportTop = $(window).scrollTop();
-    var viewportBottom = viewportTop + $(window).height();
+	var viewportTop = $(window).scrollTop();
+	var viewportBottom = viewportTop + $(window).height();
 
-    if (elementBottom > viewportTop && elementTop < viewportBottom) {
-        return $(this).outerHeight();
-    }
-    else if (elementBottom > viewportBottom && elementTop < viewportTop) {
-        return $(this).outerHeight();
-    }
-    else if (elementBottom > viewportTop) {
-        return elementBottom - viewportTop;
-    }
-    else if (elementTop < viewportBottom) {
-        return elementTop - viewportBottom;
-    }
+	if (elementBottom > viewportTop && elementTop < viewportBottom) {
+		return $(this).outerHeight();
+	}
+	else if (elementBottom > viewportBottom && elementTop < viewportTop) {
+		return $(this).outerHeight();
+	}
+	else if (elementBottom > viewportTop) {
+		return elementBottom - viewportTop;
+	}
+	else if (elementTop < viewportBottom) {
+		return elementTop - viewportBottom;
+	}
 };
 
-$.fn.portionInViewport = function() {
-    var elementTop = $(this).offset().top;
-    var elementBottom = elementTop + $(this).outerHeight();
+$.fn.portionInViewport = function () {
+	var elementTop = $(this).offset().top;
+	var elementBottom = elementTop + $(this).outerHeight();
 
-    var viewportTop = $(window).scrollTop();
-    var viewportBottom = viewportTop + $(window).height();
+	var viewportTop = $(window).scrollTop();
+	var viewportBottom = viewportTop + $(window).height();
 
-    // element is not visible
-    if (elementTop > viewportBottom || elementBottom < viewportTop) {
-    	return 0;
-    }
+	// element is not visible
+	if (elementTop > viewportBottom || elementBottom < viewportTop) {
+		return 0;
+	}
 
-    // element is partially visible, cut off at the top
-    else if (elementTop < viewportTop && elementBottom < viewportBottom) {
-        return elementBottom - viewportTop;
-    }
+	// element is partially visible, cut off at the top
+	else if (elementTop < viewportTop && elementBottom < viewportBottom) {
+		return elementBottom - viewportTop;
+	}
 
-    // element is partially visible, cut off at the bottom
-    else if (elementTop < viewportBottom && elementBottom > viewportBottom) {
-        return viewportBottom - elementTop;
-    }
+	// element is partially visible, cut off at the bottom
+	else if (elementTop < viewportBottom && elementBottom > viewportBottom) {
+		return viewportBottom - elementTop;
+	}
 
-    // element is fully visible
-    else if (elementBottom > viewportTop && elementTop < viewportBottom) {
-        return $(this).outerHeight();
-    }
+	// element is fully visible
+	else if (elementBottom > viewportTop && elementTop < viewportBottom) {
+		return $(this).outerHeight();
+	}
 
 };
 
-$.fn.mostVisible = function() {
+$.fn.mostVisible = function () {
 	mostVisible = null;
 	mostVisiblePortion = 0;
-	$(this).each(function(index) {
+	$(this).each(function (index) {
 		if ($(this).portionInViewport() > $(window).height() / 2.0 && $(this).portionInViewport() > mostVisiblePortion) {
 			mostVisiblePortion = $(this).portionInViewport();
 			mostVisible = $(this);
 		}
 	});
-    return mostVisible;
+	return mostVisible;
 };
 
 
-function resize () {
-	
+function resize() {
+
 	headerTotal = $("#header").outerHeight();
 	if ($("#tabs").length) {
 		headerTotal += $("#tabs").outerHeight();
 	}
-    var top = Math.max(0, headerTotal - $(window).scrollTop()) + 5;
-    var height = $(window).height() - top;
+	var top = Math.max(0, headerTotal - $(window).scrollTop()) + 5;
+	var height = $(window).height() - top;
 
 	$('.stickToTheTop').css('top', top + 'px');
-    $('.stickToTheTop').css('height', height + 'px');
+	$('.stickToTheTop').css('height', height + 'px');
 }
 
-$( window ).scroll(function() {
+$(window).scroll(function () {
 	resize();
 	trackTOC();
 });
 
-$( window ).on('resize', function() {
-    resize();
+$(window).on('resize', function () {
+	resize();
 	trackTOC();
 });
 
 function copyGoogleTranslation() {
 	val = $('#google_translation').val();
-	val = val.replace(/<br \/> /g , '\n');
+	val = val.replace(/<br \/> /g, '\n');
 	$('#dialogform_translation').val(val);
 }
 
 function trackTOC() {
-    mostVisible = $(".autotoc").mostVisible();
-    if (mostVisible) {
-        $("#autotoc a").removeClass("selected");
+	mostVisible = $(".autotoc").mostVisible();
+	if (mostVisible) {
+		$("#autotoc a").removeClass("selected");
 		el = $("#autotoc a[title='" + mostVisible.attr("title") + "']");
-        el.addClass("selected");
-    }
-    // else {
-    //     $("tr.visibilityChange").removeClass("selected");
-    // }
+		el.addClass("selected");
+	}
+	// else {
+	//     $("tr.visibilityChange").removeClass("selected");
+	// }
 }
