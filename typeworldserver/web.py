@@ -300,6 +300,9 @@ class Property(object):
     def valid(self, value):
         return True, None
 
+    def dialog(self, key, value, placeholder=None):
+        g.html.textInput(key, value=value, type="text", placeholder=placeholder)
+
     # def create(self, values = {}):
     #     return True, None
     # def _prepare_for_put(self):
