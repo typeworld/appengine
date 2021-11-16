@@ -846,6 +846,7 @@ class WebAppModel(ndb.Model):
                 attr._verbose_name or propertyName,
                 required=attr._required,
             )
+            g.html.BR()
             attr.dialog(f"{FORM_PREFIX}{propertyName}", attribute)
             g.html._P()
 
