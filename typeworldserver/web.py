@@ -1213,80 +1213,77 @@ def editProperties():
 
     item = getClass(g.form._get("key"), g.form._get("class"), g.form._get("parentKey"))
 
-    # Edit permissions
-    if g.admin or item.editPermission(propertyNames):
+    # Put data
+    changed = False
+    for propertyName in propertyNames:
 
-        changed = False
-        for propertyName in propertyNames:
+        if hasattr(item, propertyName):
 
-            if hasattr(item, propertyName):
+            oldValue = getattr(item, propertyName)
 
-                oldValue = getattr(item, propertyName)
+            if g.form._get(propertyName) == EMPTY:
+                setattr(item, propertyName, None)
 
-                if g.form._get(propertyName) == EMPTY:
-                    setattr(item, propertyName, None)
+            else:
 
-                else:
+                # Shape values
+                if hasattr(item.__class__, propertyName):
+                    attr = getattr(item.__class__, propertyName)
+                    value = g.form._get(propertyName)
 
-                    # Shape values
-                    if hasattr(item.__class__, propertyName):
-                        attr = getattr(item.__class__, propertyName)
-                        value = g.form._get(propertyName)
+                    # print(attr.__class__.__bases__, attr.__class__.__bases__[0].__bases__)
 
-                        # print(attr.__class__.__bases__, attr.__class__.__bases__[0].__bases__)
+                    # if google.cloud.ndb.model.Property in attr.__class__.__bases__ or google.cloud.ndb.model.
+                    # Property in attr.__class__.__bases__[0].__bases__ or Property in attr.__class__.__bases__
+                    #  or Property in attr.__class__.__bases__[0].__bases__:
+                    if (
+                        google.cloud.ndb.model.Property in attr.__class__.__bases__[0].__bases__
+                        or Property in attr.__class__.__bases__[0].__bases__
+                        or Property in attr.__class__.__bases__
+                    ):
 
-                        # if google.cloud.ndb.model.Property in attr.__class__.__bases__ or google.cloud.ndb.model.
-                        # Property in attr.__class__.__bases__[0].__bases__ or Property in attr.__class__.__bases__
-                        #  or Property in attr.__class__.__bases__[0].__bases__:
-                        if (
-                            google.cloud.ndb.model.Property in attr.__class__.__bases__[0].__bases__
-                            or Property in attr.__class__.__bases__[0].__bases__
-                            or Property in attr.__class__.__bases__
-                        ):
+                        # Shape
+                        value = attr.shape(value)
 
-                            # Shape
-                            value = attr.shape(value)
+                        # Validate
+                        success, message = attr.valid(value)
 
-                            # Validate
-                            success, message = attr.valid(value)
-
-                            if not success:
-                                g.html.SCRIPT()
-                                g.html.T(f"$(.dialogform_{propertyName}).addClass('requiredmissing');")
-                                g.html._SCRIPT()
-                                g.html.warning(f"{propertyName}: {message}")
-                                return g.html.generate(), 900
-
-                            # Set the value
-                            setattr(item, propertyName, value)
-
-                        # Required check
-                        if attr._required and not value:
+                        if not success:
                             g.html.SCRIPT()
-                            g.html.T(f"$('.dialogform_{propertyName}').addClass('requiredmissing');")
+                            g.html.T(f"$('.dialogform_{propertyName}'').addClass('requiredmissing');")
                             g.html._SCRIPT()
-                            g.html.warning(f"{propertyName} is a required value.")
+                            g.html.warning(f"{propertyName}: {message}")
                             return g.html.generate(), 900
 
-                if getattr(item, propertyName) != oldValue:
-                    changed = True
+                        # Set the value
+                        setattr(item, propertyName, value)
 
-        # Validate
-        success, message = item.canSave()
+                    # Required check
+                    if attr._required and not value:
+                        g.html.SCRIPT()
+                        g.html.T(f"$('.dialogform_{propertyName}').addClass('requiredmissing');")
+                        g.html._SCRIPT()
+                        g.html.warning(f"{propertyName} is a required value.")
+                        return g.html.generate(), 900
 
-        if not success:
-            g.html.warning(f"{message}")
-            return g.html.generate(), 900
+            if getattr(item, propertyName) != oldValue:
+                changed = True
 
-        # Return empty
-        if not changed:
-            return "", 204
+    # Validate
+    success, message = item.canSave()
 
-        # Save successful
-        else:
-            item.putnow()
+    if not success:
+        g.html.warning(f"{message}")
+        return g.html.generate(), 900
 
-            dataContainerReload(item)
+    # Return empty
+    if not changed:
+        return "", 204
+
+    # Edit permissions
+    if g.admin or item.editPermission(propertyNames):
+        item.putnow()
+        dataContainerReload(item)
 
     else:
         return abort(401)
