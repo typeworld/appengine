@@ -66,13 +66,6 @@ def ndb_wsgi_middleware(wsgi_app):
     return middleware
 
 
-app = Flask(__name__)
-app.wsgi_app = ndb_wsgi_middleware(app.wsgi_app)  # Wrap the app in middleware.
-
-app.secret_key = "94b202ff-cef0-4a82-938d-5cdbb784917a"
-app.config["modules"] = ["__main__"]
-
-
 def secret(secret_id, version_id=1):
     """
     Access Google Cloud Secrets
@@ -84,6 +77,13 @@ def secret(secret_id, version_id=1):
     return payload
 
 
+app = Flask(__name__)
+app.wsgi_app = ndb_wsgi_middleware(app.wsgi_app)  # Wrap the app in middleware.
+
+app.secret_key = secret("TYPE_WORLD_FLASK_SECRET_KEY")
+app.config["modules"] = ["__main__"]
+
+
 # Local imports
 # happen here because of circular imports,
 # as individual modules add to app.config["modules"]
@@ -92,6 +92,7 @@ def secret(secret_id, version_id=1):
 # as otherwise they are invisible to the @app router.
 #
 from . import api  # noqa: E402
+from . import auth  # noqa: E402,F401
 from . import billing_stripe  # noqa: E402,F401
 from . import blog  # noqa: E402,F401
 from . import classes  # noqa: E402

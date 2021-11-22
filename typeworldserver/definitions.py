@@ -1664,6 +1664,10 @@ SIGNINSCOPES = {
     },
     "billingaddress": {
         "name": "Billing Address",
-        "description": "Official billing address including tax number, if applicable",
+        "description": "Official billing address",
+    },
+    "euvatid": {
+        "name": "EU VAT ID",
+        "description": "European Union VAT ID (if applicable)",
     },
 }

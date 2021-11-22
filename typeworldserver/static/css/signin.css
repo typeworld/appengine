@@ -1,0 +1,136 @@
+
+body {
+
+	background-color: #DDDB00;
+}
+
+p {
+    margin-top: 0px;
+    margin-bottom: -8px;
+}
+
+.accountbar {
+    position: fixed;
+    top: 0px;
+    right: 0px;
+    color: #3C3C3B;
+    padding: 20px;
+}
+
+.accountbar a {
+    color: inherit;
+}
+
+
+.panel {
+    width: 500px;
+}
+
+.panel .header {
+    background-color: #3C3C3C;
+    padding: 30px;
+    color: #00FFA8;
+    font-size: 16pt;
+    text-align: center;
+    font-weight: 200;
+
+	border-top-left-radius: 20px;
+	border-top-right-radius: 20px;
+}
+
+.panel .content {
+    padding: 30px;
+    padding-bottom: 40px;
+    background-color: white;
+}
+
+.panel .content h1 {
+    font-size: 24pt;
+    margin-top: -5px;
+    margin-bottom: 20px;
+    font-weight: 400;
+    /* color: #575757; */
+}
+
+.panel .content h1 .black {
+    color: black;
+}
+
+.panel .content table {
+}
+
+.panel .content th {
+}
+
+.panel .content tr {
+}
+
+.panel .content td {
+}
+
+.panel .content .scope {
+    margin-bottom: 15px;
+}
+
+.panel .content .scope .head {
+    background-color: #EEE;
+    padding: 20px;
+    font-weight: 200;
+    font-size: 18pt;
+}
+
+.panel .content .scope .content {
+    background-color: #F6F6F6;
+    padding: 20px;
+    padding-top: 15px;
+    padding-bottom: 25px;
+    margin-bottom: 15px;
+}
+
+.panel .content .label {
+    font-size: 80%;
+    color: #9D9D9C;
+    line-height: 100%;
+    margin-bottom: -13px;
+}
+
+.panel .content .data {
+    margin-bottom: -5px;
+}
+
+.panel .footer {
+    background-color: #F6F6F6;
+    padding: 30px;
+    padding-top: 25px;
+    padding-bottom: 35px;
+    font-size: 11pt;
+    line-height: 130%;
+    color: #9D9D9C;
+
+	border-bottom-left-radius: 20px;
+	border-bottom-right-radius: 20px;
+}
+
+.panel .footer a {
+    color: inherit;
+}
+
+.button {
+    background-color: #00FFA8;
+    color: black;
+    padding-top: 9px;
+    padding-bottom: 10px;
+    padding-left: 14px;
+    padding-right: 14px;
+}
+
+button.button {
+    padding-top: 7px;
+    padding-bottom: 6px;
+    padding-left: 14px;
+    padding-right: 14px;
+}
+
+.loginContent {
+    display: block;
+}

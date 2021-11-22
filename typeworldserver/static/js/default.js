@@ -70,6 +70,8 @@ function AJAX(container, url, data = {}, propertyNames = [], callback = null) {
 		})
 		.fail(function (xhr, textStatus, errorThrown) {
 
+			console.log(xhr.status, xhr.responseText);
+
 			if (xhr.status == 500) {
 				warning(xhr.responseText);
 			}
@@ -121,11 +123,13 @@ function dialogConfirm(message, container, URL) {
 function warning(text) {
 	enableButtons();
 	window.alert(text);
+	enableButtons();
 }
 
 function info(text) {
 	enableButtons();
 	window.alert(text);
+	enableButtons();
 }
 
 function stopAnimation() {
@@ -218,11 +222,13 @@ function createUserAccount(name, email, password1, password2) {
 	if (!name || !email || !password1 || !password2) {
 		enableButtons();
 		warning('At least one required fields is empty.');
+		enableButtons();
 	}
 
 	else if (password1 != password2) {
 		enableButtons();
 		warning('Passwords don’t match.');
+		enableButtons();
 	}
 
 	else {
@@ -506,4 +512,9 @@ function trackTOC() {
 	// else {
 	//     $("tr.visibilityChange").removeClass("selected");
 	// }
+}
+
+
+function authorizeOAuthToken(client_id, response_type, redirect_uri, scope, state) {
+	AJAX('#action', '/auth/authorize', { 'client_id': client_id, 'response_type': response_type, 'redirect_uri': redirect_uri, 'scope': scope, 'state': state });
 }

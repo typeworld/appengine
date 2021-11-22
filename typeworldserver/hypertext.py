@@ -92,24 +92,48 @@ _iub.csConfiguration = {"gdprAppliesGlobally":false,"enableCcpa":true,"countryDe
             self.FORM()
 
             self.P(class_="createAccountContent")
+            self.LABEL(for_="name")
             self.T("Name")
+            self._LABEL()
+            self.BR()
             self.BR()
             self.INPUT(id="name", placeholder="John Doe")
             self._P()
+
             self.P()
+            self.LABEL(for_="email")
             self.T("Email")
+            self._LABEL()
             self.BR()
-            self.INPUT(id="username", placeholder="johndoe@gmail.com")
+            self.BR()
+            self.INPUT(id="email", type="email", autocomplete="username", placeholder="johndoe@gmail.com")
             self._P()
-            self.P()
+
+            self.P(class_="loginContent")
+            self.LABEL(for_="password")
             self.T("Password")
+            self._LABEL()
             self.BR()
-            self.INPUT(id="password", type="password")
+            self.BR()
+            self.INPUT(id="password", type="password", autocomplete="current-password")
             self._P()
+
             self.P(class_="createAccountContent")
+            self.LABEL(for_="newpassword")
             self.T("Repeat Password")
+            self._LABEL()
             self.BR()
-            self.INPUT(id="password2", type="password")
+            self.BR()
+            self.INPUT(id="newpassword", type="password", autocomplete="new-password")
+            self._P()
+
+            self.P(class_="createAccountContent")
+            self.LABEL(for_="newpassword2")
+            self.T("Repeat Password")
+            self._LABEL()
+            self.BR()
+            self.BR()
+            self.INPUT(id="newpassword2", type="password", autocomplete="new-password")
             self._P()
 
             self.smallSeparator()
@@ -141,7 +165,7 @@ _iub.csConfiguration = {"gdprAppliesGlobally":false,"enableCcpa":true,"countryDe
                 class_="button",
                 onclick=(
                     "$(this).addClass('disabled'); createUserAccount($('#name').val(), $('#username').val(),"
-                    " $('#password').val(), $('#password2').val());"
+                    " $('#newpassword').val(), $('#newpassword2').val());"
                 ),
             )
             self.T("Create Account")

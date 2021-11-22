@@ -321,7 +321,9 @@ a {
 .area form h1, .area form h2, .area form h3, .area form h4, .area form h5, .area form h6,
 .area form ul,
 .area form pre, .area p pre, .area table pre, .area td pre,
-.area pre + pre
+.area pre + pre,
+.area td p
+
 {
 	margin-left: 0px;
 	margin-right: 0px;
@@ -459,6 +461,11 @@ pre, code {
 	margin-left: 2px;
     margin-right: 2px;
 }
+
+table pre, table code {
+	background-color: #fff;
+}
+
 
 h1, h2, h3, h4, h5, h6 {
 	margin-top: 35px;
@@ -601,6 +608,18 @@ tr.highlight {
 	background-color: #8d471f;
 }
 
+
+::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+	color: #DADADA;
+  }
+  
+  :-ms-input-placeholder { /* Internet Explorer 10-11 */
+	color: #DADADA;
+  }
+  
+  ::-ms-input-placeholder { /* Microsoft Edge */
+	color: #DADADA;
+  }
 
 
 

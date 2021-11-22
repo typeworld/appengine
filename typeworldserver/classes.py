@@ -25,7 +25,9 @@ from pygments.formatters import HtmlFormatter
 from flask import g, request
 from google.cloud import ndb
 import logging
-
+import urllib.parse
+import jwt
+import uuid
 
 typeworldserver.app.config["modules"].append("classes")
 
@@ -42,6 +44,7 @@ class User(TWNDBModel):
     name = web.StringProperty(required=True, verbose_name="Human Readable Name")
     passwordHash = web.StringProperty(required=True)
     secretKey = web.StringProperty(required=True)
+    uuid = web.StringProperty()
     websiteToken = web.StringProperty()
     timezone = web.StringProperty()
     emailVerified = web.BooleanProperty(default=False)
@@ -65,12 +68,10 @@ class User(TWNDBModel):
     invoiceStreet = web.StringProperty(verbose_name="Street and Building Number")
     invoiceStreet2 = web.StringProperty(verbose_name="Additional Street Information <em>(optional)</em>")
     invoiceZIPCode = web.StringProperty(verbose_name="ZIP Code")
-    invoiceCity = web.StringProperty(verbose_name="City")
+    invoiceCity = web.StringProperty(verbose_name="Town")
     invoiceState = web.StringProperty(verbose_name="State <em>(optional)</em>")
     invoiceCountry = web.CountryProperty(verbose_name="Country")
-    invoiceEUVATID = web.EUVATIDProperty(
-        verbose_name="VAT ID <em>(Only for businesses in the European Union excl. Germany)</em>"
-    )
+    invoiceEUVATID = web.EUVATIDProperty(verbose_name="EU VAT ID <em>(if applicable)</em>")
 
     invoiceFields = [
         "invoiceName",
@@ -83,6 +84,12 @@ class User(TWNDBModel):
         "invoiceEUVATID",
     ]
 
+    def getUUID(self):
+        if not self.uuid:
+            self.uuid = str(uuid.uuid4())
+            self.put()
+        return self.uuid
+
     def oauth(self, scope):
         if scope == "account":
             return {"name": self.name, "email": self.email}
@@ -92,11 +99,55 @@ class User(TWNDBModel):
                 "street": self.invoiceStreet or "",
                 "street2": self.invoiceStreet2 or "",
                 "zipcode": self.invoiceZIPCode or "",
-                "city": self.invoiceCity or "",
+                "town": self.invoiceCity or "",
                 "state": self.invoiceState or "",
-                "country": self.invoiceCountry or "",
+                "country": definitions.COUNTRIES_DICT[self.invoiceCountry] or "",
+                "countryCode": self.invoiceCountry or "",
+            }
+        elif scope == "euvatid":
+            return {
                 "euvatid": self.invoiceEUVATID or "",
             }
+
+    def oauthInfo(self):
+        return {
+            "account": {
+                "editable": [],
+                "fields": {
+                    "name": {"name": "Name", "dbMapping": "name"},
+                    "email": {"name": "Email", "dbMapping": "email"},
+                },
+            },
+            "billingaddress": {
+                "editable": [
+                    "invoiceName",
+                    "invoiceStreet",
+                    "invoiceStreet2",
+                    "invoiceZIPCode",
+                    "invoiceCity",
+                    "invoiceState",
+                    "invoiceCountry",
+                ],
+                "fields": {
+                    "name": {"name": "Name or Company Name", "dbMapping": "invoiceName"},
+                    "street": {"name": "Street and Building Number", "dbMapping": "invoiceStreet"},
+                    "street2": {
+                        "name": "Additional Street Information <em>(optional)</em>",
+                        "dbMapping": "invoiceStreet2",
+                    },
+                    "zipcode": {"name": "ZIP Code", "dbMapping": "invoiceZIPCode"},
+                    "town": {"name": "Town", "dbMapping": "invoiceCity"},
+                    "state": {"name": "State <em>(optional)</em>", "dbMapping": "invoiceState"},
+                    "country": {"name": "Country", "dbMapping": "invoiceCountry"},
+                },
+            },
+            "euvatid": {
+                "editable": ["invoiceEUVATID"],
+                "fields": {
+                    "euvatid": {"name": "European Union VAT ID (if applicable)", "dbMapping": "invoiceEUVATID"},
+                },
+            },
+        }
 
     def editPermission(self, propertyNames=[]):
         allowed = list(set(["name", "email", "emailToChange"]) | set(self.invoiceFields))
@@ -2361,13 +2412,17 @@ class SignInApp(TWNDBModel):
     name = web.StringProperty(required=True, verbose_name="Application/Website Name")
     websiteURL = web.HTTPSURLProperty(required=True, verbose_name="Website URL")
     logoURL = web.HTTPSURLProperty(required=True, verbose_name="Logo URL")
-    redirectURL = web.HTTPSURLProperty(required=True, verbose_name="Redirect URL")
+    redirectURLs = web.TextProperty(required=True, verbose_name="Redirect URLs (one per line)")
     oauthScopes = web.ChoicesProperty(choices=definitions.SIGNINSCOPES, verbose_name="OAuth Scopes")
 
     # Internal
     userKey = web.KeyProperty(required=True)
     clientID = web.StringProperty(required=True)
     clientSecret = web.StringProperty(required=True)
+    lastState = web.StringProperty()
+
+    def oauthScopesList(self):
+        return sorted(self.oauthScopes)
 
     def beforePut(self):
         if not self.clientID:
@@ -2381,7 +2436,7 @@ class SignInApp(TWNDBModel):
         return False
 
     def editPermission(self, propertyNames=[]):
-        allowed = ["name", "websiteURL", "logoURL", "redirectURL", "userKey", "oauthScopes"]
+        allowed = ["name", "websiteURL", "logoURL", "redirectURLs", "userKey", "oauthScopes"]
         return (
             (propertyNames and set(allowed) & set(propertyNames)) or not propertyNames
         ) and g.user.key == self.userKey
@@ -2392,23 +2447,60 @@ class SignInApp(TWNDBModel):
     def overview(self, parameters={}, directCallParameters={}):
         g.html.TABLE()
         g.html.TR()
-        g.html.TD()
+        g.html.TD(style="text-align: left;")
+        # g.html.DIV()
+        g.html.P()
         g.html.B()
         g.html.T(self.name)
         g.html._B()
-        g.html.BR()
-        g.html.smallSeparator()
-        g.html.DIV()
+        g.html._P()
+        g.html.P()
         g.html.T(f"Client ID: <code>{self.clientID}</code>")
         g.html.BR()
         g.html.T(f"Client Secret: <code>{self.clientSecret}</code>")
         g.html.BR()
-        g.html.T(f"OAuth Scopes: <code>{' '.join(self.oauthScopes)}</code>")
-        g.html._DIV()
+        g.html.T(f"OAuth Scopes: <code>{','.join(self.oauthScopesList())}</code>")
+        g.html._P()
+        g.html.P()
+        redirectURL = "__YOUR_URL__"
+        if self.redirectURLs:
+            redirectURL = [x for x in self.redirectURLs.splitlines() if x][0]
+        g.html.T(
+            'Example of Sign-In URL (replace <span style="color: red;">red</span> with your actual values):'
+            " <pre>https://type.world/signin<br />"
+            f"?client_id={self.clientID}<br />"
+            "&response_type=code<br />"
+            f'&redirect_uri=<span style="color: red;">{urllib.parse.quote_plus(redirectURL)}</span><br />'
+            f'&scope={",".join(self.oauthScopesList())}<br />'
+            '&state=<span style="color: red;">__YOUR_STATE__</span></pre>'
+        )
+        g.html._P()
+        # g.html._DIV()
         g.html._TD()
         g.html.TD(style="width: 20%;")
-        self.edit(propertyNames=["name", "websiteURL", "logoURL", "redirectURL", "oauthScopes"])
+        self.edit(propertyNames=["name", "websiteURL", "logoURL", "redirectURLs", "oauthScopes"])
         self.delete(text='<span class="material-icons-outlined">delete</span>')
         g.html._TD()
         g.html._TR()
         g.html._TABLE()
+
+
+class OAuthToken(TWNDBModel):
+    userKey = web.KeyProperty(required=True)
+    signinAppKey = web.KeyProperty(required=True)
+    oauthScopes = web.StringProperty(required=True)
+
+    code = web.StringProperty()  # One-time code to be returned
+
+    def encode_auth_token(self):
+        """
+        Generates the Auth Token
+        :return: string
+        """
+        payload = {
+            # "exp": datetime.datetime.utcnow() + datetime.timedelta(days=0, seconds=5),
+            "iat": datetime.datetime.utcnow(),
+            "sub": self.userKey.get().getUUID(),
+        }
+        print(payload)
+        return jwt.encode(payload, typeworldserver.secret("TYPE_WORLD_FLASK_SECRET_KEY"), algorithm="HS256")
