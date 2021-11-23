@@ -30,13 +30,18 @@ from flask import session as flaskSession
 logging.basicConfig(level=logging.WARNING)
 
 # Google
-client = ndb.Client()
-
-# Google Cloud Secrets
-secretClient = secretmanager.SecretManagerServiceClient()
+GAE = os.getenv("GAE_ENV", "").startswith("standard")
+if GAE:
+    client = ndb.Client()
+    secretClient = secretmanager.SecretManagerServiceClient()
+    storage_client = storage.Client()
+else:
+    keyfile = os.path.join(os.path.dirname(__file__), "..", ".secrets", "typeworld2-b3ba737e9bbc.json")
+    client = ndb.Client.from_service_account_json(keyfile)
+    secretClient = secretmanager.SecretManagerServiceClient.from_service_account_json(keyfile)
+    storage_client = storage.Client.from_service_account_json(keyfile)
 
 # Google Cloud Storage
-storage_client = storage.Client()
 bucket = storage_client.bucket("typeworld2")
 
 
@@ -82,6 +87,7 @@ app.wsgi_app = ndb_wsgi_middleware(app.wsgi_app)  # Wrap the app in middleware.
 
 app.secret_key = secret("TYPE_WORLD_FLASK_SECRET_KEY")
 app.config["modules"] = ["__main__"]
+app.config.update(SESSION_COOKIE_NAME="typeworld")
 
 
 # Local imports
