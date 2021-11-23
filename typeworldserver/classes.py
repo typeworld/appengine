@@ -2403,8 +2403,8 @@ class SignInApp(TWNDBModel):
 
     # User editable
     name = web.StringProperty(required=True, verbose_name="Application/Website Name")
-    websiteURL = web.HTTPSURLProperty(required=True, verbose_name="Website URL")
-    logoURL = web.HTTPSURLProperty(required=True, verbose_name="Logo URL")
+    websiteURL = web.HTTPURLProperty(required=True, verbose_name="Website URL")
+    logoURL = web.HTTPURLProperty(required=True, verbose_name="Logo URL")
     redirectURLs = web.TextProperty(required=True, verbose_name="Redirect URLs (one per line)")
     oauthScopes = web.ChoicesProperty(choices=definitions.SIGNINSCOPES, verbose_name="OAuth Scopes")
 

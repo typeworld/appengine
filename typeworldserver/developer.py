@@ -2162,7 +2162,7 @@ def developer_myapps():
                 text="Register New App/Website",
                 hiddenValues={"userKey": g.user.publicID()},
                 button=True,
-                propertyNames=["name", "websiteURL", "logoURL", "redirectURL", "oauthScopes"],
+                propertyNames=["name", "websiteURL", "logoURL", "redirectURLs", "oauthScopes"],
             )
         else:
             g.html.T(

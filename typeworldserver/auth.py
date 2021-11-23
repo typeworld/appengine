@@ -119,7 +119,7 @@ def auth_authorize():
     return "<script>location.reload();</script>"
 
 
-@typeworldserver.app.route("/auth/userdata", methods=["GET"])
+@typeworldserver.app.route("/auth/userdata", methods=["POST"])
 def auth_userdata():
 
     auth_header = request.headers.get("Authorization")
@@ -145,7 +145,7 @@ def auth_userdata():
             response = {"status": "fail", "message": "User is unknown"}
             return jsonify(response), 401
 
-        response = {"status": "success", "data": {}}
+        response = {"status": "success", "data": {"user_id": user.getUUID()}}
         # Add data
         for scope in token.oauthScopes.split(","):
             response["data"][scope] = user.oauth(scope)
@@ -163,7 +163,7 @@ def auth_token():
     if check is not True:
         return jsonify({"status": "fail", "message": check})
 
-    response = {"access_token": token.authToken}
+    response = {"status": "success", "access_token": token.authToken}
     return jsonify(response)
 
 
@@ -322,6 +322,10 @@ def signin_login(app):
 def signin_forward(app, token):
 
     url = f"{g.form._get('redirect_uri')}?code={token.code}&state={g.form._get('state')}"
+
+    g.html.H1()
+    g.html.T(f"Sign-In Successful")
+    g.html._H1()
 
     g.html.T(
         f'<p>You will be redirected back to <b>{app.name}</b>.</p><p><a href="{url}">Click here</a> if nothing'

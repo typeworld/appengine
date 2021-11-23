@@ -96,7 +96,6 @@ _iub.csConfiguration = {"gdprAppliesGlobally":false,"enableCcpa":true,"countryDe
             self.T("Name")
             self._LABEL()
             self.BR()
-            self.BR()
             self.INPUT(id="name", placeholder="John Doe")
             self._P()
 
@@ -104,7 +103,6 @@ _iub.csConfiguration = {"gdprAppliesGlobally":false,"enableCcpa":true,"countryDe
             self.LABEL(for_="email")
             self.T("Email")
             self._LABEL()
-            self.BR()
             self.BR()
             self.INPUT(id="email", type="email", autocomplete="username", placeholder="johndoe@gmail.com")
             self._P()
@@ -114,7 +112,6 @@ _iub.csConfiguration = {"gdprAppliesGlobally":false,"enableCcpa":true,"countryDe
             self.T("Password")
             self._LABEL()
             self.BR()
-            self.BR()
             self.INPUT(id="password", type="password", autocomplete="current-password")
             self._P()
 
@@ -123,7 +120,6 @@ _iub.csConfiguration = {"gdprAppliesGlobally":false,"enableCcpa":true,"countryDe
             self.T("Repeat Password")
             self._LABEL()
             self.BR()
-            self.BR()
             self.INPUT(id="newpassword", type="password", autocomplete="new-password")
             self._P()
 
@@ -131,7 +127,6 @@ _iub.csConfiguration = {"gdprAppliesGlobally":false,"enableCcpa":true,"countryDe
             self.LABEL(for_="newpassword2")
             self.T("Repeat Password")
             self._LABEL()
-            self.BR()
             self.BR()
             self.INPUT(id="newpassword2", type="password", autocomplete="new-password")
             self._P()
@@ -155,7 +150,7 @@ _iub.csConfiguration = {"gdprAppliesGlobally":false,"enableCcpa":true,"countryDe
 
             self.A(
                 class_="button",
-                onclick="$(this).addClass('disabled'); login($('#username').val(), $('#password').val());",
+                onclick="$(this).addClass('disabled'); login($('#email').val(), $('#password').val());",
             )
             self.T("Log In")
             self._A()
@@ -164,7 +159,7 @@ _iub.csConfiguration = {"gdprAppliesGlobally":false,"enableCcpa":true,"countryDe
             self.A(
                 class_="button",
                 onclick=(
-                    "$(this).addClass('disabled'); createUserAccount($('#name').val(), $('#username').val(),"
+                    "$(this).addClass('disabled'); createUserAccount($('#name').val(), $('#email').val(),"
                     " $('#newpassword').val(), $('#newpassword2').val());"
                 ),
             )
