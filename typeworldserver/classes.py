@@ -1,5 +1,4 @@
 # project
-from typeworld.client.helpers import Garbage
 import typeworldserver
 from typeworldserver import definitions
 from typeworldserver import billing_stripe
@@ -26,7 +25,6 @@ from flask import g, request
 from google.cloud import ndb
 import logging
 import urllib.parse
-import jwt
 import uuid
 
 typeworldserver.app.config["modules"].append("classes")
@@ -86,7 +84,7 @@ class User(TWNDBModel):
 
     def getUUID(self):
         if not self.uuid:
-            self.uuid = str(uuid.uuid4())
+            self.uuid = str(uuid.uuid1())
             self.put()
         return self.uuid
 
@@ -1080,11 +1078,6 @@ class User(TWNDBModel):
         }
 
         return contract
-
-    # @classmethod
-    # def _pre_put_hook(self):
-    # 	if not self.secretKey:
-    # 		self.secretKey = Garbage(40)
 
     @classmethod
     def _pre_delete_hook(cls, key):
@@ -2426,9 +2419,9 @@ class SignInApp(TWNDBModel):
 
     def beforePut(self):
         if not self.clientID:
-            self.clientID = Garbage(40)
+            self.clientID = helpers.Garbage(40)
         if not self.clientSecret:
-            self.clientSecret = Garbage(40)
+            self.clientSecret = helpers.Garbage(40)
 
     def viewPermission(self, methodName):
         if methodName in ["overview"] and self.userKey == g.user.key:
@@ -2491,16 +2484,5 @@ class OAuthToken(TWNDBModel):
     oauthScopes = web.StringProperty(required=True)
 
     code = web.StringProperty()  # One-time code to be returned
-
-    def encode_auth_token(self):
-        """
-        Generates the Auth Token
-        :return: string
-        """
-        payload = {
-            # "exp": datetime.datetime.utcnow() + datetime.timedelta(days=0, seconds=5),
-            "iat": datetime.datetime.utcnow(),
-            "sub": self.userKey.get().getUUID(),
-        }
-        print(payload)
-        return jwt.encode(payload, typeworldserver.secret("TYPE_WORLD_FLASK_SECRET_KEY"), algorithm="HS256")
+    revoked = web.BooleanProperty(default=False)
+    authToken = web.StringProperty()

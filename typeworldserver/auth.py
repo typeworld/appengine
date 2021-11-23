@@ -4,7 +4,9 @@ import typeworldserver
 from typeworldserver import classes, definitions, helpers
 
 # other
-from flask import g, abort
+from flask import g, abort, request
+import jwt
+import datetime
 
 
 def signin_authorization(app):
@@ -88,12 +90,26 @@ def auth_authorize():
         g.html.T(check)
         return abort(401)
 
+    # Check for valid state
+    if not g.form._get("state"):
+        g.html.T("Missing state")
+        return abort(401)
+    if g.form._get("state") == app.lastState:
+        g.html.T("Reusing state is not allowed")
+        return abort(401)
+
     # Create token
     token = classes.OAuthToken()
     token.userKey = g.user.key
     token.signinAppKey = app.key
     token.oauthScopes = ",".join(sorted(g.form._get("scope").split(",")))
     token.code = helpers.Garbage(40)
+    payload = {
+        # "exp": datetime.datetime.utcnow() + datetime.timedelta(days=0, seconds=5),
+        "iat": datetime.datetime.utcnow(),
+        "sub": g.user.getUUID(),
+    }
+    token.authToken = jwt.encode(payload, typeworldserver.secret("TYPE_WORLD_FLASK_SECRET_KEY"), algorithm="HS256")
     token.put()
 
     # Save last state
@@ -103,14 +119,51 @@ def auth_authorize():
     return "<script>location.reload();</script>"
 
 
+@typeworldserver.app.route("/auth/userdata", methods=["GET"])
+def auth_userdata():
+
+    auth_header = request.headers.get("Authorization")
+    if auth_header:
+        auth_token = auth_header.split(" ")[1]
+    else:
+        auth_token = ""
+
+    if auth_token:
+
+        token = classes.OAuthToken.query(classes.OAuthToken.authToken == auth_token).get()
+        if not token:
+            response = {"status": "fail", "message": "Token couldn't be found"}
+            return jsonify(response), 401
+        if token and token.revoked:
+            response = {"status": "fail", "message": "Token is revoked"}
+            return jsonify(response), 401
+
+        payload = jwt.decode(auth_token, typeworldserver.secret("TYPE_WORLD_FLASK_SECRET_KEY"))
+
+        user = classes.User.query(classes.User.uuid == payload["sub"]).get()
+        if not user:
+            response = {"status": "fail", "message": "User is unknown"}
+            return jsonify(response), 401
+
+        response = {"status": "success", "data": {}}
+        # Add data
+        for scope in token.oauthScopes.split(","):
+            response["data"][scope] = user.oauth(scope)
+
+        return jsonify(response), 200
+    else:
+        response = {"status": "fail", "message": "Provide a valid auth token."}
+        return jsonify(response), 401
+
+
 @typeworldserver.app.route("/auth/token", methods=["POST"])
 def auth_token():
 
     check, app, token = checkAuthorizationCredentialsForToken()
     if check is not True:
-        return jsonify({"error": check})
+        return jsonify({"status": "fail", "message": check})
 
-    response = {"access_token": token.encode_auth_token()}
+    response = {"access_token": token.authToken}
     return jsonify(response)
 
 
@@ -304,6 +357,10 @@ def checkAuthorizationCredentialsForToken():
     if not token:
         return "Missing or unknown code", app, None
 
+    # Token is revoked
+    if token.revoked:
+        return "Token is revoked", app, token
+
     return True, app, token
 
 
@@ -321,12 +378,6 @@ def checkAuthorizationCredentialsForAuthorization():
     # Check for valid redirect_uri
     if g.form._get("redirect_uri") not in app.redirectURLs:
         return "Missing or unknown redirect_uri", app
-
-    # Check for valid state
-    if not g.form._get("state"):
-        return "Missing state", app
-    if g.form._get("state") == app.lastState:
-        return "Reusing state is not allowed", app
 
     # Check for valid scope
     if g.form._get("scope") != ",".join(app.oauthScopesList()):
