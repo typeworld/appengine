@@ -119,7 +119,7 @@ def run_on_start():
 @app.before_request
 def before_request():
 
-    logging.warning("####################")
+    # logging.warning("####################")
 
     # starttime = time.time()
 

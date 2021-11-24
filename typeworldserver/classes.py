@@ -2486,3 +2486,7 @@ class OAuthToken(TWNDBModel):
     code = web.StringProperty()  # One-time code to be returned
     revoked = web.BooleanProperty(default=False)
     authToken = web.StringProperty()
+    lastAccess = web.DateTimeProperty()
+
+    def getApp(self):
+        return self.signinAppKey.get()

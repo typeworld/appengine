@@ -150,6 +150,10 @@ def auth_userdata():
         for scope in token.oauthScopes.split(","):
             response["data"][scope] = user.oauth(scope)
 
+        # Save last access time
+        token.lastAccess = helpers.now()
+        token.put()
+
         return jsonify(response), 200
     else:
         response = {"status": "fail", "message": "Provide a valid auth token."}
@@ -324,13 +328,37 @@ def signin_forward(app, token):
     url = f"{g.form._get('redirect_uri')}?code={token.code}&state={g.form._get('state')}"
 
     g.html.H1()
-    g.html.T(f"Sign-In Successful")
+    g.html.T(f"You’re signed in to {app.name.replace(' ', '&nbsp;')}")
     g.html._H1()
 
     g.html.T(
-        f'<p>You will be redirected back to <b>{app.name}</b>.</p><p><a href="{url}">Click here</a> if nothing'
-        " happens.</p>"
+        '<p>You’ll be sent back in <span id="counter">6</span></p><p><a'
+        f' href="{url}">Click here</a> if nothing happens.</p>'
     )
+    g.html.SCRIPT()
+    g.html.T(
+        f"""
+
+function countdown() {{
+    var i = document.getElementById('counter');
+    if (parseInt(i.innerHTML)!=0) {{
+        i.innerHTML = parseInt(i.innerHTML)-1;
+    }}
+    if (parseInt(i.innerHTML)<=0) {{
+        i.classList.add("blink");
+        window.location.href = '{url}';
+        return false;
+    }}
+    else {{
+        setTimeout(function(){{ countdown(); }},1000);
+    }}
+}}
+setTimeout(function(){{ countdown(); }},1000);
+
+    """
+    )
+
+    g.html._SCRIPT()
 
 
 # https://aaronparecki.com/oauth-2-simplified/
@@ -395,6 +423,7 @@ def getToken(app):
         classes.OAuthToken.userKey == g.user.key,
         classes.OAuthToken.signinAppKey == app.key,
         classes.OAuthToken.oauthScopes == ",".join(sorted(g.form._get("scope").split(","))),
+        classes.OAuthToken.revoked == False,  # noqa E712
     ).get()
 
 

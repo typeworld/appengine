@@ -23,6 +23,25 @@ class HTML(hotmetal.HotMetal):
         self._counter += 1
         return self._counter
 
+    def tabs(self, tabs, selected, activeIsClickable=False):
+        self.DIV(id="tabs", class_="tabs clear")
+        for url, name in tabs:
+            if url == selected:
+                self.DIV(class_="tab selected")
+                if activeIsClickable:
+                    self.A(href=url)
+                self.T(name)
+                if activeIsClickable:
+                    self._A()
+                self._DIV()
+            else:
+                self.DIV(class_="tab")
+                self.A(href=url)
+                self.T(name)
+                self._A()
+                self._DIV()
+        self._DIV()
+
     def header(self):
 
         self.JSLink("https://code.jquery.com/jquery-3.4.1.min.js")

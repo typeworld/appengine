@@ -71,11 +71,22 @@ def registerNewAPIEndpoint():
     return g.html.generate()
 
 
+userAccountTabs = [
+    ["/account", '<span class="material-icons-outlined">account_circle</span> Account'],
+    [
+        "/account/signin",
+        '<span class="material-icons-outlined">app_registration</span> Sign-In Apps & Websites',
+    ],
+]
+
+
 @typeworldserver.app.route("/account", methods=["POST", "GET"])
 def account():
 
     if not g.user:
         return redirect("/")
+
+    g.html.tabs(userAccountTabs, "/account")
 
     g.html.DIV(class_="content")
 
@@ -91,6 +102,40 @@ def account():
         "accountSubscriptionsView",
         parameters={"products": ["world.type.professional_user_plan"]},
     )
+    g.html._area()
+
+    g.html._DIV()
+
+    return g.html.generate()
+
+
+@typeworldserver.app.route("/account/signin", methods=["POST", "GET"])
+def account_signin():
+
+    if not g.user:
+        return redirect("/")
+
+    g.html.tabs(userAccountTabs, "/account/signin")
+
+    g.html.DIV(class_="content")
+
+    g.html.area("Sign-In Apps & Websites")
+
+    for token in classes.OAuthToken.query(classes.OAuthToken.userKey == g.user.key).fetch():
+        app = token.getApp()
+        g.html.P()
+        g.html.T(f'<b>{app.name}</b> at <a href="{app.websiteURL}">{app.websiteURL}</a>')
+        g.html.BR()
+        g.html.T(
+            "Scopes:"
+            f" <em>{', '.join([definitions.SIGNINSCOPES[x]['name'] for x in token.oauthScopes.split(',')])}</em>"
+        )
+        g.html.BR()
+        g.html.T(f"Authorization first given: {token.created}")
+        g.html.BR()
+        g.html.T(f"Last data access by app/website: {token.lastAccess}")
+        g.html._P()
+
     g.html._area()
 
     g.html._DIV()
