@@ -1,16 +1,14 @@
 # appengine
 
-Deploy safely: `python ./deploy.py`
-Deploy unsafely: `gcloud app deploy --quiet`
-
-Logs: `gcloud app logs tail`
-
 Run locally: `gunicorn -t 0 -b :80 typeworldserver:app`
 
-Test locally (in `typeworld folder`): `python Lib/typeworld/test.py http://0.0.0.0/v1`
+Deploy safely: `sh deploy.sh`
+Deploy unsafely: `gcloud config configurations activate default && gcloud app deploy --quiet`
+Logs: `gcloud config configurations activate default && gcloud app logs tail`
+Run Pytest locally (with locally running gunicorn server): `sh testlocally.py`
 
-Upload indices: `gcloud app deploy index.yaml`
-Deleting unused indices: `gcloud datastore indexes cleanup index.yaml`
+Upload indices: `gcloud config configurations activate default && gcloud app deploy index.yaml`
+Deleting unused indices: `gcloud config configurations activate default && gcloud datastore indexes cleanup index.yaml`
 
 # Stripe:
 

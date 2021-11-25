@@ -1,20 +1,19 @@
 # project
 
 # other
-import sys
+import os
 import urllib.request
 import urllib.parse
 import ssl
 import certifi
 import unittest
 from google.cloud import ndb
-import typeworld.client
+import requests
 
-print(sys.version)
-
-MOTHERSHIP = sys.argv[-1]
+MOTHERSHIP = os.environ["TEST_MOTHERSHIP"]
+assert MOTHERSHIP
 assert MOTHERSHIP != "test.py"
-print(MOTHERSHIP)
+print("MOTHERSHIP:", MOTHERSHIP)
 
 # Google
 client = ndb.Client()
@@ -30,26 +29,17 @@ def http(url, data=None):
 
 
 class TestServer(unittest.TestCase):
-    def test_cronsjobs(self):
-        url = f"{MOTHERSHIP}/cron/daily"
-        success, content, headers = typeworld.client.request(url)
-        self.assertEqual(headers["status_code"], 200)
-
-        url = f"{MOTHERSHIP}/cron/hourly"
-        success, content, headers = typeworld.client.request(url)
-        self.assertEqual(headers["status_code"], 200)
-
-        url = f"{MOTHERSHIP}/cron/minutely"
-        success, content, headers = typeworld.client.request(url)
-        self.assertEqual(headers["status_code"], 200)
-
-    def test_normalpages(self):
+    def test_pages(self):
         urls = [
+            "/cron/daily",
+            "/cron/hourly",
+            "/cron/minutely",
+            "/cron/10minutely",
             "/",
             "/app",
             "/developer",
             "/developer/protocol",
-            "/developer/endpoints",
+            "/developer/myapps",
             "/developer/api",
             "/developer/validate",
             "/developer/prices",
@@ -61,8 +51,9 @@ class TestServer(unittest.TestCase):
         ]
 
         for url in urls:
-            success, content, headers = typeworld.client.request(MOTHERSHIP + url)
-            self.assertEqual(headers["status_code"], 200)
+            print(url)
+            response = requests.get(MOTHERSHIP + url)
+            self.assertEqual(response.status_code, 200)
 
 
 if __name__ == "__main__":
