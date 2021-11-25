@@ -13,7 +13,7 @@ p {
     position: fixed;
     top: 0px;
     right: 0px;
-    color: #3C3C3B;
+    color: black;
     padding: 20px;
 }
 
@@ -21,9 +21,26 @@ p {
     color: inherit;
 }
 
+.panelOuter {
+    display: table;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+}
+
+.panelMiddle {
+    display: table-cell;
+    vertical-align: middle;
+    padding: 10px;
+}
 
 .panel {
     width: 500px;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .panel .header {
@@ -32,7 +49,7 @@ p {
     color: #00FFA8;
     font-size: 16pt;
     text-align: center;
-    font-weight: 200;
+    font-weight: 400;
 
 	border-top-left-radius: 20px;
 	border-top-right-radius: 20px;
@@ -45,9 +62,9 @@ p {
 }
 
 .panel .content h1 {
-    font-size: 24pt;
-    margin-top: -5px;
-    margin-bottom: 20px;
+    font-size: 20pt;
+    margin-top: 5px;
+    margin-bottom: 30px;
     font-weight: 400;
     /* color: #575757; */
 }
@@ -57,32 +74,50 @@ p {
 }
 
 .panel .content table {
+    
 }
 
 .panel .content th {
 }
 
 .panel .content tr {
+    border-bottom: unset;
 }
 
 .panel .content td {
+    background-color: unset;
+    text-align: unset;
+    padding: 3px;
 }
 
+/* .panel .content td {
+    background-color: unset;
+} */
+
 .panel .content .scope {
-    margin-bottom: 15px;
+    background: linear-gradient(0deg, rgba(255, 255, 255, 1) 0%, rgba(248, 248, 248, 1) 100%); 
+
+    padding: 10px;
+    margin: -30px;
+
+    margin-top: 0px;
+    margin-bottom: -25px;
 }
 
 .panel .content .scope .head {
-    background-color: #EEE;
+    background-color: inherit;
     padding: 20px;
-    font-weight: 200;
+    padding-top: 15px;
+    padding-bottom: 5px;
+    /* font-weight: 200; */
     font-size: 18pt;
 }
 
 .panel .content .scope .content {
-    background-color: #F6F6F6;
+    background-color: inherit;
     padding: 20px;
-    padding-top: 15px;
+    padding-top: 10px;
+    padding-bottom: 5px;
     padding-bottom: 25px;
     margin-bottom: 15px;
 }
@@ -96,6 +131,17 @@ p {
 
 .panel .content .data {
     margin-bottom: -5px;
+}
+
+.panel .supplemental {
+    background-color: #FCFCFC;
+    background: linear-gradient(0deg, rgba(253, 253, 253, 1) 0%, rgba(250, 250, 250, 1) 100%); 
+    padding: 30px;
+    padding-top: 25px;
+    padding-bottom: 35px;
+    /* font-size: 11pt;
+    line-height: 130%; */
+    /* color: #9D9D9C; */
 }
 
 .panel .footer {
@@ -116,19 +162,17 @@ p {
 }
 
 .button {
+    font-size: inherit;
+    line-height: inherit;
     background-color: #00FFA8;
     color: black;
-    padding-top: 9px;
+    /* padding-top: 9px;
     padding-bottom: 10px;
     padding-left: 14px;
     padding-right: 14px;
-}
+    margin-right: 7px; */
 
-button.button {
-    padding-top: 7px;
-    padding-bottom: 6px;
-    padding-left: 14px;
-    padding-right: 14px;
+	border-radius:7px; -moz-border-radius:7px; -webkit-border-radius:7px; -khtml-border-radius:7px;
 }
 
 .loginContent {

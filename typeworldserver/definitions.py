@@ -1668,6 +1668,6 @@ SIGNINSCOPES = {
     },
     "euvatid": {
         "name": "EU VAT ID",
-        "description": "European Union VAT ID (if applicable)",
+        "description": "European Union VAT ID <em>(optional)</em>",
     },
 }

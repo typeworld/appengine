@@ -181,7 +181,7 @@ def updateMQInstances(GCEtemplates=[], GCEinstances=[]):
         # Delete
         else:
             instancesToDelete.append(instance)
-    print("instancesToDelete:", instancesToDelete)
+    # print("instancesToDelete:", instancesToDelete)
     ndb.delete_multi([x.key for x in instancesToDelete])
 
     # instancesToDelete = list(set(knownMQInstances) - set(runningKnownMQInstances))

@@ -142,7 +142,7 @@ class User(TWNDBModel):
             "euvatid": {
                 "editable": ["invoiceEUVATID"],
                 "fields": {
-                    "euvatid": {"name": "European Union VAT ID (if applicable)", "dbMapping": "invoiceEUVATID"},
+                    "euvatid": {"name": "European Union VAT ID <em>(optional)</em>", "dbMapping": "invoiceEUVATID"},
                 },
             },
         }

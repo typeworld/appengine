@@ -121,19 +121,38 @@ def account_signin():
 
     g.html.area("Sign-In Apps & Websites")
 
-    for token in classes.OAuthToken.query(classes.OAuthToken.userKey == g.user.key).fetch():
-        app = token.getApp()
+    tokens = classes.OAuthToken.query(
+        classes.OAuthToken.userKey == g.user.key, classes.OAuthToken.revoked == False
+    ).fetch()  # noqa E712
+    if tokens:
+        for token in tokens:
+            app = token.getApp()
+            g.html.P()
+            g.html.T(f'<b>{app.name}</b> at <a href="{app.websiteURL}">{app.websiteURL}</a>')
+            g.html.BR()
+            g.html.T(
+                "Scopes:"
+                f" <em>{', '.join([definitions.SIGNINSCOPES[x]['name'] for x in token.oauthScopes.split(',')])}</em>"
+            )
+            g.html.BR()
+            g.html.T(f"Authorization first given: {token.created}")
+            g.html.BR()
+            g.html.T(f"Last data access by app/website: {token.lastAccess}")
+            g.html.BR()
+            g.html.A(
+                class_="button",
+                onclick=(
+                    "if(confirm('Are you sure that you want to revoke this authorization? Hint: This will not delete"
+                    " data of yours that the app/website already has. But it will disable future access to that"
+                    f" data.')) {{ AJAX('#action', '/auth/revoketoken', {{'token': '{token.authToken}'}}); }}"
+                ),
+            )
+            g.html.T("Revoke This Authorization")
+            g.html._A()
+            g.html._P()
+    else:
         g.html.P()
-        g.html.T(f'<b>{app.name}</b> at <a href="{app.websiteURL}">{app.websiteURL}</a>')
-        g.html.BR()
-        g.html.T(
-            "Scopes:"
-            f" <em>{', '.join([definitions.SIGNINSCOPES[x]['name'] for x in token.oauthScopes.split(',')])}</em>"
-        )
-        g.html.BR()
-        g.html.T(f"Authorization first given: {token.created}")
-        g.html.BR()
-        g.html.T(f"Last data access by app/website: {token.lastAccess}")
+        g.html.T("You have no running app/website authorizations.")
         g.html._P()
 
     g.html._area()

@@ -891,26 +891,6 @@ def countDownload(url):
     pass
 
 
-def tabs(tabs, selected, activeIsClickable=False):
-    g.html.DIV(id="tabs", class_="tabs clear")
-    for url, name in tabs:
-        if url == selected:
-            g.html.DIV(class_="tab selected")
-            if activeIsClickable:
-                g.html.A(href=url)
-            g.html.T(name)
-            if activeIsClickable:
-                g.html._A()
-            g.html._DIV()
-        else:
-            g.html.DIV(class_="tab")
-            g.html.A(href=url)
-            g.html.T(name)
-            g.html._A()
-            g.html._DIV()
-    g.html._DIV()
-
-
 developerTabs = [
     ["/developer", '<span class="material-icons-outlined">description</span> Docs'],
     [
@@ -941,7 +921,7 @@ developerTabs = [
 @typeworldserver.app.route("/developer/protocol/", methods=["POST", "GET"])
 def developer_protocol():
 
-    tabs(developerTabs, "/developer/protocol")
+    g.html.tabs(developerTabs, "/developer/protocol")
 
     g.html.DIV(class_="content")
 
@@ -972,7 +952,7 @@ def developer_protocol():
 @typeworldserver.app.route("/developer/", methods=["POST", "GET"])
 def developer():
 
-    tabs(developerTabs, "/developer")
+    g.html.tabs(developerTabs, "/developer")
 
     g.html.DIV(class_="content", style="width: 1200px;")
 
@@ -1114,7 +1094,7 @@ track();
 @typeworldserver.app.route("/developer/prices", methods=["POST", "GET"])
 def developer_prices():
 
-    tabs(developerTabs, "/developer/prices")
+    g.html.tabs(developerTabs, "/developer/prices")
 
     contract = classes.User().APIEndpointContract()
     prices = contract.priceStructure
@@ -1655,7 +1635,7 @@ track();
 @typeworldserver.app.route("/developer/api", methods=["POST", "GET"])
 def developer_api():
 
-    tabs(developerTabs, "/developer/api")
+    g.html.tabs(developerTabs, "/developer/api")
 
     displayAPIKey = None
     if g.user:
@@ -2065,13 +2045,14 @@ def _validateAPIEndpoint():
 @typeworldserver.app.route("/developer/myapps", methods=["POST", "GET"])
 def developer_myapps():
 
-    tabs(developerTabs, "/developer/myapps")
+    g.html.tabs(developerTabs, "/developer/myapps")
 
     g.html.DIV(class_="content")
 
     if not g.user:
         g.html.T("Please log in to the website to access this page.")
     else:
+
         endpoints = g.user.APIEndpoints()
 
         g.html.area("My API Endpoints")
@@ -2153,10 +2134,6 @@ def developer_myapps():
 
         g.html.area("My Sign-In Apps")
         g.html.P()
-        print(
-            "g.user.stripeSubscriptionReceivesService()",
-            g.user.stripeSubscriptionReceivesService("world.type.signin_service_plan"),
-        )
         if g.user.stripeSubscriptionReceivesService("world.type.signin_service_plan"):
             classes.SignInApp().new(
                 text="Register New App/Website",
@@ -2201,7 +2178,7 @@ def developer_editapiendpoint(apiEndpointKey):
     if not g.user:
         return redirect("/")
 
-    tabs(developerTabs, "/developer/endpoints", activeIsClickable=True)
+    g.html.tabs(developerTabs, "/developer/endpoints", activeIsClickable=True)
 
     endpoint = classes.APIEndpoint.get_or_insert(
         base64.b64decode(apiEndpointKey).decode()
@@ -2326,7 +2303,7 @@ def developer_editapiendpoint(apiEndpointKey):
 @typeworldserver.app.route("/developer/billing/", methods=["POST", "GET"])
 def developer_billing():
 
-    tabs(developerTabs, "/developer/billing")
+    g.html.tabs(developerTabs, "/developer/billing")
 
     g.html.DIV(class_="content")
     if not g.user:
@@ -2351,7 +2328,7 @@ def developer_billing():
 @typeworldserver.app.route("/developer/validate", methods=["POST", "GET"])
 def developer_validate():
 
-    tabs(developerTabs, "/developer/validate")
+    g.html.tabs(developerTabs, "/developer/validate")
 
     g.html.DIV(class_="content")
 
@@ -2476,7 +2453,7 @@ def developer_validate():
 
 # def _developer_validate():
 
-#     tabs(developerTabs, "/developer/validate/")
+#     g.html.tabs(developerTabs, "/developer/validate/")
 
 #     MOTHERSHIP = "https://type.world/api"
 

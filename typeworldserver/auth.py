@@ -15,6 +15,8 @@ def signin_authorization(app):
     Log In or Sign Up
     """
 
+    g.html.DIV(class_="content")
+
     g.html.H1()
     g.html.T(f'Authorize <span class="black">{app.name}</span>')
     g.html._H1()
@@ -38,15 +40,25 @@ def signin_authorization(app):
         g.html._DIV()  # .head
         g.html.DIV(class_="content")
 
+        g.html.TABLE()
+        # g.html.P()
         oauth = g.user.oauth(scope)
         for key in oauth:
             if key in g.user.oauthInfo()[scope]["fields"]:
-                g.html.P(class_="label")
-                g.html.T(g.user.oauthInfo()[scope]["fields"][key]["name"])
-                g.html._P()
-                g.html.P(class_="data")
+                # g.html.P(class_="label")
+                # g.html.T(g.user.oauthInfo()[scope]["fields"][key]["name"])
+                # g.html._P()
+                g.html.TR()
+                g.html.TD(style="width: 40%; text-align: right; color: #777; font-size: 10pt;")
+                g.html.T(g.user.oauthInfo()[scope]["fields"][key]["name"] + ":")
+                g.html._TD()
+                g.html.TD()
                 g.html.T(oauth[key] or '<span style="color: #777;">&lt;empty&gt;</span>')
-                g.html._P()
+                g.html._TD()
+                g.html._TR()
+                # g.html.BR()
+        # g.html._P()
+        g.html._TABLE()
 
         g.html._DIV()  # .content
         g.html._DIV()  # .scope
@@ -54,10 +66,10 @@ def signin_authorization(app):
     g.html.smallSeparator()
 
     g.html.P()
-    g.html.T('This authorization can be revoked at any time in the <a href="/account">User Account</a>.')
+    g.html.T('This authorization can be revoked at any time in the <a href="/account">User&nbsp;Account</a>.')
     g.html._P()
 
-    g.html.smallSeparator()
+    g.html.mediumSeparator()
 
     g.html.DIV(class_="clear")
     g.html.SPAN(class_="noAnimation floatleft", style="margin-right: 10px;")
@@ -81,22 +93,21 @@ def signin_authorization(app):
     g.html._SPAN()
     g.html._DIV()  # .clear
 
+    g.html._DIV()  # .content
+
 
 @typeworldserver.app.route("/auth/authorize", methods=["POST"])
 def auth_authorize():
 
     check, app = checkAuthorizationCredentialsForAuthorization()
     if check is not True:
-        g.html.T(check)
-        return abort(401)
+        return check, 401
 
     # Check for valid state
     if not g.form._get("state"):
-        g.html.T("Missing state")
-        return abort(401)
+        return "Missing state", 401
     if g.form._get("state") == app.lastState:
-        g.html.T("Reusing state is not allowed")
-        return abort(401)
+        return "Reusing state is not allowed", 401
 
     # Create token
     token = classes.OAuthToken()
@@ -138,7 +149,7 @@ def auth_userdata():
             response = {"status": "fail", "message": "Token is revoked"}
             return jsonify(response), 401
 
-        payload = jwt.decode(auth_token, typeworldserver.secret("TYPE_WORLD_FLASK_SECRET_KEY"))
+        payload = jwt.decode(auth_token, typeworldserver.secret("TYPE_WORLD_FLASK_SECRET_KEY"), algorithms=["HS256"])
 
         user = classes.User.query(classes.User.uuid == payload["sub"]).get()
         if not user:
@@ -160,6 +171,22 @@ def auth_userdata():
         return jsonify(response), 401
 
 
+@typeworldserver.app.route("/auth/revoketoken", methods=["POST"])
+def auth_revoketoken():
+
+    if not g.user:
+        return abort(401)
+
+    token = classes.OAuthToken.query(classes.OAuthToken.authToken == g.form._get("token")).get()
+    if not token:
+        return abort(401)
+
+    token.revoked = True
+    token.put()
+
+    return "<script>location.reload();</script>"
+
+
 @typeworldserver.app.route("/auth/token", methods=["POST"])
 def auth_token():
 
@@ -177,12 +204,14 @@ def signin_login(app):
     Log In or Sign Up
     """
 
+    g.html.DIV(class_="loginContent")
+    g.html.DIV(class_="content")
+
     g.html.H1()
     g.html.T(f'Sign in to <span class="black">{app.name}</span>')
     g.html._H1()
 
     # Login form
-    g.html.DIV(class_="loginContent")
     g.html.FORM()
 
     g.html.P()
@@ -223,7 +252,8 @@ def signin_login(app):
 
     g.html._FORM()
 
-    g.html.smallSeparator()
+    g.html._DIV()  # .content
+    g.html.DIV(class_="supplemental")
 
     g.html.P()
     g.html.A()
@@ -242,10 +272,17 @@ def signin_login(app):
     g.html._A()
     g.html._P()
 
+    g.html._DIV()  # .content
     g.html._DIV()  # .loginContent
 
     # Signup form
     g.html.DIV(class_="createAccountContent")
+    g.html.DIV(class_="content")
+
+    g.html.H1()
+    g.html.T(f"Sign up for Type.World")
+    g.html._H1()
+
     g.html.FORM()
 
     g.html.P()
@@ -305,7 +342,8 @@ def signin_login(app):
 
     g.html._FORM()
 
-    g.html.smallSeparator()
+    g.html._DIV()  # .content
+    g.html.DIV(class_="supplemental")
 
     g.html.P()
     g.html.T("Already have an account? ")
@@ -320,6 +358,7 @@ def signin_login(app):
     g.html._A()
     g.html._P()
 
+    g.html._DIV()  # .content
     g.html._DIV()  # .createAccountContent
 
 
@@ -327,12 +366,14 @@ def signin_forward(app, token):
 
     url = f"{g.form._get('redirect_uri')}?code={token.code}&state={g.form._get('state')}"
 
+    g.html.DIV(class_="content")
+
     g.html.H1()
     g.html.T(f"You’re signed in to {app.name.replace(' ', '&nbsp;')}")
     g.html._H1()
 
     g.html.T(
-        '<p>You’ll be sent back in <span id="counter">6</span></p><p><a'
+        '<p>You’ll be sent back in <span id="counter">3</span></p><p><a'
         f' href="{url}">Click here</a> if nothing happens.</p>'
     )
     g.html.SCRIPT()
@@ -360,6 +401,8 @@ setTimeout(function(){{ countdown(); }},1000);
 
     g.html._SCRIPT()
 
+    g.html._DIV()  # .content
+
 
 # https://aaronparecki.com/oauth-2-simplified/
 
@@ -381,7 +424,13 @@ def checkAuthorizationCredentialsForToken():
         return "Missing or unknown grant_type", app, None
 
     # Check for valid redirect_uri
-    if g.form._get("redirect_uri") not in app.redirectURLs:
+    matchedURL = False
+    for url in [x.strip() for x in app.redirectURLs.splitlines()]:
+        if url:
+            if g.form._get("redirect_uri").startswith(url):
+                matchedURL = True
+                break
+    if matchedURL is False:
         return "Missing or unknown redirect_uri", app, None
 
     # Check for valid code
@@ -408,8 +457,14 @@ def checkAuthorizationCredentialsForAuthorization():
         return "Missing or unknown response_type", app
 
     # Check for valid redirect_uri
-    if g.form._get("redirect_uri") not in app.redirectURLs:
-        return "Missing or unknown redirect_uri", app
+    matchedURL = False
+    for url in [x.strip() for x in app.redirectURLs.splitlines()]:
+        if url:
+            if g.form._get("redirect_uri").startswith(url):
+                matchedURL = True
+                break
+    if matchedURL is False:
+        return "Missing or unknown redirect_uri", app, None
 
     # Check for valid scope
     if g.form._get("scope") != ",".join(app.oauthScopesList()):
@@ -433,6 +488,7 @@ def signin():
     check, app = checkAuthorizationCredentialsForAuthorization()
     if check is not True:
         g.html.T(check)
+        print(check)
         return g.html.GeneratePage()
 
     g.html.title = f"Type.World Sign-In (via {app.name})"
@@ -452,34 +508,34 @@ def signin():
     g.html._DIV()
     g.html._DIV()
 
-    # Header
-    g.html.DIV(class_="accountbar clear")
-    g.html.DIV(class_="floatright")
-    if g.user:
-        g.html.SPAN(class_="link", style="color: #777")
-        g.html.T(g.user.email)
-        g.html._SPAN()
-        g.html.SPAN(class_="link")
-        g.html.A(href="/account")
-        g.html.T('<span class="material-icons-outlined">account_circle</span> Account')
-        g.html._A()
-        g.html._SPAN()
-        g.html.SPAN(class_="link")
-        g.html.A(onclick="logout();")
-        g.html.T('<span class="material-icons-outlined">logout</span> Log Out')
-        g.html._A()
-        g.html._SPAN()
-    g.html._DIV()
-    g.html._DIV()  # .clear
+    # # Header
+    # g.html.DIV(class_="accountbar clear")
+    # g.html.DIV(class_="floatright")
+    # if g.user:
+    #     g.html.SPAN(class_="link", style="color: #777")
+    #     g.html.T(g.user.email)
+    #     g.html._SPAN()
+    #     g.html.SPAN(class_="link")
+    #     g.html.A(href="/account")
+    #     g.html.T('<span class="material-icons-outlined">account_circle</span> Account')
+    #     g.html._A()
+    #     g.html._SPAN()
+    #     g.html.SPAN(class_="link")
+    #     g.html.A(onclick="logout();")
+    #     g.html.T('<span class="material-icons-outlined">logout</span> Log Out')
+    #     g.html._A()
+    #     g.html._SPAN()
+    # g.html._DIV()
+    # g.html._DIV()  # .clear
 
-    g.html.DIV(class_="centered panel")
+    g.html.DIV(class_="panelOuter")
+    g.html.DIV(class_="panelMiddle")
+    g.html.DIV(class_="panel")
     g.html.DIV(class_="header")
     g.html.IMG(src="/static/images/logo.svg", style="width: 80px; margin-bottom: 10px;")
     g.html.BR()
     g.html.T("Type.World Sign-In")
     g.html._DIV()  # .header
-
-    g.html.DIV(class_="content")
 
     if g.user:
         token = getToken(app)
@@ -489,8 +545,6 @@ def signin():
             signin_authorization(app)
     else:
         signin_login(app)
-
-    g.html._DIV()  # .content
 
     g.html.DIV(class_="footer")
     g.html.P()
@@ -520,5 +574,7 @@ def signin():
     g.html._DIV()  # .footer
 
     g.html._DIV()  # .panel
+    g.html._DIV()  # .panelMiddle
+    g.html._DIV()  # .panelOuter
 
     return g.html.GeneratePage()

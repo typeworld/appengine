@@ -207,24 +207,31 @@ input[type=file] {
 
 input[type=button], input[type=submit], .button, button {
 	width: auto;
-	padding-top: 6px;
-	padding-bottom: 8px;
-	padding-left: 10px;
-	padding-right: 10px;
+    padding-top: 9px;
+    padding-bottom: 10px;
+    padding-left: 14px;
+    padding-right: 14px;
 	margin-top: 8px;
 	margin-left: 0px;
-/*	margin-bottom: -5px; */
-	margin-right: 0px;
+	/* margin-right: 7px; */
 	cursor: pointer;
 	background-color: #58585A;
 	border-radius:4px; -moz-border-radius:4px; -webkit-border-radius:4px; -khtml-border-radius:4px;
 	-webkit-appearance: none;
 	font-family: inherit;
-	font-size: inherit;
+    font-size: inherit;
+    line-height: inherit;
 	color: #FFF;
 	display: inline-block;
 	border: none;
 }
+
+/* button {
+    padding-top: 6px;
+    padding-bottom: 7px;
+    padding-left: 14px;
+    padding-right: 14px;
+} */
 
 input[type=button]+input[type=button], input[type=button]+input[type=submit], input[type=button]+.button,
 input[type=submit]+input[type=submit], input[type=submit]+input[type=button], input[type=submit]+.button,
@@ -235,7 +242,7 @@ input[type=submit]+input[type=submit], input[type=submit]+.no-print input[type=b
 .button+.button, .button+.no-print input[type=button], .button+input[type=submit]
 
  {
-	margin-left: 10px; 
+	margin-left: 15px; 
 }
 
 .button.secondary, a.button.secondary, input[type=button].secondary, button.secondary {

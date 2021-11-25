@@ -7,15 +7,12 @@ import re
 import json
 from flask import abort, g, redirect
 from google.cloud import ndb
-from google.cloud import translate_v2
 import logging
 
 
 typeworldserver.app.config["modules"].append("translations")
 
 ###
-
-translateClient = translate_v2.Client()
 
 
 @typeworldserver.app.route("/downloadLocalization", methods=["GET"])
@@ -80,7 +77,9 @@ def googleTranslate():
 
     keyword = ndb.Key(urlsafe=g.form._get("keywordKey").encode()).get(read_consistency=ndb.STRONG)
     source = keyword.currentTranslation("en").replace("\n", "<br />")
-    results = translateClient.translate(source, source_language="en", target_language=g.form._get("targetLanguage"))
+    results = typeworldserver.translateClient.translate(
+        source, source_language="en", target_language=g.form._get("targetLanguage")
+    )
 
     # logging.warning('Sent: %s' % source)
     # logging.warning('Received: %s' % results['translatedText'])

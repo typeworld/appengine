@@ -17,4 +17,3 @@ handlers:
   secure: always
   script: auto
 entrypoint: gunicorn -t 0 -b :$PORT typeworldserver:app
-app_engine_apis: true

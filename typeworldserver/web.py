@@ -652,15 +652,17 @@ class WebAppModel(ndb.Model):
     defaultValues = {}
 
     def __init__(self, *args, **kwargs):
+
+        super(WebAppModel, self).__init__(*args, **kwargs)
+
         # print(self.__class__.__name__, "__init__")
         self.delegate = None
 
         # self.delegate = WebAppModelDelegate()
-        super(WebAppModel, self).__init__(*args, **kwargs)
         self._contentCache = {}
         self._updateContentCache()
         # Necessary when creating new object, not loading from DB
-        self._contentCacheUpdated = False
+        # self._contentCacheUpdated = False
         self.initialize()
         self._currentlyPutting = False
 
@@ -701,7 +703,7 @@ class WebAppModel(ndb.Model):
         if self.created is None:
             self.created = helpers.now()
 
-        if self.createdBy is None and g.user:
+        if self.createdBy is None and hasattr(g, "user") and g.user:
             self.createdBy = g.user.key
 
         self._currentlyPutting = True

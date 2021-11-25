@@ -24,6 +24,7 @@ import typeworld.api
 import typeworld.client
 from google.cloud import ndb, storage
 from google.cloud import secretmanager
+from google.cloud import translate_v2
 from flask import Flask, Response, g, redirect, request
 from flask import session as flaskSession
 
@@ -35,11 +36,14 @@ if GAE:
     client = ndb.Client()
     secretClient = secretmanager.SecretManagerServiceClient()
     storage_client = storage.Client()
+    translateClient = translate_v2.Client()
+
 else:
     keyfile = os.path.join(os.path.dirname(__file__), "..", ".secrets", "typeworld2-b3ba737e9bbc.json")
     client = ndb.Client.from_service_account_json(keyfile)
     secretClient = secretmanager.SecretManagerServiceClient.from_service_account_json(keyfile)
     storage_client = storage.Client.from_service_account_json(keyfile)
+    translateClient = translate_v2.Client.from_service_account_json(keyfile)
 
 # Google Cloud Storage
 bucket = storage_client.bucket("typeworld2")
@@ -71,7 +75,7 @@ def ndb_wsgi_middleware(wsgi_app):
     return middleware
 
 
-def secret(secret_id, version_id=1):
+def secret(secret_id, version_id="latest"):
     """
     Access Google Cloud Secrets
     https://cloud.google.com/secret-manager/docs/creating-and-accessing-secrets#access
@@ -113,7 +117,9 @@ from . import web  # noqa: E402,F401
 
 @app.before_first_request
 def run_on_start():
-    pass
+    g.user = None
+    g.admin = None
+    g.session = None
 
 
 @app.before_request
@@ -129,7 +135,6 @@ def before_request():
         g.instanceVersion = str(int(time.time()))
 
     g.user = None
-
     g.admin = None
     g.session = None
     g.ndb_puts = []
@@ -443,18 +448,27 @@ def cron_hourly():
 def cron_10minutely():
 
     # MQ test
-    for instance in mq.availableMQInstances():
-        success, response, responseObject = typeworld.client.request(f"http://{instance.ip}/uptime", method="GET")
-        if type(response) != str:
-            response = response.decode()
+    mqInstances = mq.availableMQInstances()
+    if mqInstances:
+        for instance in mqInstances:
+            success, response, responseObject = typeworld.client.request(f"http://{instance.ip}/uptime", method="GET")
+            if type(response) != str:
+                response = response.decode()
 
-        if not success or success and response != "ok":
-            helpers.email(
-                "Type.World <hq@mail.type.world>",
-                ["tech@type.world"],
-                "Type.World: MQ is offline",
-                f"MQ {instance.ip} is offline. Message: {response}",
-            )
+            if not success or success and response != "ok":
+                helpers.email(
+                    "Type.World <hq@mail.type.world>",
+                    ["tech@type.world"],
+                    "Type.World: MQ is offline",
+                    f"MQ {instance.ip} is offline. Message: {response}",
+                )
+    else:
+        helpers.email(
+            "Type.World <hq@mail.type.world>",
+            ["tech@type.world"],
+            "Type.World: MQ is offline",
+            "No MQ is currently available",
+        )
 
     return Response("ok", mimetype="text/plain")
 
