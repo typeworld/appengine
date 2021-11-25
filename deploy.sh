@@ -22,5 +22,9 @@ gcloud app deploy --quiet --project typeworld2 --version $VERSION --no-promote
 echo "PyTest..."
 pytest -s
 
+echo "API Test..."
+TYPEWORLD_LIB_PATH=`python3 -c 'import typeworld, os; print(os.path.join(os.path.dirname(typeworld.__file__)))'`
+python3 $TYPEWORLD_LIB_PATH/test.py $TEST_MOTHERSHIP
+
 echo "Migrating traffic..."
 gcloud app services set-traffic default --splits $VERSION=1 --quiet
