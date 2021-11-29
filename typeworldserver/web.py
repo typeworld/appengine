@@ -95,6 +95,7 @@ import base64
 from google.cloud import ndb
 from urllib.parse import unquote, urlencode
 import copy
+import urllib.parse
 
 typeworldserver.app.config["modules"].append("web")
 
@@ -858,7 +859,8 @@ class WebAppModel(ndb.Model):
         if not new:
             hiddenValues["key"] = self.key.urlsafe().decode()
         hiddenValues["class"] = self.__class__.__name__
-        hiddenValues["dataContainer"] = dataContainer
+        if dataContainer:
+            hiddenValues["dataContainer"] = dataContainer
         if reloadURL:
             hiddenValues["reloadURL"] = helpers.addAttributeToURL(reloadURL, "inline=true")
         if parentKey:
@@ -993,13 +995,16 @@ class WebAppModel(ndb.Model):
         g.html.T(text or ("+ Add %s" % self.__class__.__name__))
         g.html._A()
 
-    def edit(self, text=None, button=False, propertyNames=[], values={}, hiddenValues={}):
+    def edit(self, text=None, button=False, propertyNames=[], values={}, hiddenValues={}, reloadURL=None):
 
         url = "/createDialog?inline=true&class=%s" % (self.__class__.__name__)
         url += "&key=%s" % self.key.urlsafe().decode()
         if propertyNames:
             url += "&propertyNames=%s" % ",".join(propertyNames)
-        url += f"&dataContainer={dataContainerJavaScriptIdentifier}"
+        if reloadURL:
+            url += f"&reloadURL={reloadURL}"
+        else:
+            url += f"&dataContainer={dataContainerJavaScriptIdentifier}"
         if values:
             url += f"&values={','.join(values.keys())}&{urlencode(values)}"
         if hiddenValues:
@@ -1334,7 +1339,13 @@ def editProperties():
     # Edit permissions
     if g.admin or item.editPermission(propertyNames):
         item.putnow()
-        dataContainerReload(item)
+
+        if g.form._get("dataContainer"):
+            dataContainerReload(item)
+        elif g.form._get("reloadURL"):
+            g.html.SCRIPT()
+            g.html.T(f"window.location.href='{urllib.parse.unquote_plus(g.form._get('reloadURL'))}';")
+            g.html._SCRIPT()
 
     else:
         return abort(401)

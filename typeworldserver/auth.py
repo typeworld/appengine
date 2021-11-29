@@ -1,12 +1,14 @@
 # project
 from flask.json import jsonify
 import typeworldserver
-from typeworldserver import classes, definitions, helpers
+from typeworldserver import classes, helpers
 
 # other
-from flask import g, abort, request
+from flask import g, abort, request, Response
 import jwt
 import datetime
+import urllib.parse
+import json
 
 
 def signin_authorization(app):
@@ -27,41 +29,7 @@ def signin_authorization(app):
 
     g.html.mediumSeparator()
 
-    for i, scope in enumerate(g.form._get("scope").split(",")):
-        g.html.DIV(class_="scope")
-        g.html.DIV(class_="head clear")
-        g.html.DIV(class_="floatleft")
-        g.html.T(f"{definitions.SIGNINSCOPES[scope]['name']}")
-        g.html._DIV()  # .floatleft
-        g.html.DIV(class_="floatright", style="font-size: inherit;")
-        if g.user.oauthInfo()[scope]["editable"]:
-            g.user.edit(propertyNames=g.user.oauthInfo()[scope]["editable"])
-        g.html._DIV()  # .floatright
-        g.html._DIV()  # .head
-        g.html.DIV(class_="content")
-
-        g.html.TABLE()
-        # g.html.P()
-        oauth = g.user.oauth(scope)
-        for key in oauth:
-            if key in g.user.oauthInfo()[scope]["fields"]:
-                # g.html.P(class_="label")
-                # g.html.T(g.user.oauthInfo()[scope]["fields"][key]["name"])
-                # g.html._P()
-                g.html.TR()
-                g.html.TD(style="width: 40%; text-align: right; color: #777; font-size: 10pt;")
-                g.html.T(g.user.oauthInfo()[scope]["fields"][key]["name"] + ":")
-                g.html._TD()
-                g.html.TD()
-                g.html.T(oauth[key] or '<span style="color: #777;">&lt;empty&gt;</span>')
-                g.html._TD()
-                g.html._TR()
-                # g.html.BR()
-        # g.html._P()
-        g.html._TABLE()
-
-        g.html._DIV()  # .content
-        g.html._DIV()  # .scope
+    g.user.editScopes(g.form._get("scope").split(","))
 
     g.html.smallSeparator()
 
@@ -149,6 +117,7 @@ def auth_userdata():
             response = {"status": "fail", "message": "Token is revoked"}
             return jsonify(response), 401
 
+        app = token.getApp()
         payload = jwt.decode(auth_token, typeworldserver.secret("TYPE_WORLD_FLASK_SECRET_KEY"), algorithms=["HS256"])
 
         user = classes.User.query(classes.User.uuid == payload["sub"]).get()
@@ -156,19 +125,80 @@ def auth_userdata():
             response = {"status": "fail", "message": "User is unknown"}
             return jsonify(response), 401
 
-        response = {"status": "success", "data": {"user_id": user.getUUID()}}
+        response = {
+            "status": "success",
+            "userdata": {
+                "user_id": user.getUUID(),
+                "edit_uri": f"{typeworldserver.HTTPROOT}/auth/edituserdata?scope={token.oauthScopes}",
+                "scope": {},
+            },
+        }
         # Add data
         for scope in token.oauthScopes.split(","):
-            response["data"][scope] = user.oauth(scope)
+            response["userdata"]["scope"][scope] = user.oauth(scope)
+            # Add clientID
+            if "edit_uri" in response["userdata"]["scope"][scope]:
+                response["userdata"]["scope"][scope]["edit_uri"] += f"&client_id={app.clientID}"
 
         # Save last access time
         token.lastAccess = helpers.now()
         token.put()
 
-        return jsonify(response), 200
+        # return json.dumps(response), 200
+        return Response(json.dumps(response), mimetype="application/json", status=200)
     else:
         response = {"status": "fail", "message": "Provide a valid auth token."}
         return jsonify(response), 401
+
+
+@typeworldserver.app.route("/auth/edituserdata", methods=["GET"])
+def auth_edituserdata():
+
+    # Check for valid client_id
+    app = classes.SignInApp.query(classes.SignInApp.clientID == g.form._get("client_id")).get()
+    if not app:
+        return "Missing or unknown client_id", 401
+
+    # TODO:
+    # Check for valid scopes
+
+    # Check for valid redirect_uri
+    matchedURL = False
+    for url in [x.strip() for x in app.redirectURLs.splitlines()]:
+        if url:
+            if urllib.parse.unquote_plus(g.form._get("redirect_uri")).startswith(url):
+                matchedURL = True
+                break
+    if matchedURL is False:
+        return "Missing or unknown redirect_uri", 401
+
+    ########################
+
+    signin_header(app)
+
+    g.html.DIV(class_="content")
+
+    g.html.H1()
+    g.html.T("Edit my Type.World account")
+    g.html._H1()
+
+    g.user.editScopes(g.form._get("scope").split(","))
+
+    g.html.smallSeparator()
+
+    g.html.DIV(class_="clear")
+    g.html.SPAN(class_="floatleft", style="margin-right: 10px;")
+    g.html.A(class_="button", href=urllib.parse.unquote_plus(g.form._get("redirect_uri")))
+    g.html.T(f"Return to {app.name}")
+    g.html._A()
+    g.html._SPAN()
+    g.html._DIV()  # .clear
+
+    g.html._DIV()  # .content
+
+    signin_footer(app)
+
+    return g.html.GeneratePage()
 
 
 @typeworldserver.app.route("/auth/revoketoken", methods=["POST"])
@@ -280,7 +310,7 @@ def signin_login(app):
     g.html.DIV(class_="content")
 
     g.html.H1()
-    g.html.T(f"Sign up for Type.World")
+    g.html.T("Sign up for Type.World")
     g.html._H1()
 
     g.html.FORM()
@@ -482,15 +512,7 @@ def getToken(app):
     ).get()
 
 
-@typeworldserver.app.route("/signin", methods=["GET"])
-def signin():
-
-    check, app = checkAuthorizationCredentialsForAuthorization()
-    if check is not True:
-        g.html.T(check)
-        print(check)
-        return g.html.GeneratePage()
-
+def signin_header(app):
     g.html.title = f"Type.World Sign-In (via {app.name})"
 
     g.html.JSLink("https://code.jquery.com/jquery-3.4.1.min.js")
@@ -508,26 +530,6 @@ def signin():
     g.html._DIV()
     g.html._DIV()
 
-    # # Header
-    # g.html.DIV(class_="accountbar clear")
-    # g.html.DIV(class_="floatright")
-    # if g.user:
-    #     g.html.SPAN(class_="link", style="color: #777")
-    #     g.html.T(g.user.email)
-    #     g.html._SPAN()
-    #     g.html.SPAN(class_="link")
-    #     g.html.A(href="/account")
-    #     g.html.T('<span class="material-icons-outlined">account_circle</span> Account')
-    #     g.html._A()
-    #     g.html._SPAN()
-    #     g.html.SPAN(class_="link")
-    #     g.html.A(onclick="logout();")
-    #     g.html.T('<span class="material-icons-outlined">logout</span> Log Out')
-    #     g.html._A()
-    #     g.html._SPAN()
-    # g.html._DIV()
-    # g.html._DIV()  # .clear
-
     g.html.DIV(class_="panelOuter")
     g.html.DIV(class_="panelMiddle")
     g.html.DIV(class_="panel")
@@ -537,14 +539,8 @@ def signin():
     g.html.T("Type.World Sign-In")
     g.html._DIV()  # .header
 
-    if g.user:
-        token = getToken(app)
-        if token:
-            signin_forward(app, token)
-        else:
-            signin_authorization(app)
-    else:
-        signin_login(app)
+
+def signin_footer(app):
 
     g.html.DIV(class_="footer")
     g.html.P()
@@ -576,5 +572,30 @@ def signin():
     g.html._DIV()  # .panel
     g.html._DIV()  # .panelMiddle
     g.html._DIV()  # .panelOuter
+
+
+@typeworldserver.app.route("/signin", methods=["GET"])
+def signin():
+
+    check, app = checkAuthorizationCredentialsForAuthorization()
+    if check is not True:
+        g.html.T(check)
+        print(check)
+        return g.html.GeneratePage()
+
+    ########################
+
+    signin_header(app)
+
+    if g.user:
+        token = getToken(app)
+        if token:
+            signin_forward(app, token)
+        else:
+            signin_authorization(app)
+    else:
+        signin_login(app)
+
+    signin_footer(app)
 
     return g.html.GeneratePage()

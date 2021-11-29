@@ -45,6 +45,12 @@ else:
     storage_client = storage.Client.from_service_account_json(keyfile)
     translateClient = translate_v2.Client.from_service_account_json(keyfile)
 
+if GAE:
+    HTTPROOT = "https://type.world"
+
+else:
+    HTTPROOT = "http://0.0.0.0"
+
 # Google Cloud Storage
 bucket = storage_client.bucket("typeworld2")
 

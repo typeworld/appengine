@@ -90,21 +90,32 @@ class User(TWNDBModel):
 
     def oauth(self, scope):
         if scope == "account":
-            return {"name": self.name, "email": self.email}
+            return {
+                "name": definitions.SIGNINSCOPES["account"]["name"],
+                "data": {"name": self.name, "email": self.email},
+            }
         elif scope == "billingaddress":
             return {
-                "name": self.invoiceName or "",
-                "street": self.invoiceStreet or "",
-                "street2": self.invoiceStreet2 or "",
-                "zipcode": self.invoiceZIPCode or "",
-                "town": self.invoiceCity or "",
-                "state": self.invoiceState or "",
-                "country": definitions.COUNTRIES_DICT[self.invoiceCountry] or "",
-                "countryCode": self.invoiceCountry or "",
+                "name": definitions.SIGNINSCOPES["billingaddress"]["name"],
+                "edit_uri": f"{typeworldserver.HTTPROOT}/auth/edituserdata?scope=billingaddress",
+                "data": {
+                    "name": self.invoiceName or "",
+                    "street": self.invoiceStreet or "",
+                    "street2": self.invoiceStreet2 or "",
+                    "zipcode": self.invoiceZIPCode or "",
+                    "town": self.invoiceCity or "",
+                    "state": self.invoiceState or "",
+                    "country": definitions.COUNTRIES_DICT[self.invoiceCountry] if self.invoiceCountry else "",
+                    "country_code": self.invoiceCountry or "",
+                },
             }
         elif scope == "euvatid":
             return {
-                "euvatid": self.invoiceEUVATID or "",
+                "name": definitions.SIGNINSCOPES["euvatid"]["name"],
+                "edit_uri": f"{typeworldserver.HTTPROOT}/auth/edituserdata?scope=euvatid",
+                "data": {
+                    "euvatid": self.invoiceEUVATID or "",
+                },
             }
 
     def oauthInfo(self):
@@ -146,6 +157,46 @@ class User(TWNDBModel):
                 },
             },
         }
+
+    def editScopes(self, scopes):
+        for i, scope in enumerate(scopes):
+            g.html.DIV(class_="scope")
+            g.html.DIV(class_="head clear")
+            g.html.DIV(class_="floatleft")
+            g.html.T(f"{definitions.SIGNINSCOPES[scope]['name']}")
+            g.html._DIV()  # .floatleft
+            g.html.DIV(class_="floatright", style="font-size: inherit;")
+            if self.oauthInfo()[scope]["editable"]:
+                self.edit(
+                    propertyNames=self.oauthInfo()[scope]["editable"],
+                    reloadURL="' + encodeURIComponent(window.location.href) + '",
+                )
+            g.html._DIV()  # .floatright
+            g.html._DIV()  # .head
+            g.html.DIV(class_="content")
+
+            g.html.TABLE()
+            # g.html.P()
+            oauth = self.oauth(scope)
+            for key in oauth["data"]:
+                if key in self.oauthInfo()[scope]["fields"]:
+                    # g.html.P(class_="label")
+                    # g.html.T(self.oauthInfo()[scope]["fields"][key]["name"])
+                    # g.html._P()
+                    g.html.TR()
+                    g.html.TD(style="width: 40%; text-align: right; color: #777; font-size: 10pt;")
+                    g.html.T(self.oauthInfo()[scope]["fields"][key]["name"] + ":")
+                    g.html._TD()
+                    g.html.TD()
+                    g.html.T(oauth["data"][key] or '<span style="color: #777;">&lt;empty&gt;</span>')
+                    g.html._TD()
+                    g.html._TR()
+                    # g.html.BR()
+            # g.html._P()
+            g.html._TABLE()
+
+            g.html._DIV()  # .content
+            g.html._DIV()  # .scope
 
     def editPermission(self, propertyNames=[]):
         allowed = list(set(["name", "email", "emailToChange"]) | set(self.invoiceFields))
