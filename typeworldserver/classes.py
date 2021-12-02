@@ -1373,7 +1373,10 @@ class AppInstance(TWNDBModel):
             if endpoint:
 
                 if status == "revoked":
-                    client = subscription.rawSubscription().client()
+                    success, client = subscription.rawSubscription().client()
+                    if not success:
+                        return False, client
+
                     client.set("typeworldUserAccount", user.publicID())
                     success, message, publisher, subscription = client.addSubscription(subscription.url, remotely=True)
                     if not success:
@@ -1487,7 +1490,7 @@ class APIEndpoint(TWNDBModel):
         if g.form._get("testScenario"):
             client.testScenario = g.form._get("testScenario")
 
-        return client
+        return True, client
 
     def updateJSON(self, force=False):
         # Fetch JSON Root
@@ -1499,7 +1502,10 @@ class APIEndpoint(TWNDBModel):
             # or not self.touched or (self.touched and
             # ((helpers.now() - self.touched).seconds > self.aliveSeconds))
 
-            client = self.client()
+            success, client = self.client()
+            if not success:
+                return False, client
+
             success, endpointCommand = client.endpointCommand(url)
 
             if success:
@@ -1954,6 +1960,8 @@ class RawSubscription(TWNDBModel):
             success, endpoint = self.APIEndpoint()
             if success:
                 APIKey = endpoint.APIKey
+            else:
+                return False, endpoint
 
         # TODO: This hsoul dowrk, but it doesn't.
         # This script can't access itself through a https request.
@@ -1975,11 +1983,9 @@ class RawSubscription(TWNDBModel):
         if g.form._get("testScenario"):
             client.testScenario = g.form._get("testScenario")
 
-        return client
+        return True, client
 
     def updateJSON(self, force=False, save=True):
-
-        print("updateJSON() 1")
 
         if (
             force
@@ -1989,9 +1995,10 @@ class RawSubscription(TWNDBModel):
 
             # start = time.time()
 
-            print("updateJSON() 2")
+            success, client = self.client()
+            if not success:
+                return False, client, {}
 
-            client = self.client()
             success, message, publisher, subscription = client.addSubscription(self.secretURL, remotely=True)
             if not success:
                 if type(message) in (
