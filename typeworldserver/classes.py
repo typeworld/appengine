@@ -2092,7 +2092,10 @@ class RawSubscription(TWNDBModel):
             success, endpoint = protocol.endpointCommand()
             if not success:
                 return False, endpoint
-            self.canonicalURL = endpoint.canonicalURL
+            self.canonicalURL = (
+                f"typeworld://{typeworld.client.URL(self.secretURL).protocol}"
+                f"+{endpoint.canonicalURL.replace('://', '//')}"
+            )
             self.put()
 
         else:
