@@ -2346,7 +2346,7 @@ Here are the details:
             rawSubscription = self.rawSubscription()
             getEndpointSuccess, endpoint = rawSubscription.APIEndpoint()
             if not getEndpointSuccess:
-                return False, "rawSubscription.APIEndpoint(): " + endpoint
+                return False, endpoint
             invitedByUser = (
                 self.invitedByUserKey or self.invitedByAPIEndpointKey.get(read_consistency=ndb.STRONG).userKey
             ).get(read_consistency=ndb.STRONG)
@@ -2375,7 +2375,7 @@ Here are the details:
 
             success, message, desc, origin = rawSubscription.descriptionForEmail()
             if not success:
-                return False, "awSubscription.descriptionForEmail(): " + message
+                return False, message
             body += desc
             body += definitions.EMAILFOOTER
 
