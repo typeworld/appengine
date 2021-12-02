@@ -1,6 +1,6 @@
 # appengine
 
-Run locally: `gunicorn -t 0 -b :80 typeworldserver:app`
+Run locally: `gunicorn -t 0 -b :80 -w 2 typeworldserver:app`
 
 Deploy safely: `sh deploy.sh`
 Deploy unsafely: `gcloud config configurations activate default && gcloud app deploy --quiet`
