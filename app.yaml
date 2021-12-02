@@ -16,4 +16,4 @@ handlers:
 - url: /.*
   secure: always
   script: auto
-entrypoint: gunicorn -t 0 -b :$PORT typeworldserver:app
+entrypoint: gunicorn -t 0 -b :$PORT -w 2 typeworldserver:app
