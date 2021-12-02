@@ -1640,7 +1640,8 @@ def developer_api():
     displayAPIKey = None
     if g.user:
         endpoints = g.user.APIEndpoints()
-        displayAPIKey = endpoints[0].APIKey
+        if endpoints:
+            displayAPIKey = endpoints[0].APIKey
 
     MOTHERSHIP = "https://api.type.world/v1"
 
@@ -2206,93 +2207,93 @@ def developer_editapiendpoint(apiEndpointKey):
         g.html._P()
         g.html.separator()
 
-        g.html.area("API Key")
-        g.html.P()
-        g.html.T(
-            "Your secret API Key that you must use for API calls such as"
-            f" <code>verifyCredentials</code> is: <pre>{endpoint.getAPIKey()}</pre>"
-        )
-        g.html._P()
-        g.html._area()
+    g.html.area("API Key")
+    g.html.P()
+    g.html.T(
+        "Your secret API Key that you must use for API calls such as"
+        f" <code>verifyCredentials</code> is: <pre>{endpoint.getAPIKey()}</pre>"
+    )
+    g.html._P()
+    g.html._area()
 
-        # billing = endpoint.monthlyBilling()
-        # billing.container('accountView')
+    # billing = endpoint.monthlyBilling()
+    # billing.container('accountView')
 
-        g.html.area("Test Users for Pro accounts")
-        g.html.P()
-        g.html.T(
-            f"You may register up to {definitions.AMOUNTTESTUSERSFORAPIENTPOINT} users here for"
-            " fake Pro accounts. This is particularly useful for development when your"
-            " billing isn’t activated yet.<br />These users will enjoy the usual"
-            " benefits of Pro accounts such as account synching and inviting other"
-            " users to share subscriptions.<br />Only existing Type.World user"
-            " accounts can be added."
-        )
-        g.html._P()
+    g.html.area("Test Users for Pro accounts")
+    g.html.P()
+    g.html.T(
+        f"You may register up to {definitions.AMOUNTTESTUSERSFORAPIENTPOINT} users here for"
+        " fake Pro accounts. This is particularly useful for development when your"
+        " billing isn’t activated yet.<br />These users will enjoy the usual"
+        " benefits of Pro accounts such as account synching and inviting other"
+        " users to share subscriptions.<br />Only existing Type.World user"
+        " accounts can be added."
+    )
+    g.html._P()
+
+    g.html.mediumSeparator()
+
+    testUsersForAPIEndpoint = endpoint.testUsers()
+
+    if testUsersForAPIEndpoint:
+        g.html.TABLE()
+        g.html.TR()
+        g.html.TH()
+        g.html.T("Type.World User Account")
+        g.html._TH()
+        g.html.TH()
+        g.html._TH()
+        g.html._TR()
+
+        for testUserForAPIEndpoint in testUsersForAPIEndpoint:
+            testUser = testUserForAPIEndpoint.userKey.get(read_consistency=ndb.STRONG)
+            g.html.TR()
+            g.html.TD()
+            g.html.T(testUser.email)
+            g.html._TD()
+            g.html.TD()
+            # if testUser == g.user:
+            #     g.html.T("<em>automatically added</em>")
+            # else:
+            testUserForAPIEndpoint.delete(text='<span class="material-icons-outlined">delete</span>')
+            g.html._TD()
+            g.html._TR()
+        g.html._TABLE()
 
         g.html.mediumSeparator()
 
-        testUsersForAPIEndpoint = endpoint.testUsers()
+    g.html.P()
+    g.html.T(
+        f"You may add {definitions.AMOUNTTESTUSERSFORAPIENTPOINT - len(testUsersForAPIEndpoint)} more test users."
+    )
+    g.html._P()
 
-        if testUsersForAPIEndpoint:
-            g.html.TABLE()
-            g.html.TR()
-            g.html.TH()
-            g.html.T("Type.World User Account")
-            g.html._TH()
-            g.html.TH()
-            g.html._TH()
-            g.html._TR()
-
-            for testUserForAPIEndpoint in testUsersForAPIEndpoint:
-                testUser = testUserForAPIEndpoint.userKey.get(read_consistency=ndb.STRONG)
-                g.html.TR()
-                g.html.TD()
-                g.html.T(testUser.email)
-                g.html._TD()
-                g.html.TD()
-                # if testUser == g.user:
-                #     g.html.T("<em>automatically added</em>")
-                # else:
-                testUserForAPIEndpoint.delete(text='<span class="material-icons-outlined">delete</span>')
-                g.html._TD()
-                g.html._TR()
-            g.html._TABLE()
-
-            g.html.mediumSeparator()
-
+    if len(testUsersForAPIEndpoint) < definitions.AMOUNTTESTUSERSFORAPIENTPOINT:
+        # g.html.P()
+        # g.html.FORM()
         g.html.P()
-        g.html.T(
-            f"You may add {definitions.AMOUNTTESTUSERSFORAPIENTPOINT - len(testUsersForAPIEndpoint)} more test users."
-        )
+        g.html.T("Add Type.World User Account:")
+        g.html.BR()
+        g.html.INPUT(id="email", placeholder="johndoe@gmail.com")
         g.html._P()
+        g.html.P()
+        g.html.A(
+            class_="button",
+            onclick="AJAX('#action', '/addTestUserForAPIEndpoint', {'email': $('#email').val(), 'canonicalURL': '"
+            + endpoint.key.id()
+            + "', 'reloadURL': encodeURIComponent(window.location.href), 'inline': 'true'});",
+        )
+        g.html.T("Add Test User")
+        g.html._A()
+        g.html._P()
+        # g.html._FORM()
+        # g.html._P()
 
-        if len(testUsersForAPIEndpoint) < definitions.AMOUNTTESTUSERSFORAPIENTPOINT:
-            # g.html.P()
-            # g.html.FORM()
-            g.html.P()
-            g.html.T("Add Type.World User Account:")
-            g.html.BR()
-            g.html.INPUT(id="email", placeholder="johndoe@gmail.com")
-            g.html._P()
-            g.html.P()
-            g.html.A(
-                class_="button",
-                onclick="AJAX('#action', '/addTestUserForAPIEndpoint', {'email': $('#email').val(), 'canonicalURL': '"
-                + endpoint.key.id()
-                + "', 'reloadURL': encodeURIComponent(window.location.href), 'inline': 'true'});",
-            )
-            g.html.T("Add Test User")
-            g.html._A()
-            g.html._P()
-            # g.html._FORM()
-            # g.html._P()
+    g.html._area()
 
-        g.html._area()
-
-        g.html.area("Type.World API Logs")
-        endpoint.container("logView")
-        g.html._area()
+    g.html.area("Type.World API Logs")
+    endpoint.container("logView")
+    g.html._area()
 
     g.html._DIV()
 
