@@ -9,6 +9,7 @@ from typeworldserver import helpers
 from google.cloud import ndb
 import logging
 import typeworld
+import typeworld.client
 import time
 import urllib
 import re
@@ -16,6 +17,7 @@ import random
 import json
 import semver
 from flask import abort, g, redirect, Response
+import traceback
 
 typeworldserver.app.config["modules"].append("api")
 
@@ -1648,11 +1650,10 @@ def updateSubscription(responses):
     log.incoming = dict(g.form)
 
     # Check URL
-    url = urllib.parse.unquote(g.form._get("subscriptionURL"))
-    success, message = typeworld.client.urlIsValid(url)
+    success, message = typeworld.client.urlIsValid(g.form._get("subscriptionURL"))
     if not success:
         responses["response"] = "invalidSubscriptionURL"
-        responses["explanation"] = "The `subscriptionURL` is of an invalid format"
+        responses["explanation"] = f"The `subscriptionURL` is of an invalid format: {message}"
         log.response = responses
         log.put()
         return
@@ -1843,6 +1844,8 @@ def resendEmailVerification(responses):
 
 def reportAPIEndpointError(responses):
 
+    return
+
     rawSubscription = classes.RawSubscription.get_or_insert(
         classes.RawSubscription.keyURL(g.form._get("subscriptionURL"))
     )  # , read_consistency=ndb.STRONG
@@ -1854,77 +1857,83 @@ def reportAPIEndpointError(responses):
         and (helpers.now() - rawSubscription.lastErrorReported).seconds > 7 * 24 * 60 * 60
     ):  # once per week:
 
-        print("Investigating error")
+        print("Investigating error", g.form._get("subscriptionURL"))
 
-        client = rawSubscription.client()
-        success, message, publisher, subscription = client.addSubscription(
-            g.form._get("subscriptionURL"), remotely=True, reportErrors=False
-        )
-        if not success:
+        try:
+            success, client = rawSubscription.client()
+            if not success:
+                print("Couln't get client()")
+            success, message, publisher, subscription = client.addSubscription(
+                g.form._get("subscriptionURL"), remotely=True, reportErrors=False
+            )
+            if not success:
 
-            emails = []
-            if type(message) in (
-                typeworld.api.MultiLanguageText,
-                typeworld.api.MultiLanguageLongText,
-            ):
-                message = message.getText()
+                emails = []
+                if type(message) in (
+                    typeworld.api.MultiLanguageText,
+                    typeworld.api.MultiLanguageLongText,
+                ):
+                    message = message.getText()
 
-            success, endpoint = rawSubscription.APIEndpoint()
+                success, endpoint = rawSubscription.APIEndpoint()
 
-            # Successful, pull email from APIEndpoint object
-            if success and endpoint.userKey:
-                emails.append(endpoint.userKey.get().email)
+                # Successful, pull email from APIEndpoint object
+                if success and endpoint.userKey:
+                    emails.append(endpoint.userKey.get().email)
 
-            # Failed, find endpoint directly
-            else:
-                success, content, response = typeworld.client.request(
-                    typeworld.client.URL(g.form._get("subscriptionURL")).HTTPURL()
-                )
-                # content = content.decode()
-                if success:
+                # Failed, find endpoint directly
+                else:
+                    success, content, response = typeworld.client.request(
+                        typeworld.client.URL(g.form._get("subscriptionURL")).HTTPURL()
+                    )
+                    # content = content.decode()
+                    if success:
 
-                    # Catch email
-                    match = re.search(r'.*"adminEmail".+?"(.+?)".*', content, re.M)
-                    if match:
-                        emails.append(match.group(1))
+                        # Catch email
+                        match = re.search(r'.*"adminEmail".+?"(.+?)".*', content, re.M)
+                        if match:
+                            emails.append(match.group(1))
 
-                    # Catch canonical URL
-                    match = re.search(r'.*"canonicalURL".+?"(.+?)".*', content, re.M)
-                    if match:
-                        canonicalURL = match.group(1)
-                        endpoint = classes.APIEndpoint.get_or_insert(canonicalURL)
-                        if endpoint:
-                            if endpoint.userKey:
-                                emails.append(endpoint.userKey.get().email)
+                        # Catch canonical URL
+                        match = re.search(r'.*"canonicalURL".+?"(.+?)".*', content, re.M)
+                        if match:
+                            canonicalURL = match.group(1)
+                            endpoint = classes.APIEndpoint.get_or_insert(canonicalURL)
+                            if endpoint:
+                                if endpoint.userKey:
+                                    emails.append(endpoint.userKey.get().email)
 
-            # Add HQ
-            emails.append("hello@type.world")
-            emails = list(set(emails))
+                # Add HQ
+                emails.append("hello@type.world")
+                emails = list(set(emails))
 
-            if emails:
+                if emails:
 
-                subscriptionURL = g.form._get("subscriptionURL")
-                body = f"The subscription {subscriptionURL} showed the following error:\n\n"
-                body += message
-                body += (
-                    "\n\nThis page describes how to validate your API Endpoint before"
-                    " publication: https://type.world/developer/validate\n I hope to be"
-                    " able to offer you an online validator again soon under that same"
-                    " URL.\n\nThis is an automated email which you will receive at most"
-                    " once per week.\n\nYours truly, Type.World HQ"
-                )
+                    subscriptionURL = g.form._get("subscriptionURL")
+                    body = f"The subscription {subscriptionURL} showed the following error:\n\n"
+                    body += message
+                    body += (
+                        "\n\nThis page describes how to validate your API Endpoint before"
+                        " publication: https://type.world/developer/validate\n I hope to be"
+                        " able to offer you an online validator again soon under that same"
+                        " URL.\n\nThis is an automated email which you will receive at most"
+                        " once per week.\n\nYours truly, Type.World HQ"
+                    )
 
-                success, message = helpers.email(
-                    "Type.World <hq@mail.type.world>",
-                    emails,  # email
-                    "Error in a Type.World font subscription that you host",
-                    body,
-                )
+                    success, message = helpers.email(
+                        "Type.World <hq@mail.type.world>",
+                        emails,  # email
+                        "Error in a Type.World font subscription that you host",
+                        body,
+                    )
 
-                rawSubscription.lastErrorReported = helpers.now()
-                rawSubscription.put()
+                    rawSubscription.lastErrorReported = helpers.now()
+                    rawSubscription.put()
 
-                print("success, sent email")
-            else:
+                    print("success, sent email")
+                else:
 
-                print("Couln't find email")
+                    print("Couln't find email")
+
+        except Exception:
+            print(traceback.format_exc())
