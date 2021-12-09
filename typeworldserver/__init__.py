@@ -51,6 +51,8 @@ if GAE:
 else:
     HTTPROOT = "http://0.0.0.0"
 
+print(GAE, HTTPROOT)
+
 # Google Cloud Storage
 bucket = storage_client.bucket("typeworld2")
 
