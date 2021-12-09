@@ -124,8 +124,8 @@ def account_signin():
     g.html.area("Sign-In Apps & Websites")
 
     tokens = classes.OAuthToken.query(
-        classes.OAuthToken.userKey == g.user.key, classes.OAuthToken.revoked == False
-    ).fetch()  # noqa E712
+        classes.OAuthToken.userKey == g.user.key, classes.OAuthToken.revoked == False  # noqa E712
+    ).fetch()
     if tokens:
         for token in tokens:
             app = token.getApp()
