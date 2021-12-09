@@ -540,7 +540,7 @@ def user(userKey=None):
         g.html._P()
         g.html._area()
 
-        g.html.area("Subscriptions")
+        g.html.area("Plans")
         for productID in billing_stripe.stripeProducts:
             subscription = user.stripeSubscriptionByProductID(productID)
 
@@ -580,6 +580,27 @@ def user(userKey=None):
             g.html._TD()
             g.html.TD()
             instance.delete()
+            g.html._TD()
+            g.html._TR()
+        g.html._TABLE()
+        g.html._area()
+
+        g.html.area("Total Subscriptions")
+        subscriptions = user.subscriptions()
+        g.html.TABLE()
+        for subscription in subscriptions:
+            g.html.TR()
+            g.html.TD()
+            g.html.T(subscription.url)
+            g.html.BR()
+            g.html.T(f"Type: {subscription.type}")
+            g.html.BR()
+            g.html.T(f"Confirmed: {subscription.confirmed}")
+            g.html.BR()
+            g.html.T(f"Invited by: {subscription.invitedByAPIEndpointKey or subscription.invitedByUserKey}")
+            g.html._TD()
+            g.html.TD()
+            subscription.delete()
             g.html._TD()
             g.html._TR()
         g.html._TABLE()
