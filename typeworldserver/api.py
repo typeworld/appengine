@@ -888,6 +888,18 @@ def verifyCredentials(responses):
                 #  'unknownAnonymousTypeWorldUserID'], 1)
                 return
 
+            # Check validity of URL
+            if g.form._get("subscriptionURL"):
+                success, message = typeworld.client.urlIsValid(g.form._get("subscriptionURL"))
+                if not success:
+                    responses["response"] = "invalid"
+                    responses["explanation"] = "The format of `subscriptionURL` is invalid."
+                    log.response = responses
+                    log.put()
+                    # stat.bump([endpoint.key.id(), 'command', 'verifyCredentials',
+                    # 'userIsMissingSubscription'], 1)
+                    return
+
             # Check if user holds subscription
             if g.form._get("subscriptionURL"):
                 if not g.form._get("subscriptionURL") in [x.url for x in user.confirmedSubscriptions()]:
