@@ -500,6 +500,12 @@ def checkAuthorizationCredentialsForAuthorization():
     if g.form._get("scope") != ",".join(app.oauthScopesList()):
         return "Missing or unknown or unauthorized scope", app
 
+    # State
+    if not g.form._get("state"):
+        return "Missing state", app
+    if g.form._get("state") == app.lastState:
+        return "Reusing state is not allowed", app
+
     return True, app
 
 
