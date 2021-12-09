@@ -3,6 +3,7 @@ import time
 import unittest
 from ynlib.strings import Garbage
 import requests
+import typeworld.client
 
 # Selenium
 from selenium import webdriver
@@ -164,6 +165,15 @@ class TestFoo(flask_unittest.LiveTestCase):
         cls.root_url = "http://127.0.0.1:5000"
         cls.std_wait = WebDriverWait(cls.driver, 10)
 
+        # Create Type.World user account
+        cls.client = typeworld.client.APIClient(
+            zmqSubscriptions=False,
+            online=True,
+            commercial=True,
+            appID="world.type.app",
+        )
+        success, message = cls.client.deleteUserAccount("test1@type.world", "0123456789")
+
         # Wait for server to come online
         while True:
             try:
@@ -171,7 +181,7 @@ class TestFoo(flask_unittest.LiveTestCase):
                 break
             except ConnectionRefusedError:
                 time.sleep(1)
-        time.sleep(2)
+        time.sleep(20)
 
     @classmethod
     def teardown_class(cls):
@@ -250,7 +260,27 @@ class TestFoo(flask_unittest.LiveTestCase):
             self.driver.find_element_by_link_text("Sign In With Type.World").click()
         self.assertIn("Type.World Sign-In (via OAuth UnitTest)", self.driver.page_source)
 
+        success, message = self.client.createUserAccount(
+            "Test OAuth User", "test1@type.world", "0123456789", "0123456789"
+        )
+        self.assertTrue(success)
 
-suite = flask_unittest.LiveTestSuite(app)
+        # Log in
+        email = self.driver.find_element_by_id("email")
+        email.send_keys("test1@type.world")
+        password = self.driver.find_element_by_id("password")
+        password.send_keys("0123456789")
+        with wait_for_page_load(self.driver):
+            self.driver.find_element_by_name("loginButton").click()
+        with wait_for_page_load(self.driver):
+            self.driver.find_element_by_name("authorizeTokenButton").click()
+        time.sleep(10)
+
+        # Delete user account
+        success, message = self.client.deleteUserAccount("test1@type.world", "0123456789")
+        self.assertTrue(success)
+
+
+suite = flask_unittest.LiveTestSuite(app, timeout=60)
 # suite.addTest(unittest.makeSuite(TestFoo))
 unittest.TextTestRunner(verbosity=0).run(suite)
