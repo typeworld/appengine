@@ -45,6 +45,7 @@ def signin_authorization(app):
         class_="button",
         type="submit",
         value="submit",
+        name="authorizeTokenButton",
         onclick=(
             f"$(this).addClass('disabled'); authorizeOAuthToken('{g.form._get('client_id')}',"
             f" '{g.form._get('response_type')}', '{g.form._get('redirect_uri')}', '{g.form._get('scope')}',"
@@ -268,6 +269,7 @@ def signin_login(app):
         class_="button",
         type="submit",
         value="submit",
+        name="loginButton",
         onclick="$(this).addClass('disabled'); login($('#email').val(), $('#password').val()); return false;",
     )
     g.html.T("Sign In")
@@ -355,6 +357,7 @@ def signin_login(app):
         class_="button",
         type="submit",
         value="submit",
+        name="createUserAccountButton",
         onclick=(
             "$(this).addClass('disabled'); createUserAccount($('#name').val(), $('#createaccount-email').val(),"
             " $('#newpassword').val(), $('#newpassword2').val()); return false;"
