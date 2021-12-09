@@ -490,11 +490,11 @@ def checkAuthorizationCredentialsForAuthorization():
     matchedURL = False
     for url in [x.strip() for x in app.redirectURLs.splitlines()]:
         if url:
-            if g.form._get("redirect_uri").startswith(url):
+            if g.form._get("redirect_uri") and g.form._get("redirect_uri").startswith(url):
                 matchedURL = True
                 break
     if matchedURL is False:
-        return "Missing or unknown redirect_uri", app, None
+        return "Missing or unknown redirect_uri", app
 
     # Check for valid scope
     if g.form._get("scope") != ",".join(app.oauthScopesList()):
