@@ -38,7 +38,8 @@ def secret(secret_id, version_id="latest"):
     return payload
 
 
-MOTHERSHIP = os.environ.get("TEST_MOTHERSHIP", "https://type.world")
+ORIGINAL_MOTHERSHIP = "https://type.world"
+MOTHERSHIP = os.environ.get("TEST_MOTHERSHIP", ORIGINAL_MOTHERSHIP)
 print("MOTHERSHIP", MOTHERSHIP)
 
 app = Flask(__name__)
@@ -95,6 +96,20 @@ def before_request_web():
             # Save token to session
             flaskSession["token"] = getTokenResponse["access_token"]
             flaskSession.modified = True
+
+    if g.form.get("testcase") in (
+        "no_clientid",
+        "wrong_clientid",
+        "correct_clientid",
+        "wrong_response_type",
+        "correct_response_type",
+        "wrong_redirect_uri",
+        "correct_redirect_uri",
+        "wrong_authorization_scope",
+        "correct_authorization_scope",
+    ):
+        flaskSession["token"] = None
+        flaskSession.modified = True
 
     # Log in user
     if "token" in flaskSession and flaskSession["token"]:
@@ -209,16 +224,19 @@ def makeAccountLink(link):
     redirect_url = urllib.parse.quote_plus("http://127.0.0.1:5000/account")
     state = flaskSession["state"]
 
-    if g.form.get("testcase") == "wrong_redirect_uri":
+    if g.form.get("testcase") == "account_wrong_redirect_uri":
         redirect_url = urllib.parse.quote_plus("http://0.0.0.0:5000/account")
-    elif g.form.get("testcase") == "wrong_client_id":
+    elif g.form.get("testcase") == "account_wrong_client_id":
         link = link.replace("client_id=", "client_id=aaa")
-    elif g.form.get("testcase") == "wrong_scope":
+    elif g.form.get("testcase") == "account_wrong_scope":
         link = link.replace("scope=", "scope=aaa")
     else:
         redirect_url = urllib.parse.quote_plus("http://127.0.0.1:5000/account")
 
-    return link + "&redirect_uri=" + redirect_url + "&state=" + state
+    url = link + "&redirect_uri=" + redirect_url + "&state=" + state
+    url = url.replace(ORIGINAL_MOTHERSHIP, MOTHERSHIP)
+    print(g.form.get("testcase"), url)
+    return url
 
 
 @app.route("/account", methods=["GET", "POST"])
@@ -449,7 +467,7 @@ class TestFoo(flask_unittest.LiveTestCase):
         with wait_for_page_load(self.driver):
             self.driver.get(self.root_url + "/reset")
         with wait_for_page_load(self.driver):
-            self.driver.get(self.root_url + "/account?testcase=wrong_authorization_scope")
+            self.driver.get(self.root_url + "/account")
         self.assertIn("test1@type.world", self.driver.page_source)
 
         # Edit data
@@ -463,19 +481,20 @@ class TestFoo(flask_unittest.LiveTestCase):
 
         # Test cases
         with wait_for_page_load(self.driver):
-            self.driver.get(self.root_url + "/account?testcase=wrong_redirect_uri")
+            self.driver.get(self.root_url + "/account?testcase=account_wrong_redirect_uri")
         with wait_for_page_load(self.driver):
             self.driver.find_element(By.NAME, "edit_billingaddress").click()
         self.assertIn("Missing or unknown redirect_uri", self.driver.page_source)
 
         with wait_for_page_load(self.driver):
-            self.driver.get(self.root_url + "/account?testcase=wrong_client_id")
+            self.driver.get(self.root_url + "/account?testcase=account_wrong_client_id")
         with wait_for_page_load(self.driver):
+            print("123", self.driver.page_source)
             self.driver.find_element(By.NAME, "edit_billingaddress").click()
         self.assertIn("Missing or unknown client_id", self.driver.page_source)
 
         with wait_for_page_load(self.driver):
-            self.driver.get(self.root_url + "/account?testcase=wrong_scope")
+            self.driver.get(self.root_url + "/account?testcase=account_wrong_scope")
         with wait_for_page_load(self.driver):
             self.driver.find_element(By.NAME, "edit_billingaddress").click()
         self.assertIn("Missing or unknown or unauthorized scope", self.driver.page_source)
