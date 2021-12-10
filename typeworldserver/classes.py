@@ -49,6 +49,7 @@ class User(TWNDBModel):
     emailVerificationCode = web.StringProperty()
     emailToChange = web.EmailProperty(verbose_name="New Email Address")
     lastSeenOnline = web.DateTimeProperty()
+    lastLogin = web.DateTimeProperty()
 
     # Rights Management
     admin = web.BooleanProperty(default=False)
@@ -1144,6 +1145,7 @@ class User(TWNDBModel):
                 puts.append(endpoint)
 
                 # TODO: Delete Stripe subscriptions
+            deletes.extend(OAuthToken.query(OAuthToken.userKey == key).fetch(keys_only=True))
 
         if puts:
             ndb.put_multi(puts)

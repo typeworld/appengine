@@ -4,11 +4,21 @@ import typeworldserver
 from typeworldserver import classes, helpers
 
 # other
-from flask import g, abort, request, Response
+from flask import g, abort, request, Response, redirect
 import jwt
 import datetime
 import urllib.parse
 import json
+import time
+
+
+def getToken(app):
+    return classes.OAuthToken.query(
+        classes.OAuthToken.userKey == g.user.key,
+        classes.OAuthToken.signinAppKey == app.key,
+        classes.OAuthToken.oauthScopes == ",".join(sorted(g.form._get("scope").split(","))),
+        classes.OAuthToken.revoked == False,  # noqa E712
+    ).get()
 
 
 def signin_authorization(app):
@@ -22,6 +32,12 @@ def signin_authorization(app):
     g.html.H1()
     g.html.T(f'Authorize <span class="black">{app.name}</span>')
     g.html._H1()
+
+    g.html.P()
+    g.html.T(f'Not you, {g.user.name} ({g.user.email})? <a onclick="logout();">Switch&nbsp;Accounts</a>.')
+    g.html._P()
+
+    g.html.smallSeparator()
 
     g.html.P()
     g.html.T(f"I authorize <b>{app.name}</b> to access the following data of my Type.World account:")
@@ -92,10 +108,6 @@ def auth_authorize():
     token.authToken = jwt.encode(payload, typeworldserver.secret("TYPE_WORLD_FLASK_SECRET_KEY"), algorithm="HS256")
     token.put()
 
-    # Save last state
-    app.lastState = g.form._get("state")
-    app.put()
-
     return "<script>location.reload();</script>"
 
 
@@ -160,8 +172,13 @@ def auth_edituserdata():
     if not app:
         return "Missing or unknown client_id", 401
 
-    # TODO:
+    # State
+    if g.form._get("state") == app.lastState:
+        return "Reusing state is not allowed", 401
+
     # Check for valid scopes
+    if g.form._get("scope") not in app.oauthScopesList():
+        return "Missing or unknown or unauthorized scope", 401
 
     # Check for valid redirect_uri
     matchedURL = False
@@ -189,7 +206,7 @@ def auth_edituserdata():
 
     g.html.DIV(class_="clear")
     g.html.SPAN(class_="floatleft", style="margin-right: 10px;")
-    g.html.A(class_="button", href=urllib.parse.unquote_plus(g.form._get("redirect_uri")))
+    g.html.A(name="returnButton", class_="button", href=urllib.parse.unquote_plus(g.form._get("redirect_uri")))
     g.html.T(f"Return to {app.name}")
     g.html._A()
     g.html._SPAN()
@@ -397,42 +414,89 @@ def signin_login(app):
 
 def signin_forward(app, token):
 
-    url = f"{g.form._get('redirect_uri')}?code={token.code}&state={g.form._get('state')}"
+    check, app = checkAuthorizationCredentialsForAuthorization()
+    if check is not True:
+        return check, 401
 
     g.html.DIV(class_="content")
 
-    g.html.H1()
-    g.html.T(f"You’re signed in to {app.name.replace(' ', '&nbsp;')}")
-    g.html._H1()
+    token = getToken(app)
+    url = f"{g.form._get('redirect_uri')}?code={token.code}&state={g.form._get('state')}"
 
-    g.html.T(
-        '<p>You’ll be sent back in <span id="counter">3</span></p><p><a'
-        f' href="{url}">Click here</a> if nothing happens.</p>'
-    )
-    g.html.SCRIPT()
-    g.html.T(
-        f"""
+    # Brand-new token or recent login
+    if (
+        token.created.timestamp() > time.time() - 5
+        or g.user.lastLogin
+        and g.user.lastLogin.timestamp() > time.time() - 5
+    ):
 
-function countdown() {{
-    var i = document.getElementById('counter');
-    if (parseInt(i.innerHTML)!=0) {{
-        i.innerHTML = parseInt(i.innerHTML)-1;
-    }}
-    if (parseInt(i.innerHTML)<=0) {{
-        i.classList.add("blink");
-        window.location.href = '{url}';
-        return false;
-    }}
-    else {{
-        setTimeout(function(){{ countdown(); }},1000);
-    }}
-}}
-setTimeout(function(){{ countdown(); }},1000);
+        g.html.H1()
+        g.html.T(f"You’re signed in to {app.name.replace(' ', '&nbsp;')}")
+        g.html._H1()
 
-    """
-    )
+        g.html.P()
+        g.html.T(
+            '<p>You’ll be sent back in <span id="counter">3</span></p><p><a'
+            f' href="{url}">Click here</a> if nothing happens.</p>'
+        )
+        g.html._P()
 
-    g.html._SCRIPT()
+        g.html.SCRIPT()
+        g.html.T(
+            """
+
+    function countdown() {
+        var i = document.getElementById('counter');
+        if (parseInt(i.innerHTML)!=0) {
+            i.innerHTML = parseInt(i.innerHTML)-1;
+        }
+        if (parseInt(i.innerHTML)<=0) {
+            i.classList.add("blink");
+            window.location.href = window.location.href + '&redirect=true';
+            return false;
+        }
+        else {
+            setTimeout(function(){ countdown(); },1000);
+        }
+    }
+    setTimeout(function(){ countdown(); },1000);
+
+        """
+        )
+
+        g.html._SCRIPT()
+
+    # Old token, been logged in already
+    else:
+
+        g.html.H1()
+        g.html.T(f"Sign in to {app.name.replace(' ', '&nbsp;')}")
+        g.html._H1()
+
+        g.html.P()
+        g.html.T(f'Not you, {g.user.name} ({g.user.email})? <a onclick="logout();">Switch&nbsp;Accounts</a>.')
+        g.html._P()
+
+        g.html.mediumSeparator()
+
+        g.html.DIV(class_="clear")
+        g.html.SPAN(class_="noAnimation floatleft", style="margin-right: 10px;")
+        g.html.BUTTON(
+            class_="button",
+            type="submit",
+            value="submit",
+            name="redirectButton",
+            onclick="window.location.href = window.location.href + '&redirect=true'; return false;",
+        )
+        g.html.T("Sign In")
+        g.html._BUTTON()
+        g.html._SPAN()
+        g.html.SPAN(class_="floatleft", style="margin-right: 10px;")
+        g.html.A(class_="button secondary", href=g.form._get("redirect_uri"))
+        g.html.T("Cancel")
+        g.html._A()
+        g.html._SPAN()
+        g.html._DIV()  # .clear
 
     g.html._DIV()  # .content
 
@@ -512,15 +576,6 @@ def checkAuthorizationCredentialsForAuthorization():
     return True, app
 
 
-def getToken(app):
-    return classes.OAuthToken.query(
-        classes.OAuthToken.userKey == g.user.key,
-        classes.OAuthToken.signinAppKey == app.key,
-        classes.OAuthToken.oauthScopes == ",".join(sorted(g.form._get("scope").split(","))),
-        classes.OAuthToken.revoked == False,  # noqa E712
-    ).get()
-
-
 def signin_header(app):
     g.html.title = f"Type.World Sign-In (via {app.name})"
 
@@ -543,7 +598,7 @@ def signin_header(app):
     g.html.DIV(class_="panelMiddle")
     g.html.DIV(class_="panel")
     g.html.DIV(class_="header")
-    g.html.IMG(src="/static/images/logo.svg", style="width: 80px; margin-bottom: 10px;")
+    g.html.IMG(src="/static/images/logo.svg", style="width: 80px; height: 80px; margin-bottom: 10px;")
     g.html.BR()
     g.html.T("Type.World Sign-In")
     g.html._DIV()  # .header
@@ -589,8 +644,9 @@ def signin():
     check, app = checkAuthorizationCredentialsForAuthorization()
     if check is not True:
         g.html.T(check)
-        print(check)
         return g.html.GeneratePage()
+
+    ###
 
     ########################
 
@@ -598,8 +654,20 @@ def signin():
 
     if g.user:
         token = getToken(app)
+
         if token:
-            signin_forward(app, token)
+
+            # redirect
+            if g.form._get("redirect") == "true":
+                url = f"{g.form._get('redirect_uri')}?code={token.code}&state={g.form._get('state')}"
+
+                # Save last state
+                app.lastState = g.form._get("state")
+                app.put()
+
+                return redirect(url)
+            else:
+                signin_forward(app, token)
         else:
             signin_authorization(app)
     else:

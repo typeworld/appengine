@@ -383,6 +383,9 @@ def performLogin(user):
     session.userKey = user.key
     session.putnow()
 
+    user.lastLogin = helpers.now()
+    user.put()
+
     g.user = user
     g.admin = g.user.admin
 
