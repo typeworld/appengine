@@ -89,6 +89,25 @@ class User(TWNDBModel):
             self.put()
         return self.uuid
 
+    def rawJSONData(self, app, scopes):
+        response = {
+            "userdata": {
+                "user_id": self.getUUID(),
+                "edit_uri": (
+                    f"{typeworldserver.HTTPROOT}/auth/edituserdata?scope={','.join(scopes)}&client_id={app.clientID}"
+                ),
+                "scope": {},
+            },
+        }
+        # Add data
+        for scope in scopes:
+            response["userdata"]["scope"][scope] = self.oauth(scope)
+            # Add clientID
+            if "edit_uri" in response["userdata"]["scope"][scope]:
+                response["userdata"]["scope"][scope]["edit_uri"] += f"&client_id={app.clientID}"
+
+        return response
+
     def oauth(self, scope):
         if scope == "account":
             return {
@@ -159,52 +178,137 @@ class User(TWNDBModel):
             },
         }
 
-    def editScopes(self, scopes):
-        for i, scope in enumerate(scopes):
-            g.html.DIV(class_="scope")
-            g.html.DIV(class_="head clear")
-            g.html.DIV(class_="floatleft")
-            g.html.T(f"{definitions.SIGNINSCOPES[scope]['name']}")
-            g.html._DIV()  # .floatleft
-            g.html.DIV(class_="floatright", style="font-size: inherit;")
-            if self.oauthInfo()[scope]["editable"]:
-                self.edit(
-                    propertyNames=self.oauthInfo()[scope]["editable"],
-                    reloadURL="' + encodeURIComponent(window.location.href) + '",
+    def reloadDataContainer(self, view, parameters):
+
+        keyID, methodName, parameters = web.decodeDataContainer(view)
+
+        if methodName == "editScopeView":
+            return web.encodeDataContainer(
+                self.publicID(), "rawJSONDataView", {"scopes": parameters["scopes"], "appKey": parameters["appKey"]}
+            )
+
+    def editScopeView(self, parameters={}, directCallParameters={}):
+        scope = parameters["scope"]
+
+        g.html.DIV(class_="scope")
+        g.html.DIV(class_="head clear")
+        g.html.DIV(class_="floatleft")
+        g.html.T(
+            "<span"
+            f' class="material-icons-outlined">view_in_ar</span>&nbsp;&nbsp;{definitions.SIGNINSCOPES[scope]["name"]}'
+        )
+        g.html._DIV()  # .floatleft
+        g.html.DIV(class_="floatright", style="font-size: inherit;")
+        if self.oauthInfo()[scope]["editable"]:
+            self.edit(
+                propertyNames=self.oauthInfo()[scope]["editable"],
+                # reloadURL="' + encodeURIComponent(window.location.href) + '",
+            )
+        g.html._DIV()  # .floatright
+        g.html._DIV()  # .head
+        g.html.DIV(class_="content")
+
+        g.html.TABLE()
+        # g.html.P()
+        oauth = self.oauth(scope)
+        for key in oauth["data"]:
+            if key in self.oauthInfo()[scope]["fields"]:
+                # g.html.P(class_="label")
+                # g.html.T(self.oauthInfo()[scope]["fields"][key]["name"])
+                # g.html._P()
+                g.html.TR()
+                g.html.TD(style="width: 40%; text-align: right; color: #777; font-size: 10pt;")
+                g.html.T(self.oauthInfo()[scope]["fields"][key]["name"] + ":")
+                g.html._TD()
+                g.html.TD()
+                g.html.T(oauth["data"][key] or '<span style="color: #777;">&lt;empty&gt;</span>')
+                g.html._TD()
+                g.html._TR()
+                # g.html.BR()
+        # g.html._P()
+        g.html._TABLE()
+
+        g.html._DIV()  # .content
+        g.html._DIV()  # .scope
+
+    def rawJSONDataView(self, parameters={}, directCallParameters={}):
+        scopes = parameters["scopes"]
+        app = ndb.Key(urlsafe=parameters["appKey"].encode()).get(read_consistency=ndb.STRONG)
+
+        g.html.DIV(class_="scope")
+        g.html.DIV(class_="content")
+
+        g.html.P()
+        g.html.T(
+            f'<span class="material-icons-outlined">view_in_ar</span> This is the precise data that <b>{app.name}</b>'
+            " will receive. Nothing more, nothing less."
+        )
+        g.html._P()
+        g.html.mediumSeparator()
+
+        g.html.P()
+        g.html.PRE()
+        g.html.T(json.dumps(self.rawJSONData(app, scopes), indent=1))  # .replace("\n", "<br />")
+        g.html._PRE()
+        g.html._P()
+
+        g.html._DIV()  # .content
+        g.html._DIV()  # .scope
+
+    def editScopes(self, scopes, completeData, app, rawDataLink=True):
+
+        if completeData:
+
+            # COMPLETE DATA
+            g.html.DIV(class_="raw_data_off")
+            if rawDataLink:
+                g.html.DIV(style="text-align: right;")
+                g.html.T(
+                    "Show raw JSON data <a onclick=\"$('.raw_data_on').show(); $('.raw_data_off').hide();\">"
+                    '<span class="material-icons-outlined">toggle_off</span></a>'
                 )
-            g.html._DIV()  # .floatright
-            g.html._DIV()  # .head
-            g.html.DIV(class_="content")
+                g.html._DIV()
+                g.html.smallSeparator()
 
-            g.html.TABLE()
-            # g.html.P()
-            oauth = self.oauth(scope)
-            for key in oauth["data"]:
-                if key in self.oauthInfo()[scope]["fields"]:
-                    # g.html.P(class_="label")
-                    # g.html.T(self.oauthInfo()[scope]["fields"][key]["name"])
-                    # g.html._P()
-                    g.html.TR()
-                    g.html.TD(style="width: 40%; text-align: right; color: #777; font-size: 10pt;")
-                    g.html.T(self.oauthInfo()[scope]["fields"][key]["name"] + ":")
-                    g.html._TD()
-                    g.html.TD()
-                    g.html.T(oauth["data"][key] or '<span style="color: #777;">&lt;empty&gt;</span>')
-                    g.html._TD()
-                    g.html._TR()
-                    # g.html.BR()
-            # g.html._P()
-            g.html._TABLE()
+            for i, scope in enumerate(scopes):
+                self.container(
+                    "editScopeView", parameters={"scope": scope, "scopes": scopes, "appKey": app.publicID()}
+                )
 
-            g.html._DIV()  # .content
-            g.html._DIV()  # .scope
+            g.html._DIV()  # .raw_data_off
+
+            if rawDataLink:
+                # RAW DATA
+                g.html.DIV(class_="raw_data_on", style="display: none;")
+                g.html.DIV(style="text-align: right;")
+                g.html.T(
+                    "Show raw JSON data <a onclick=\"$('.raw_data_on').hide(); $('.raw_data_off').show();\">"
+                    '<span class="material-icons-outlined">toggle_on</span></a>'
+                )
+                g.html._DIV()
+
+                g.html.smallSeparator()
+                self.container("rawJSONDataView", parameters={"scopes": scopes, "appKey": app.publicID()})
+
+                g.html._DIV()  # .raw_data_on
+
+        else:
+            # g.html.DIV(class_="scope")
+            # g.html.DIV(class_="content")
+            for i, scope in enumerate(scopes):
+                g.html.P()
+                g.html.T('<span class="material-icons-outlined">view_in_ar</span>&nbsp;&nbsp;')
+                g.html.T(definitions.SIGNINSCOPES[scope]["name"])
+                g.html._P()
+            # g.html._DIV()  # .content
+            # g.html._DIV()  # .scope
 
     def editPermission(self, propertyNames=[]):
         allowed = list(set(["name", "email", "emailToChange"]) | set(self.invoiceFields))
         return set(allowed) & set(propertyNames) and g.user == self
 
     def viewPermission(self, methodName):
-        return methodName in ("accountSubscriptionsView", "userAccountView")
+        return methodName in ("accountSubscriptionsView", "userAccountView", "editScopeView", "rawJSONDataView")
 
     def checkPassword(self, password):
         return bcrypt.checkpw(password.encode(), self.passwordHash.encode())

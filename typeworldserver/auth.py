@@ -11,6 +11,8 @@ import urllib.parse
 import json
 import time
 
+typeworldserver.app.config["modules"].append("auth")
+
 
 def getToken(app):
     return classes.OAuthToken.query(
@@ -23,10 +25,6 @@ def getToken(app):
 
 def signin_authorization(app):
 
-    """
-    Log In or Sign Up
-    """
-
     g.html.DIV(class_="content")
 
     g.html.H1()
@@ -34,24 +32,52 @@ def signin_authorization(app):
     g.html._H1()
 
     g.html.P()
-    g.html.T(f'Not you, {g.user.name} ({g.user.email})? <a onclick="logout();">Switch&nbsp;Accounts</a>.')
+    g.html.T(
+        f'<span class="material-icons-outlined">account_circle</span> Not you, {g.user.name}? <a'
+        ' onclick="logout();">Switch&nbsp;Accounts.</a>'
+    )
     g.html._P()
 
-    g.html.smallSeparator()
+    # g.html.smallSeparator()
 
     g.html.P()
-    g.html.T(f"I authorize <b>{app.name}</b> to access the following data of my Type.World account:")
+    g.html.T('<span class="material-icons-outlined">view_in_ar</span> ')
+    g.html.T(
+        f"I authorize <b>{app.name}</b> to access the following data of my Type.World account:"
+        # ' This authorization canbe revoked at any time in the <a href="/account">User&nbsp;Account</a>.'
+    )
     g.html._P()
 
     g.html.mediumSeparator()
 
-    g.user.editScopes(g.form._get("scope").split(","))
+    # Reduced Data
+    g.html.DIV(class_="reduced_data")
+    g.html.DIV(style="text-align: right;")
+    g.html.T(
+        "Show complete data <a onclick=\"$('.reduced_data').hide(); $('.complete_data').show();\">"
+        '<span class="material-icons-outlined">toggle_off</span></a>'
+    )
+    g.html._DIV()
+    g.user.editScopes(g.form._get("scope").split(","), False, app)
+    g.html._DIV()  # .reducted_data
 
-    g.html.smallSeparator()
+    # Complete Data, show this by default if there is a problem
+    g.html.DIV(class_="complete_data")
+    g.html.DIV(style="text-align: right;")
+    g.html.T(
+        "Show complete data <a onclick=\"$('.reduced_data').show(); $('.complete_data').hide();\">"
+        '<span class="material-icons-outlined">toggle_on</span></a>'
+    )
+    g.html._DIV()
+    g.user.editScopes(g.form._get("scope").split(","), True, app)
+    g.html._DIV()  # .complete_data
 
-    g.html.P()
-    g.html.T('This authorization can be revoked at any time in the <a href="/account">User&nbsp;Account</a>.')
-    g.html._P()
+    g.html.SCRIPT()
+    if True:
+        g.html.T("$('.reduced_data').show(); $('.complete_data').hide();")
+    else:
+        g.html.T("$('.reduced_data').hide(); $('.complete_data').show();")
+    g.html._SCRIPT()
 
     g.html.mediumSeparator()
 
@@ -138,20 +164,8 @@ def auth_userdata():
             response = {"status": "fail", "message": "User is unknown"}
             return jsonify(response), 401
 
-        response = {
-            "status": "success",
-            "userdata": {
-                "user_id": user.getUUID(),
-                "edit_uri": f"{typeworldserver.HTTPROOT}/auth/edituserdata?scope={token.oauthScopes}",
-                "scope": {},
-            },
-        }
-        # Add data
-        for scope in token.oauthScopes.split(","):
-            response["userdata"]["scope"][scope] = user.oauth(scope)
-            # Add clientID
-            if "edit_uri" in response["userdata"]["scope"][scope]:
-                response["userdata"]["scope"][scope]["edit_uri"] += f"&client_id={app.clientID}"
+        response = user.rawJSONData(app, token.oauthScopes.split(","))
+        response["status"] = "success"
 
         # Save last access time
         token.lastAccess = helpers.now()
@@ -200,7 +214,7 @@ def auth_edituserdata():
     g.html.T("Edit my Type.World account")
     g.html._H1()
 
-    g.user.editScopes(g.form._get("scope").split(","))
+    g.user.editScopes(g.form._get("scope").split(","), True, app, rawDataLink=False)
 
     g.html.smallSeparator()
 
@@ -305,11 +319,12 @@ def signin_login(app):
     g.html.DIV(class_="supplemental")
 
     g.html.P()
+    g.html.T('<span class="material-icons-outlined">password</span> ')
     g.html.A()
     g.html.T("Forgot password?")
     g.html._A()
     g.html.BR()
-    g.html.T("New to Type.World? ")
+    g.html.T('<span class="material-icons-outlined">account_circle</span> New to Type.World? ')
     g.html.A(
         onclick=(
             "enableButtons(); $('.loginContent.noAnimation').hide(); $('.loginContent').slideUp();"
@@ -396,7 +411,7 @@ def signin_login(app):
     g.html.DIV(class_="supplemental")
 
     g.html.P()
-    g.html.T("Already have an account? ")
+    g.html.T('<span class="material-icons-outlined">account_circle</span> Already have an account? ')
     g.html.A(
         onclick=(
             "enableButtons(); $('.createAccountContent.noAnimation').hide(); $('.createAccountContent').slideUp();"
@@ -425,13 +440,13 @@ def signin_forward(app, token):
 
     # Brand-new token or recent login
     if (
-        token.created.timestamp() > time.time() - 5
+        token.created.timestamp() > time.time() - 15
         or g.user.lastLogin
-        and g.user.lastLogin.timestamp() > time.time() - 5
+        and g.user.lastLogin.timestamp() > time.time() - 15
     ):
 
         g.html.H1()
-        g.html.T(f"You’re signed in to {app.name.replace(' ', '&nbsp;')}")
+        g.html.T(f'You’re signed in to {app.name.replace(" ", "&nbsp;")}')
         g.html._H1()
 
         g.html.P()
@@ -474,7 +489,10 @@ def signin_forward(app, token):
         g.html._H1()
 
         g.html.P()
-        g.html.T(f'Not you, {g.user.name} ({g.user.email})? <a onclick="logout();">Switch&nbsp;Accounts</a>.')
+        g.html.T(
+            f'<span class="material-icons-outlined">account_circle</span> Not you, {g.user.name}? <a'
+            ' onclick="logout();">Switch&nbsp;Accounts.</a>'
+        )
         g.html._P()
 
         g.html.mediumSeparator()
