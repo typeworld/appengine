@@ -278,7 +278,7 @@ ZM	Zambia
 ZW	Zimbabwe
 """
 
-EU_COUNTRIES = [
+EU_COUNTRIES = (
     "AT",
     "BE",
     "BG",
@@ -290,7 +290,7 @@ EU_COUNTRIES = [
     "ES",
     "FI",
     "FR",
-    # "UK",
+    # "UK", welp
     "GR",
     "HR",
     "HU",
@@ -304,8 +304,7 @@ EU_COUNTRIES = [
     "NL",
     "PL",
     "PT",
-]
-
+)
 
 COUNTRIES = []
 COUNTRIES_DICT = {}
@@ -316,6 +315,15 @@ for line in COUNTRIES_PLAIN.splitlines():
     COUNTRIES_DICT[code] = name
 COUNTRIES = sorted(COUNTRIES, key=lambda country: country[1])
 
+COUNTRIES_THAT_REQUIRE_STATE_OR_PROVINCE = (
+    "US",
+    "CA",
+    "AU",
+    "CN",
+    "BR",
+    "MX",
+    "MY",
+)
 APICOMMANDS = collections.OrderedDict()
 
 APICOMMANDS["validateAPIEndpoint"] = {
