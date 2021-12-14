@@ -63,16 +63,18 @@ class User(TWNDBModel):
     stripeTestSubscriptions = web.JsonProperty(default={})
     stripeTestSubscribedProductsHistory = web.JsonProperty(default={})
 
-    invoiceName = web.StringProperty(verbose_name="Name or Company")
+    invoiceName = web.StringProperty(verbose_name="Name")
+    invoiceCompany = web.StringProperty(verbose_name="Company")
     invoiceStreet = web.StringProperty(verbose_name="Street and Building Number")
-    invoiceStreet2 = web.StringProperty(verbose_name="Additional Street Information <em>(optional)</em>")
+    invoiceStreet2 = web.StringProperty(verbose_name="Additional Street Information")
     invoiceZIPCode = web.StringProperty(verbose_name="ZIP Code")
     invoiceCity = web.StringProperty(verbose_name="Town")
-    invoiceState = web.StringProperty(verbose_name="State/Province <em>(optional)</em>")
+    invoiceState = web.StringProperty(verbose_name="State/Province")
     invoiceCountry = web.CountryProperty(verbose_name="Country")
     invoiceEUVATID = web.EUVATIDProperty(verbose_name="EU VAT ID <em>(if applicable)</em>")
 
     invoiceFields = [
+        "invoiceCompany",
         "invoiceName",
         "invoiceStreet",
         "invoiceStreet2",
@@ -136,6 +138,7 @@ class User(TWNDBModel):
                 "edit_uri": f"{typeworldserver.HTTPROOT}/auth/edituserdata?scope=billingaddress",
                 "data": {
                     "name": self.invoiceName or "",
+                    "company": self.invoiceCompany or "",
                     "street": self.invoiceStreet or "",
                     "street2": self.invoiceStreet2 or "",
                     "zipcode": self.invoiceZIPCode or "",
@@ -148,8 +151,9 @@ class User(TWNDBModel):
 
             # Missing data
             missing = []
-            if not self.invoiceName:
+            if not self.invoiceName and not self.invoiceCompany:
                 missing.append("name")
+                missing.append("company")
             if not self.invoiceStreet:
                 missing.append("street")
             if not self.invoiceZIPCode:
@@ -198,6 +202,7 @@ class User(TWNDBModel):
             "billingaddress": {
                 "editable": [
                     "invoiceName",
+                    "invoiceCompany",
                     "invoiceStreet",
                     "invoiceStreet2",
                     "invoiceZIPCode",
@@ -206,22 +211,26 @@ class User(TWNDBModel):
                     "invoiceCountry",
                 ],
                 "fields": {
-                    "name": {"name": "Name or Company Name", "dbMapping": "invoiceName"},
+                    "name": {"name": "Name", "dbMapping": "invoiceName"},
+                    "company": {"name": "Company", "dbMapping": "invoiceCompany"},
                     "street": {"name": "Street and Building Number", "dbMapping": "invoiceStreet"},
                     "street2": {
-                        "name": "Additional Street Information <em>(optional)</em>",
+                        "name": "Additional Street Information",
                         "dbMapping": "invoiceStreet2",
                     },
                     "zipcode": {"name": "ZIP Code", "dbMapping": "invoiceZIPCode"},
                     "town": {"name": "Town", "dbMapping": "invoiceCity"},
-                    "state": {"name": "State/Province <em>(optional)</em>", "dbMapping": "invoiceState"},
+                    "state": {"name": "State/Province", "dbMapping": "invoiceState"},
                     "country": {"name": "Country", "dbMapping": "invoiceCountry"},
                 },
             },
             "euvatid": {
                 "editable": ["invoiceEUVATID"],
                 "fields": {
-                    "euvatid": {"name": "European Union VAT ID <em>(optional)</em>", "dbMapping": "invoiceEUVATID"},
+                    "euvatid": {
+                        "name": "European Union VAT ID <em>(if applicable)</em>",
+                        "dbMapping": "invoiceEUVATID",
+                    },
                 },
             },
         }
