@@ -1211,12 +1211,14 @@ def dataContainerReload(item=None):
 
                     html = g.html.generate()
 
+                    html = html.replace("\n", "\\n")
+
                     if "\n" in html:
                         raise ValueError("Returned code contains new line character, which breaks JS handling.")
 
                     g.html = oldHTML
                     g.html.SCRIPT()
-                    js = "$('.%s').html('%s');" % (
+                    js = "$('.%s').html('%s'.replace('\\\\n', '\\n'));" % (
                         additionalReloadDataContainer,
                         html.replace("'", "\\'"),
                     )
