@@ -213,15 +213,14 @@ def innerContainer(methodName, parameters={}, directCallParameters={}):
             method = getattr(module, methodName)
             break
 
-    assert method
-
     if methodName in globals():
         method = globals()[methodName]
     elif methodName in locals():
         method = locals()[methodName]
 
-    if method:
-        method(parameters, directCallParameters)
+    assert method
+
+    method(parameters, directCallParameters)
 
 
 def _outerContainer():
