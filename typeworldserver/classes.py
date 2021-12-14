@@ -68,7 +68,7 @@ class User(TWNDBModel):
     invoiceStreet2 = web.StringProperty(verbose_name="Additional Street Information <em>(optional)</em>")
     invoiceZIPCode = web.StringProperty(verbose_name="ZIP Code")
     invoiceCity = web.StringProperty(verbose_name="Town")
-    invoiceState = web.StringProperty(verbose_name="State <em>(optional)</em>")
+    invoiceState = web.StringProperty(verbose_name="State/Province <em>(optional)</em>")
     invoiceCountry = web.CountryProperty(verbose_name="Country")
     invoiceEUVATID = web.EUVATIDProperty(verbose_name="EU VAT ID <em>(if applicable)</em>")
 
@@ -109,13 +109,29 @@ class User(TWNDBModel):
         return response
 
     def oauth(self, scope):
+
+        # See http://www.bitboost.com/ref/international-address-formats.html
+        # for address formatting
+
         if scope == "account":
-            return {
+            data = {
                 "name": definitions.SIGNINSCOPES["account"]["name"],
                 "data": {"name": self.name, "email": self.email},
             }
+
+            # Missing data
+            missing = []
+            if not self.name:
+                missing.append("name")
+            if not self.email:
+                missing.append("name")
+            if missing:
+                data["missing_required_data"] = missing
+
+            return data
+
         elif scope == "billingaddress":
-            return {
+            data = {
                 "name": definitions.SIGNINSCOPES["billingaddress"]["name"],
                 "edit_uri": f"{typeworldserver.HTTPROOT}/auth/edituserdata?scope=billingaddress",
                 "data": {
@@ -129,14 +145,50 @@ class User(TWNDBModel):
                     "country_code": self.invoiceCountry or "",
                 },
             }
+
+            # Missing data
+            missing = []
+            if not self.invoiceName:
+                missing.append("name")
+            if not self.invoiceStreet:
+                missing.append("street")
+            if not self.invoiceZIPCode:
+                missing.append("zipcode")
+            if not self.invoiceCity:
+                missing.append("town")
+            if self.invoiceCountry and self.invoiceCountry in (
+                "US",
+                "CA",
+                "AU",
+                "CN",
+                "BR",
+                "MX",
+                "MY",
+            ):
+                missing.append("state")
+            if not self.invoiceCountry:
+                missing.append("country")
+
+            if missing:
+                data["missing_required_data"] = missing
+
+            return data
+
         elif scope == "euvatid":
-            return {
+            data = {
                 "name": definitions.SIGNINSCOPES["euvatid"]["name"],
                 "edit_uri": f"{typeworldserver.HTTPROOT}/auth/edituserdata?scope=euvatid",
                 "data": {
                     "euvatid": self.invoiceEUVATID or "",
                 },
             }
+
+            # Missing data
+            missing = []
+            if missing:
+                data["missing_required_data"] = missing
+
+            return data
 
     def oauthInfo(self):
         return {
@@ -166,7 +218,7 @@ class User(TWNDBModel):
                     },
                     "zipcode": {"name": "ZIP Code", "dbMapping": "invoiceZIPCode"},
                     "town": {"name": "Town", "dbMapping": "invoiceCity"},
-                    "state": {"name": "State <em>(optional)</em>", "dbMapping": "invoiceState"},
+                    "state": {"name": "State/Province <em>(optional)</em>", "dbMapping": "invoiceState"},
                     "country": {"name": "Country", "dbMapping": "invoiceCountry"},
                 },
             },
@@ -221,7 +273,10 @@ class User(TWNDBModel):
                 g.html.T(self.oauthInfo()[scope]["fields"][key]["name"] + ":")
                 g.html._TD()
                 g.html.TD()
-                g.html.T(oauth["data"][key] or '<span style="color: #777;">&lt;empty&gt;</span>')
+                if "missing_required_data" in oauth and key in oauth["missing_required_data"]:
+                    g.html.T('<span style="color: #ff8b47;">&lt;missing&gt;</span>')
+                else:
+                    g.html.T(oauth["data"][key] or '<span style="color: #777;">&lt;empty&gt;</span>')
                 g.html._TD()
                 g.html._TR()
                 # g.html.BR()
@@ -230,6 +285,16 @@ class User(TWNDBModel):
 
         g.html._DIV()  # .content
         g.html._DIV()  # .scope
+
+        # Missing data
+        if self.oauth_incompleteUserData(parameters["scopes"]):
+            g.html.SCRIPT()
+            g.html.T("$('.incomplete_user_data').show(); $('.complete_user_data').hide();")
+            g.html._SCRIPT()
+        else:
+            g.html.SCRIPT()
+            g.html.T("$('.incomplete_user_data').hide(); $('.complete_user_data').show();")
+            g.html._SCRIPT()
 
     def rawJSONDataView(self, parameters={}, directCallParameters={}):
         scopes = parameters["scopes"]
@@ -302,6 +367,14 @@ class User(TWNDBModel):
                 g.html._P()
             # g.html._DIV()  # .content
             # g.html._DIV()  # .scope
+
+    def oauth_incompleteUserData(self, scopes, singleScope=None):
+        # Missing data
+        incompleteData = False
+        for scope in scopes:
+            if "missing_required_data" in self.oauth(scope):
+                incompleteData = True
+        return incompleteData
 
     def editPermission(self, propertyNames=[]):
         allowed = list(set(["name", "email", "emailToChange"]) | set(self.invoiceFields))

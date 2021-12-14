@@ -709,14 +709,14 @@ tr.highlight {
 	top: -5px;
 }
 
-.warning {
+/* .warning {
 	color: #E94E1B;
 }
 
 .warning a {
 	color: #E94E1B;
 	font-weight: bold;
-}
+} */
 
 
 /* STRIPE */
@@ -764,4 +764,18 @@ p.date {
 
 .blogentry h1.title {
     margin-top: 70px;
+}
+
+.message.warning {
+    padding: 15px;
+    margin-bottom: 10px;
+    background-color: #ff8b47;
+    border-radius: 3px;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+    -khtml-border-radius: 3px;
+}
+
+.incomplete_user_data {
+	display: none;
 }

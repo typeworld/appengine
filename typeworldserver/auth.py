@@ -25,6 +25,8 @@ def getToken(app):
 
 def signin_authorization(app):
 
+    incompleteUserData = g.user.oauth_incompleteUserData(g.form._get("scope").split(","))
+
     g.html.DIV(class_="content")
 
     g.html.H1()
@@ -54,35 +56,58 @@ def signin_authorization(app):
     g.html.DIV(class_="reduced_data")
     g.html.DIV(style="text-align: right;")
     g.html.T(
-        "Show complete data <a onclick=\"$('.reduced_data').hide(); $('.complete_data').show();\">"
+        "Show full data <a onclick=\"$('.reduced_data').hide(); $('.full_data').show();\">"
         '<span class="material-icons-outlined">toggle_off</span></a>'
     )
     g.html._DIV()
     g.user.editScopes(g.form._get("scope").split(","), False, app)
-    g.html._DIV()  # .reducted_data
+    g.html._DIV()  # .reduced_data
 
     # Complete Data, show this by default if there is a problem
-    g.html.DIV(class_="complete_data")
+    g.html.DIV(class_="full_data")
     g.html.DIV(style="text-align: right;")
     g.html.T(
-        "Show complete data <a onclick=\"$('.reduced_data').show(); $('.complete_data').hide();\">"
+        "Show full data <a onclick=\"$('.reduced_data').show(); $('.full_data').hide();\">"
         '<span class="material-icons-outlined">toggle_on</span></a>'
     )
     g.html._DIV()
     g.user.editScopes(g.form._get("scope").split(","), True, app)
-    g.html._DIV()  # .complete_data
+    g.html._DIV()  # .full_data
 
     g.html.SCRIPT()
-    if True:
-        g.html.T("$('.reduced_data').show(); $('.complete_data').hide();")
+    if incompleteUserData:
+        g.html.T("$('.reduced_data').hide(); $('.full_data').show();")
     else:
-        g.html.T("$('.reduced_data').hide(); $('.complete_data').show();")
+        g.html.T("$('.reduced_data').show(); $('.full_data').hide();")
     g.html._SCRIPT()
 
     g.html.mediumSeparator()
 
+    g.html.DIV(class_="message warning incomplete_user_data")
+    g.html.T(
+        '<span class="material-icons-outlined">error_outline</span> Your data is incomplete.<br />Please add'
+        f" the relevant data, as <b>{app.name}</b> requires it for its service."
+    )
+    g.html._DIV()  # .incomplete_user_data
+
     g.html.DIV(class_="clear")
-    g.html.SPAN(class_="noAnimation floatleft", style="margin-right: 10px;")
+    g.html.SPAN(class_="noAnimation floatleft incomplete_user_data", style="margin-right: 10px;")
+    g.html.BUTTON(
+        class_="button dead",
+        type="submit",
+        value="submit",
+        name="authorizeTokenButton",
+        onclick=(
+            f"$(this).addClass('disabled'); authorizeOAuthToken('{g.form._get('client_id')}',"
+            f" '{g.form._get('response_type')}', '{g.form._get('redirect_uri')}', '{g.form._get('scope')}',"
+            f" '{g.form._get('state')}'); return false;"
+        ),
+    )
+    g.html.T("Authorize")
+    g.html._BUTTON()
+    g.html._SPAN()
+
+    g.html.SPAN(class_="noAnimation floatleft complete_user_data", style="margin-right: 10px;")
     g.html.BUTTON(
         class_="button",
         type="submit",
@@ -97,6 +122,7 @@ def signin_authorization(app):
     g.html.T("Authorize")
     g.html._BUTTON()
     g.html._SPAN()
+
     g.html.SPAN(class_="floatleft", style="margin-right: 10px;")
     g.html.A(class_="button secondary", href=g.form._get("redirect_uri"))
     g.html.T("Cancel")
@@ -105,6 +131,16 @@ def signin_authorization(app):
     g.html._DIV()  # .clear
 
     g.html._DIV()  # .content
+
+    # Missing data
+    if incompleteUserData:
+        g.html.SCRIPT()
+        g.html.T("$('.incomplete_user_data').show(); $('.complete_user_data').hide();")
+        g.html._SCRIPT()
+    else:
+        g.html.SCRIPT()
+        g.html.T("$('.incomplete_user_data').hide(); $('.complete_user_data').show();")
+        g.html._SCRIPT()
 
 
 @typeworldserver.app.route("/auth/authorize", methods=["POST"])
@@ -206,7 +242,12 @@ def auth_edituserdata():
 
     ########################
 
+    scopes = g.form._get("scope").split(",")
+
     signin_header(app)
+
+    # TODO:
+    # Check if signed in user (g.user) is identical to token’s user
 
     g.html.DIV(class_="content")
 
@@ -214,13 +255,28 @@ def auth_edituserdata():
     g.html.T("Edit my Type.World account")
     g.html._H1()
 
-    g.user.editScopes(g.form._get("scope").split(","), True, app, rawDataLink=False)
+    g.user.editScopes(scopes, True, app, rawDataLink=False)
 
-    g.html.smallSeparator()
+    g.html.mediumSeparator()
 
-    g.html.DIV(class_="clear")
+    g.html.DIV(class_="message warning incomplete_user_data")
+    g.html.T(
+        '<span class="material-icons-outlined">error_outline</span> Your data is incomplete.<br />Please add'
+        f" the relevant data, as <b>{app.name}</b> requires it for its service."
+    )
+    g.html._DIV()  # .incomplete_user_data
+
+    g.html.DIV(class_="clear complete_user_data")
     g.html.SPAN(class_="floatleft", style="margin-right: 10px;")
     g.html.A(name="returnButton", class_="button", href=urllib.parse.unquote_plus(g.form._get("redirect_uri")))
+    g.html.T(f"Return to {app.name}")
+    g.html._A()
+    g.html._SPAN()
+    g.html._DIV()  # .clear
+
+    g.html.DIV(class_="clear incomplete_user_data")
+    g.html.SPAN(class_="floatleft", style="margin-right: 10px;")
+    g.html.A(name="returnButton", class_="button dead", href=urllib.parse.unquote_plus(g.form._get("redirect_uri")))
     g.html.T(f"Return to {app.name}")
     g.html._A()
     g.html._SPAN()
@@ -229,6 +285,16 @@ def auth_edituserdata():
     g.html._DIV()  # .content
 
     signin_footer(app)
+
+    # Missing data
+    if g.user.oauth_incompleteUserData(scopes):
+        g.html.SCRIPT()
+        g.html.T("$('.incomplete_user_data').show(); $('.complete_user_data').hide();")
+        g.html._SCRIPT()
+    else:
+        g.html.SCRIPT()
+        g.html.T("$('.incomplete_user_data').hide(); $('.complete_user_data').show();")
+        g.html._SCRIPT()
 
     return g.html.GeneratePage()
 
