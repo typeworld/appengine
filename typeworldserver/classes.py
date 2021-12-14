@@ -172,6 +172,16 @@ class User(TWNDBModel):
             if missing:
                 data["missing_required_data"] = missing
 
+            # Formatted address
+            if self.invoiceCountry:
+                formattedData = definitions.ADDRESS_FORMAT[
+                    self.invoiceCountry if self.invoiceCountry in definitions.ADDRESS_FORMAT else "default"
+                ]
+                for key in data["data"]:
+                    formattedData = formattedData.replace(f"{{{key}}}", data["data"][key])
+                formattedData = formattedData.replace("\n\n", "\n").replace("  ", " ").strip()
+                data["formatted_data"] = formattedData
+
             return data
 
         elif scope == "euvatid":

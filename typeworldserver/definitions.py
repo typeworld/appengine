@@ -324,6 +324,43 @@ COUNTRIES_THAT_REQUIRE_STATE_OR_PROVINCE = (
     "MX",
     "MY",
 )
+
+#
+#
+#  ADDRESSES
+#
+#
+
+ADDRESS_FORMAT = {
+    "default": """{name}
+{company}
+{street}
+{street2}
+{zipcode} {town}
+{state}
+{country}""",
+    "AR": """{name}
+{company}
+{street}
+{street2}
+{zipcode} {town}
+{country}""",
+    "AU": """{name}
+{company}
+{street}
+{street2}
+{town} {state} {zipcode}
+{country}""",
+}
+
+
+#
+#
+#  API
+#
+#
+
+
 APICOMMANDS = collections.OrderedDict()
 
 APICOMMANDS["validateAPIEndpoint"] = {
