@@ -129,8 +129,7 @@ class User(TWNDBModel):
                 missing.append("name")
             if not self.email:
                 missing.append("name")
-            if missing:
-                data["missing_required_data"] = missing
+            data["missing_required_data"] = missing
 
             return data
 
@@ -176,8 +175,7 @@ class User(TWNDBModel):
             if not self.invoiceCountry:
                 missing.append("country")
 
-            if missing:
-                data["missing_required_data"] = missing
+            data["missing_required_data"] = missing
 
             # Formatted address
             if self.invoiceCountry:
@@ -216,8 +214,7 @@ class User(TWNDBModel):
 
             # Missing data
             missing = []
-            if missing:
-                data["missing_required_data"] = missing
+            data["missing_required_data"] = missing
 
             return data
 
