@@ -379,123 +379,123 @@ COUNTRIES_THAT_REQUIRE_STATE_OR_PROVINCE = (
 #
 
 ADDRESS_FORMAT = {
-    "default": """{name}
-{company}
+    "default": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {zipcode} {town}
 {state}
 {country}""",
-    "AR": """{name}
-{company}
+    "AR": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {zipcode} {town}
 {country}""",
-    "AU": """{name}
-{company}
+    "AU": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {town} {state} {zipcode}
 {country}""",
-    "AT": """{name}
-{company}
+    "AT": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {zipcode} {town}
 {country}""",
-    "BG": """{name}
-{company}
+    "BG": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 B-{zipcode} {town}
 {country}""",
-    "BR": """{name}
-{company}
+    "BR": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {town}
 {zipcode}
 {country}""",
-    "CA": """{name}
-{company}
+    "CA": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {town} {state} {zipcode}
 {country}""",
-    "CN": """{name}
-{company}
+    "CN": """{company}
+{name}
 {address_2}
 {address_3}
 {address} {town}
 {zipcode} {state}
 {country}""",
-    "TW": """{name}
-{company}
+    "TW": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {town} {zipcode}
 {country}""",
-    "CZ": """{name}
-{company}
+    "CZ": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {zipcode} {town}
 {country}""",
-    "DK": """{name}
-{company}
+    "DK": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 DK-{zipcode} {town}
 {country}""",
-    "EE": """{name}
-{company}
+    "EE": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {zipcode} {town}
 {country}""",
-    "FJ": """{name}
-{company}
+    "FJ": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {state}
 {town}
 {country}""",
-    "FI": """{name}
-{company}
+    "FI": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {zipcode} {town}
 {country}""",
-    "FR": """{name}
-{company}
+    "FR": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {zipcode} {town}
 {country}""",
-    "DE": """{name}
-{company}
+    "DE": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {zipcode} {town}
 {country}""",
-    "UK": """{name}
-{company}
+    "UK": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
@@ -503,151 +503,151 @@ DK-{zipcode} {town}
 {state}
 {zipcode}
 {country}""",
-    "GL": """{name}
-{company}
+    "GL": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 DK-{zipcode} {town}
 {country}""",
-    "HK": """{name}
-{company}
+    "HK": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {town}
 {country}""",
-    "IS": """{name}
-{company}
+    "IS": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {zipcode} {town}
 {country}""",
-    "IN": """{name}
-{company}
+    "IN": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {town} {zipcode}
 {country}""",
-    "ID": """{name}
-{company}
+    "ID": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {town} {zipcode}
 {country}""",
-    "IE": """{name}
-{company}
+    "IE": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {town}
 {zipcode}
 {country}""",
-    "IL": """{name}
-{company}
+    "IL": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {zipcode} {town}
 {country}""",
-    "IT": """{name}
-{company}
+    "IT": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {zipcode} {town} {state}
 {country}""",
-    "JP": """{name}
-{company}
+    "JP": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {town} {state} {zipcode}
 {country}""",
-    "KR": """{name}
-{company}
+    "KR": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {town} {zipcode}
 {country}""",
-    "LU": """{name}
-{company}
+    "LU": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 L-{zipcode} {town}
 {country}""",
-    "MY": """{name}
-{company}
+    "MY": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {town} {zipcode}, {state}
 {country}""",
-    "NL": """{name}
-{company}
+    "NL": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {zipcode} {town}
 {country}""",
-    "NZ": """{name}
-{company}
+    "NZ": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {town} {zipcode}
 {country}""",
-    "NO": """{name}
-{company}
+    "NO": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 NO-{zipcode} {town}
 {country}""",
-    "OM": """{name}
-{company}
+    "OM": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {zipcode}
 {town}
 {country}""",
-    "PK": """{name}
-{company}
+    "PK": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {town} {zipcode}
 {country}""",
-    "PL": """{name}
-{company}
+    "PL": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {zipcode} {town}
 {country}""",
-    "PT": """{name}
-{company}
+    "PT": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {zipcode} {town}
 {country}""",
-    "RO": """{name}
-{company}
+    "RO": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {zipcode} {town}
 {state}
 {country}""",
-    "RU": """{name}
-{company}
+    "RU": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
@@ -655,59 +655,59 @@ NO-{zipcode} {town}
 {state}
 {zipcode}
 {country}""",
-    "SG": """{name}
-{company}
+    "SG": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {town} {zipcode}
 {country}""",
-    "ZA": """{name}
-{company}
+    "ZA": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {town}
 {zipcode}
 {country}""",
-    "ES": """{name}
-{company}
+    "ES": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {zipcode} {town}
 {country}""",
-    "SE": """{name}
-{company}
+    "SE": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 SE-{zipcode} {town}
 {country}""",
-    "CH": """{name}
-{company}
+    "CH": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {zipcode} {town}
 {country}""",
-    "UA": """{name}
-{company}
+    "UA": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {town}
 {zipcode}
 {country}""",
-    "US": """{name}
-{company}
+    "US": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
 {town} {state} {zipcode}
 {country}""",
-    "UY": """{name}
-{company}
+    "UY": """{company}
+{name}
 {address}
 {address_2}
 {address_3}
