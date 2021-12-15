@@ -432,10 +432,11 @@ B-{zipcode} {town}
 {country}""",
     "CN": """{company}
 {name}
+{address}
 {address_2}
 {address_3}
-{address} {town}
-{zipcode} {state}
+{state}
+{zipcode} {town}
 {country}""",
     "TW": """{company}
 {name}
