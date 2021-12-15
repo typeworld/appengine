@@ -63,7 +63,9 @@ function AJAX(container, url, data = {}, propertyNames = [], callback = null) {
 				}
 			}
 
-			enableButtons();
+			if (xhr.status != 302) {
+				enableButtons();
+			}
 			// stopAnimation();
 			documentReady();
 
