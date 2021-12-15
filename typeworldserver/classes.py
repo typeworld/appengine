@@ -405,7 +405,7 @@ class User(TWNDBModel):
         # Missing data
         incompleteData = False
         for scope in scopes:
-            if "missing_required_data" in self.oauth(scope):
+            if self.oauth(scope)["missing_required_data"]:
                 incompleteData = True
         return incompleteData
 
