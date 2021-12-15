@@ -383,7 +383,6 @@ ADDRESS_FORMAT = {
 {name}
 {address}
 {address_2}
-{address_3}
 {zipcode} {town}
 {state}
 {country}""",
@@ -391,35 +390,30 @@ ADDRESS_FORMAT = {
 {name}
 {address}
 {address_2}
-{address_3}
 {zipcode} {town}
 {country}""",
     "AU": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {town} {state} {zipcode}
 {country}""",
     "AT": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {zipcode} {town}
 {country}""",
     "BG": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 B-{zipcode} {town}
 {country}""",
     "BR": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {town}
 {zipcode}
 {country}""",
@@ -427,14 +421,12 @@ B-{zipcode} {town}
 {name}
 {address}
 {address_2}
-{address_3}
 {town} {state} {zipcode}
 {country}""",
     "CN": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {state}
 {zipcode} {town}
 {country}""",
@@ -442,35 +434,30 @@ B-{zipcode} {town}
 {name}
 {address}
 {address_2}
-{address_3}
 {town} {zipcode}
 {country}""",
     "CZ": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {zipcode} {town}
 {country}""",
     "DK": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 DK-{zipcode} {town}
 {country}""",
     "EE": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {zipcode} {town}
 {country}""",
     "FJ": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {state}
 {town}
 {country}""",
@@ -478,28 +465,24 @@ DK-{zipcode} {town}
 {name}
 {address}
 {address_2}
-{address_3}
 {zipcode} {town}
 {country}""",
     "FR": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {zipcode} {town}
 {country}""",
     "DE": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {zipcode} {town}
 {country}""",
     "UK": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {town}
 {state}
 {zipcode}
@@ -508,42 +491,36 @@ DK-{zipcode} {town}
 {name}
 {address}
 {address_2}
-{address_3}
 DK-{zipcode} {town}
 {country}""",
     "HK": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {town}
 {country}""",
     "IS": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {zipcode} {town}
 {country}""",
     "IN": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {town} {zipcode}
 {country}""",
     "ID": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {town} {zipcode}
 {country}""",
     "IE": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {town}
 {zipcode}
 {country}""",
@@ -551,70 +528,60 @@ DK-{zipcode} {town}
 {name}
 {address}
 {address_2}
-{address_3}
 {zipcode} {town}
 {country}""",
     "IT": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {zipcode} {town} {state}
 {country}""",
     "JP": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {town} {state} {zipcode}
 {country}""",
     "KR": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {town} {zipcode}
 {country}""",
     "LU": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 L-{zipcode} {town}
 {country}""",
     "MY": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {town} {zipcode}, {state}
 {country}""",
     "NL": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {zipcode} {town}
 {country}""",
     "NZ": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {town} {zipcode}
 {country}""",
     "NO": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 NO-{zipcode} {town}
 {country}""",
     "OM": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {zipcode}
 {town}
 {country}""",
@@ -622,28 +589,24 @@ NO-{zipcode} {town}
 {name}
 {address}
 {address_2}
-{address_3}
 {town} {zipcode}
 {country}""",
     "PL": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {zipcode} {town}
 {country}""",
     "PT": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {zipcode} {town}
 {country}""",
     "RO": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {zipcode} {town}
 {state}
 {country}""",
@@ -651,7 +614,6 @@ NO-{zipcode} {town}
 {name}
 {address}
 {address_2}
-{address_3}
 {town}
 {state}
 {zipcode}
@@ -660,14 +622,12 @@ NO-{zipcode} {town}
 {name}
 {address}
 {address_2}
-{address_3}
 {town} {zipcode}
 {country}""",
     "ZA": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {town}
 {zipcode}
 {country}""",
@@ -675,28 +635,24 @@ NO-{zipcode} {town}
 {name}
 {address}
 {address_2}
-{address_3}
 {zipcode} {town}
 {country}""",
     "SE": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 SE-{zipcode} {town}
 {country}""",
     "CH": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {zipcode} {town}
 {country}""",
     "UA": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {town}
 {zipcode}
 {country}""",
@@ -704,14 +660,12 @@ SE-{zipcode} {town}
 {name}
 {address}
 {address_2}
-{address_3}
 {town} {state} {zipcode}
 {country}""",
     "UY": """{company}
 {name}
 {address}
 {address_2}
-{address_3}
 {zipcode} {town}
 {country}""",
 }
