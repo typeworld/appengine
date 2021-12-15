@@ -179,8 +179,22 @@ class User(TWNDBModel):
                 ]
                 for key in data["data"]:
                     formattedData = formattedData.replace(f"{{{key}}}", data["data"][key])
-                formattedData = formattedData.replace("\n\n", "\n").replace("  ", " ").strip()
-                data["formatted_data"] = formattedData
+                # Strip beginning and end
+                formattedData = formattedData.strip()
+                # Strip each line
+                formattedData = "\n".join([x.strip() for x in formattedData.splitlines() if x])
+                # Remove leftovers (probably unnecessary at this point except for spaces)
+                formattedData = (
+                    formattedData.replace("\n\n", "\n")
+                    .replace("\n\n", "\n")
+                    .replace("\n\n", "\n")
+                    .replace("  ", " ")
+                    .replace("  ", " ")
+                    .replace("  ", " ")
+                    .replace(" \n", "\n")
+                    .replace("\n ", "\n")
+                )
+                data["formatted_billing_address"] = formattedData
 
             return data
 
