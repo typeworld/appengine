@@ -156,7 +156,11 @@ class User(TWNDBModel):
                 missing.append("company")
             if not self.invoiceStreet:
                 missing.append("street")
-            if not self.invoiceZIPCode:
+            if (
+                self.invoiceCountry
+                and self.invoiceCountry in definitions.COUNTRIES_THAT_REQUIRE_ZIP_CODE
+                and not self.invoiceZIPCode
+            ):
                 missing.append("zipcode")
             if not self.invoiceCity:
                 missing.append("town")
