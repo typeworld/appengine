@@ -65,10 +65,11 @@ class User(TWNDBModel):
 
     invoiceName = web.StringProperty(verbose_name="Name")
     invoiceCompany = web.StringProperty(verbose_name="Company")
-    invoiceStreet = web.StringProperty(verbose_name="Street and Building Number")
-    invoiceStreet2 = web.StringProperty(verbose_name="Additional Street Information")
+    invoiceStreet = web.StringProperty(verbose_name="Address")
+    invoiceStreet2 = web.StringProperty(verbose_name="Additional Address Information")
+    invoiceStreet3 = web.StringProperty(verbose_name="Additional Address Information")
     invoiceZIPCode = web.StringProperty(verbose_name="ZIP Code")
-    invoiceCity = web.StringProperty(verbose_name="Town")
+    invoiceCity = web.StringProperty(verbose_name="City/Town")
     invoiceState = web.StringProperty(verbose_name="State/Province")
     invoiceCountry = web.CountryProperty(verbose_name="Country")
     invoiceEUVATID = web.EUVATIDProperty(verbose_name="EU VAT ID <em>(if applicable)</em>")
@@ -78,6 +79,7 @@ class User(TWNDBModel):
         "invoiceName",
         "invoiceStreet",
         "invoiceStreet2",
+        "invoiceStreet3",
         "invoiceZIPCode",
         "invoiceCity",
         "invoiceState",
@@ -139,8 +141,9 @@ class User(TWNDBModel):
                 "data": {
                     "name": self.invoiceName or "",
                     "company": self.invoiceCompany or "",
-                    "street": self.invoiceStreet or "",
-                    "street2": self.invoiceStreet2 or "",
+                    "address": self.invoiceStreet or "",
+                    "address_2": self.invoiceStreet2 or "",
+                    "address_3": self.invoiceStreet3 or "",
                     "zipcode": self.invoiceZIPCode or "",
                     "town": self.invoiceCity or "",
                     "state": self.invoiceState or "",
@@ -155,7 +158,7 @@ class User(TWNDBModel):
                 missing.append("name")
                 missing.append("company")
             if not self.invoiceStreet:
-                missing.append("street")
+                missing.append("address")
             if (
                 self.invoiceCountry
                 and self.invoiceCountry in definitions.COUNTRIES_THAT_REQUIRE_ZIP_CODE
@@ -233,6 +236,7 @@ class User(TWNDBModel):
                     "invoiceCompany",
                     "invoiceStreet",
                     "invoiceStreet2",
+                    "invoiceStreet3",
                     "invoiceZIPCode",
                     "invoiceCity",
                     "invoiceState",
@@ -241,10 +245,14 @@ class User(TWNDBModel):
                 "fields": {
                     "name": {"name": "Name", "dbMapping": "invoiceName"},
                     "company": {"name": "Company", "dbMapping": "invoiceCompany"},
-                    "street": {"name": "Street and Building Number", "dbMapping": "invoiceStreet"},
-                    "street2": {
-                        "name": "Additional Street Information",
+                    "address": {"name": "Address", "dbMapping": "invoiceStreet"},
+                    "address_2": {
+                        "name": "Additional Address Information",
                         "dbMapping": "invoiceStreet2",
+                    },
+                    "address_3": {
+                        "name": "Additional Address Information",
+                        "dbMapping": "invoiceStreet3",
                     },
                     "zipcode": {"name": "ZIP Code", "dbMapping": "invoiceZIPCode"},
                     "town": {"name": "Town", "dbMapping": "invoiceCity"},
