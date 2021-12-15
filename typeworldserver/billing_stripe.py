@@ -23,7 +23,7 @@ if typeworldserver.STRIPELIVE:
     stripeProducts = {
         "world.type.professional_publisher_plan": {
             "ID": "prod_Ix1l3V2SyfLIT4",
-            "name": "Font Publishing Through Type.World",
+            "name": "Font Installations Through Type.World App",
             "prices": [
                 {
                     "id": "price_1IlCzHLUOp6Nnz1oCvGD8bt2",
