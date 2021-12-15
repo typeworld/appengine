@@ -67,7 +67,7 @@ class User(TWNDBModel):
     invoiceCompany = web.StringProperty(verbose_name="Company")
     invoiceStreet = web.StringProperty(verbose_name="Address")
     invoiceStreet2 = web.StringProperty(verbose_name="Additional Address Information")
-    invoiceStreet3 = web.StringProperty(verbose_name="Additional Address Information")
+    # invoiceStreet3 = web.StringProperty(verbose_name="Additional Address Information")
     invoiceZIPCode = web.StringProperty(verbose_name="ZIP Code")
     invoiceCity = web.StringProperty(verbose_name="City/Town")
     invoiceState = web.StringProperty(verbose_name="State/Province")
@@ -79,7 +79,7 @@ class User(TWNDBModel):
         "invoiceName",
         "invoiceStreet",
         "invoiceStreet2",
-        "invoiceStreet3",
+        # "invoiceStreet3",
         "invoiceZIPCode",
         "invoiceCity",
         "invoiceState",
@@ -142,7 +142,7 @@ class User(TWNDBModel):
                     "company": self.invoiceCompany or "",
                     "address": self.invoiceStreet or "",
                     "address_2": self.invoiceStreet2 or "",
-                    "address_3": self.invoiceStreet3 or "",
+                    # "address_3": self.invoiceStreet3 or "",
                     "zipcode": self.invoiceZIPCode or "",
                     "town": self.invoiceCity or "",
                     "state": self.invoiceState or "",
@@ -233,7 +233,7 @@ class User(TWNDBModel):
                     "invoiceCompany",
                     "invoiceStreet",
                     "invoiceStreet2",
-                    "invoiceStreet3",
+                    # "invoiceStreet3",
                     "invoiceZIPCode",
                     "invoiceCity",
                     "invoiceState",
@@ -247,10 +247,10 @@ class User(TWNDBModel):
                         "name": "Additional Address Information",
                         "dbMapping": "invoiceStreet2",
                     },
-                    "address_3": {
-                        "name": "Additional Address Information",
-                        "dbMapping": "invoiceStreet3",
-                    },
+                    # "address_3": {
+                    #     "name": "Additional Address Information",
+                    #     "dbMapping": "invoiceStreet3",
+                    # },
                     "zipcode": {"name": "ZIP Code", "dbMapping": "invoiceZIPCode"},
                     "town": {"name": "Town", "dbMapping": "invoiceCity"},
                     "state": {"name": "State/Province", "dbMapping": "invoiceState"},
