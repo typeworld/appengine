@@ -785,28 +785,18 @@ class User(TWNDBModel):
         g.html._B()
         g.html._P()
 
-        if not self.invoiceDataComplete():
+        oauth = self.oauth("billingaddress")
+        if oauth["missing_required_data"]:
             g.html.P(class_="warning", id="adblockerwarning")
-            g.html.T("▲ Billing address is incomplete")
+            g.html.T('<span class="material-icons-outlined">error_outline</span> Billing address is incomplete')
             g.html._P()
         else:
             g.html.P()
-            g.html.T(self.invoiceName)
-            g.html.BR()
-            g.html.T(self.invoiceStreet)
-            if self.invoiceStreet2:
-                g.html.BR()
-                g.html.T(self.invoiceStreet2)
-            g.html.BR()
-            g.html.T(f"{self.invoiceZIPCode} {self.invoiceCity}")
-            if self.invoiceState:
-                g.html.BR()
-                g.html.T(self.invoiceState)
-            g.html.BR()
-            g.html.T(definitions.COUNTRIES_DICT[self.invoiceCountry])
+            g.html.T(oauth["formatted_billing_address"].replace("\n", "<br />"))
             if self.invoiceEUVATID:
-                g.html.BR()
-                g.html.T(self.invoiceEUVATID)
+                g.html._P()
+                g.html.P()
+                g.html.T(f"EU VAT ID: {self.invoiceEUVATID}")
             g.html._P()
 
         g.html.P()
@@ -827,7 +817,7 @@ class User(TWNDBModel):
 
         if not self.invoiceDataComplete():
             g.html.P(class_="warning", id="adblockerwarning")
-            g.html.T("▲ Billing address is incomplete")
+            g.html.T('<span class="material-icons-outlined">error_outline</span> Billing address is incomplete')
             g.html._P()
         else:
 

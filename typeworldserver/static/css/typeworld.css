@@ -709,14 +709,14 @@ tr.highlight {
 	top: -5px;
 }
 
-/* .warning {
+.warning {
 	color: #E94E1B;
 }
 
 .warning a {
 	color: #E94E1B;
 	font-weight: bold;
-} */
+}
 
 
 /* STRIPE */
@@ -767,6 +767,7 @@ p.date {
 }
 
 .message.warning {
+	color: inherit;
     padding: 15px;
     margin-bottom: 10px;
     background-color: #ff8b47;
