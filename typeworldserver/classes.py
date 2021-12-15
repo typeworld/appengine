@@ -276,13 +276,9 @@ class User(TWNDBModel):
         g.html.DIV(class_="content")
 
         g.html.TABLE()
-        # g.html.P()
         oauth = self.oauth(scope)
         for key in oauth["data"]:
             if key in self.oauthInfo()[scope]["fields"]:
-                # g.html.P(class_="label")
-                # g.html.T(self.oauthInfo()[scope]["fields"][key]["name"])
-                # g.html._P()
                 g.html.TR()
                 g.html.TD(style="width: 40%; text-align: right; color: #777; font-size: 10pt;")
                 g.html.T(self.oauthInfo()[scope]["fields"][key]["name"] + ":")
@@ -294,8 +290,7 @@ class User(TWNDBModel):
                     g.html.T(oauth["data"][key] or '<span style="color: #777;">&lt;empty&gt;</span>')
                 g.html._TD()
                 g.html._TR()
-                # g.html.BR()
-        # g.html._P()
+
         g.html._TABLE()
 
         g.html._DIV()  # .content
