@@ -323,6 +323,9 @@ COUNTRIES_THAT_REQUIRE_STATE_OR_PROVINCE = (
     "BR",
     "MX",
     "MY",
+    "IT",
+    "JP",
+    "RO",
 )
 
 #
@@ -350,6 +353,275 @@ ADDRESS_FORMAT = {
 {street}
 {street2}
 {town} {state} {zipcode}
+{country}""",
+    "AT": """{name}
+{company}
+{street}
+{street2}
+{zipcode} {town}
+{country}""",
+    "BG": """{name}
+{company}
+{street}
+{street2}
+B-{zipcode} {town}
+{country}""",
+    "BR": """{name}
+{company}
+{street}
+{street2}
+{town}
+{zipcode}
+{country}""",
+    "CA": """{name}
+{company}
+{street}
+{street2}
+{town} {state} {zipcode}
+{country}""",
+    "CN": """{name}
+{company}
+{street2}
+{street} {town}
+{zipcode} {state}
+{country}""",
+    "TW": """{name}
+{company}
+{street}
+{street2}
+{town} {zipcode}
+{country}""",
+    "CZ": """{name}
+{company}
+{street}
+{street2}
+{zipcode} {town}
+{country}""",
+    "DK": """{name}
+{company}
+{street}
+{street2}
+DK-{zipcode} {town}
+{country}""",
+    "EE": """{name}
+{company}
+{street}
+{street2}
+{zipcode} {town}
+{country}""",
+    "FJ": """{name}
+{company}
+{street}
+{street2}
+{state}
+{town}
+{country}""",
+    "FI": """{name}
+{company}
+{street}
+{street2}
+{zipcode} {town}
+{country}""",
+    "FR": """{name}
+{company}
+{street}
+{street2}
+{zipcode} {town}
+{country}""",
+    "DE": """{name}
+{company}
+{street}
+{street2}
+{zipcode} {town}
+{country}""",
+    "UK": """{name}
+{company}
+{street}
+{street2}
+{town}
+{state}
+{zipcode}
+{country}""",
+    "GL": """{name}
+{company}
+{street}
+{street2}
+DK-{zipcode} {town}
+{country}""",
+    "HK": """{name}
+{company}
+{street}
+{street2}
+{town}
+{country}""",
+    "IS": """{name}
+{company}
+{street}
+{street2}
+{zipcode} {town}
+{country}""",
+    "IN": """{name}
+{company}
+{street}
+{street2}
+{town} {zipcode}
+{country}""",
+    "ID": """{name}
+{company}
+{street}
+{street2}
+{town} {zipcode}
+{country}""",
+    "IE": """{name}
+{company}
+{street}
+{street2}
+{town}
+{zipcode}
+{country}""",
+    "IL": """{name}
+{company}
+{street}
+{street2}
+{zipcode} {town}
+{country}""",
+    "IT": """{name}
+{company}
+{street}
+{street2}
+{zipcode} {town} {state}
+{country}""",
+    "JP": """{name}
+{company}
+{street}
+{street2}
+{town} {state} {zipcode}
+{country}""",
+    "KR": """{name}
+{company}
+{street}
+{street2}
+{town} {zipcode}
+{country}""",
+    "LU": """{name}
+{company}
+{street}
+{street2}
+L-{zipcode} {town}
+{country}""",
+    "MY": """{name}
+{company}
+{street}
+{street2}
+{town} {zipcode}, {state}
+{country}""",
+    "NL": """{name}
+{company}
+{street}
+{street2}
+{zipcode} {town}
+{country}""",
+    "NZ": """{name}
+{company}
+{street}
+{street2}
+{town} {zipcode}
+{country}""",
+    "NO": """{name}
+{company}
+{street}
+{street2}
+NO-{zipcode} {town}
+{country}""",
+    "OM": """{name}
+{company}
+{street}
+{street2}
+{zipcode}
+{town}
+{country}""",
+    "PK": """{name}
+{company}
+{street}
+{street2}
+{town} {zipcode}
+{country}""",
+    "PL": """{name}
+{company}
+{street}
+{street2}
+{zipcode} {town}
+{country}""",
+    "PT": """{name}
+{company}
+{street}
+{street2}
+{zipcode} {town}
+{country}""",
+    "RO": """{name}
+{company}
+{street}
+{street2}
+{zipcode} {town}
+{state}
+{country}""",
+    "RU": """{name}
+{company}
+{street}
+{street2}
+{town}
+{state}
+{zipcode}
+{country}""",
+    "SG": """{name}
+{company}
+{street}
+{street2}
+{town} {zipcode}
+{country}""",
+    "ZA": """{name}
+{company}
+{street}
+{street2}
+{town}
+{zipcode}
+{country}""",
+    "ES": """{name}
+{company}
+{street}
+{street2}
+{zipcode} {town}
+{country}""",
+    "SE": """{name}
+{company}
+{street}
+{street2}
+SE-{zipcode} {town}
+{country}""",
+    "CH": """{name}
+{company}
+{street}
+{street2}
+{zipcode} {town}
+{country}""",
+    "UA": """{name}
+{company}
+{street}
+{street2}
+{town}
+{zipcode}
+{country}""",
+    "US": """{name}
+{company}
+{street}
+{street2}
+{town} {state} {zipcode}
+{country}""",
+    "UY": """{name}
+{company}
+{street}
+{street2}
+{zipcode} {town}
 {country}""",
 }
 
