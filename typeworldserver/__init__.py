@@ -383,9 +383,6 @@ def performLogin(user):
     session.userKey = user.key
     session.putnow()
 
-    user.lastLogin = helpers.now()
-    user.put()
-
     g.user = user
     g.admin = g.user.admin
 
@@ -417,6 +414,8 @@ def login():
     if not user.checkPassword(request.values.get("password")):
         return "<script>warning('Wrong password');</script>"
 
+    user.lastLogin = helpers.now()
+    user.put()
     performLogin(user)
     return "<script>location.reload();</script>"
 
