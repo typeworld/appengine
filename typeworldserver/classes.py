@@ -815,7 +815,7 @@ class User(TWNDBModel):
 
         paymentMethod = self.stripePaymentMethod()
 
-        if not self.invoiceDataComplete():
+        if oauth["missing_required_data"]:
             g.html.P(class_="warning", id="adblockerwarning")
             g.html.T('<span class="material-icons-outlined">error_outline</span> Billing address is incomplete')
             g.html._P()
