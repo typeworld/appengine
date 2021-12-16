@@ -268,7 +268,12 @@ def auth_edituserdata():
 
     g.html.DIV(class_="clear complete_user_data")
     g.html.SPAN(class_="floatleft", style="margin-right: 10px;")
-    g.html.A(name="returnButton", class_="button", href=urllib.parse.unquote_plus(g.form._get("redirect_uri")))
+    g.html.A(
+        name="returnButton",
+        onclick="$(this).addClass('disabled')",
+        class_="button",
+        href=urllib.parse.unquote_plus(g.form._get("redirect_uri")),
+    )
     g.html.T(f"Return to {app.name}")
     g.html._A()
     g.html._SPAN()
