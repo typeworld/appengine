@@ -853,7 +853,7 @@ class User(TWNDBModel):
                             " Make sure to update the payment method after you’ve"
                             " changed your Type.World account’s email address to"
                             " receive payment related information on the new email"
-                            " address (your account’s new email address will linked)."
+                            " address (your account’s new email address will be linked)."
                             " This process cannot be automated."
                         )
                         g.html._P()
