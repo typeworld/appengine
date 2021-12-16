@@ -210,8 +210,10 @@ function logout() {
 
 function enableButtons() {
 	$('.disabled').removeClass('disabled');
-	$('.button,button').click(function () {
-		$(this).addClass('disabled');
+	$('a.button, .button, button').click(function () {
+		if (!$(this).attr("href")) {
+			$(this).addClass('disabled');
+		}
 	});
 }
 
@@ -278,7 +280,7 @@ function reload(element, parameters) {
 }
 
 $(document).ready(function () {
-	$('.button,button').click(function () {
+	$('a.button, .button, button').click(function () {
 		if (!$(this).attr("href")) {
 			$(this).addClass('disabled');
 		}
