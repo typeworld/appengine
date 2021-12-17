@@ -933,6 +933,7 @@ APICOMMANDS["verifyCredentials"] = {
             ),
             "unknownAnonymousTypeWorldUserID": "The user identified by unknownAnonymousTypeWorldUserID is unknown.",
             "unknownAPIKey": "The secret API Key for this API endpoint is unknown.",
+            "emailNotVerified": "The user’s email address isn’t verified. A new verification email has been sent.",
         }
     ),
     "exampleParameters": collections.OrderedDict(

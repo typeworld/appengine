@@ -915,7 +915,7 @@ def verifyCredentials(responses):
 
             if not user.emailVerified:
                 user.sendEmailVerificationLink()
-                responses["response"] = "invalid"
+                responses["response"] = "emailNotVerified"
                 responses[
                     "explanation"
                 ] = "The user’s email address isn’t verified. A new verification email has been sent."
