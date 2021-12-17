@@ -63,16 +63,18 @@ class User(TWNDBModel):
     stripeTestSubscriptions = web.JsonProperty(default={})
     stripeTestSubscribedProductsHistory = web.JsonProperty(default={})
 
-    invoiceName = web.StringProperty(verbose_name="Name")
-    invoiceCompany = web.StringProperty(verbose_name="Company")
-    invoiceStreet = web.StringProperty(verbose_name="Address")
+    invoiceName = web.StringProperty(verbose_name=["Name", "Either <em>Name</em> or <em>Company</em> are reqired"])
+    invoiceCompany = web.StringProperty(
+        verbose_name=["Company", "Either <em>Name</em> or <em>Company</em> are reqired"]
+    )
+    invoiceStreet = web.StringProperty(verbose_name=["Address", "Required"])
     invoiceStreet2 = web.StringProperty(verbose_name="Additional Address Information")
     # invoiceStreet3 = web.StringProperty(verbose_name="Additional Address Information")
-    invoiceZIPCode = web.StringProperty(verbose_name="ZIP Code")
-    invoiceCity = web.StringProperty(verbose_name="City/Town")
-    invoiceState = web.StringProperty(verbose_name="State/Province")
-    invoiceCountry = web.CountryProperty(verbose_name="Country")
-    invoiceEUVATID = web.EUVATIDProperty(verbose_name="EU VAT ID <em>(if applicable)</em>")
+    invoiceZIPCode = web.StringProperty(verbose_name=["ZIP Code", "Required for certain countries"])
+    invoiceCity = web.StringProperty(verbose_name=["City/Town", "Required"])
+    invoiceState = web.StringProperty(verbose_name=["State/Province", "Required for certain countries"])
+    invoiceCountry = web.CountryProperty(verbose_name=["Country", "Required"])
+    invoiceEUVATID = web.EUVATIDProperty(verbose_name=["EU VAT ID", "Required only for E.U. businesses"])
 
     invoiceFields = [
         "invoiceCompany",
