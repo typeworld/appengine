@@ -780,3 +780,9 @@ p.date {
 .incomplete_user_data {
 	display: none;
 }
+
+.labelDescription {
+	margin-left: 10px;
+	font-size: 80%;
+	opacity: 0.5;
+}

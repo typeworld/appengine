@@ -294,6 +294,16 @@ def before_request_web():
 
 
 class Property(object):
+    def __init__(self, *args, **kwargs):
+
+        # Patch description
+        self.description = None
+        if "verbose_name" in kwargs and type(kwargs["verbose_name"]) in (list, tuple):
+            self.description = kwargs["verbose_name"][1]
+            kwargs["verbose_name"] = kwargs["verbose_name"][0]
+
+        super().__init__(*args, **kwargs)
+
     def shape(self, value):
         return value
 
@@ -313,21 +323,21 @@ class Property(object):
 #####
 
 
-class StringProperty(ndb.StringProperty, Property):
+class StringProperty(Property, ndb.StringProperty):
     def dialog(self, key, value, placeholder=None):
         g.html.textInput(key, value=value, type="text", placeholder=placeholder)
 
 
-class BlobProperty(ndb.BlobProperty, Property):
+class BlobProperty(Property, ndb.BlobProperty):
     pass
 
 
-class TextProperty(ndb.TextProperty, Property):
+class TextProperty(Property, ndb.TextProperty):
     def dialog(self, key, value, placeholder=None):
         g.html.textInput(key, value=value, type="textarea", placeholder=placeholder)
 
 
-class EmailProperty(ndb.StringProperty, Property):
+class EmailProperty(Property, ndb.StringProperty):
     def dialog(self, key, value, placeholder=None):
         g.html.textInput(key, value=value, type="email", placeholder=placeholder)
 
@@ -338,7 +348,7 @@ class EmailProperty(ndb.StringProperty, Property):
             return False, "Invalid email"
 
 
-class HTTPURLProperty(ndb.StringProperty, Property):
+class HTTPURLProperty(Property, ndb.StringProperty):
     def valid(self, value):
         if value.startswith("http://") or value.startswith("https://"):
             return True, None
@@ -349,7 +359,7 @@ class HTTPURLProperty(ndb.StringProperty, Property):
         g.html.textInput(key, value=value, type="text", placeholder="http://")
 
 
-class HTTPSURLProperty(ndb.StringProperty, Property):
+class HTTPSURLProperty(Property, ndb.StringProperty):
     def valid(self, value):
         if value.startswith("https://"):
             return True, None
@@ -383,17 +393,17 @@ class UserKeyProperty(KeyProperty):
         g.html.textInput(key, value=email, type="email", placeholder=placeholder)
 
 
-class DateTimeProperty(ndb.DateTimeProperty, Property):
+class DateTimeProperty(Property, ndb.DateTimeProperty):
     def dialog(self, key, value, placeholder=None):
         pass
 
 
-class GeoPtProperty(ndb.GeoPtProperty, Property):
+class GeoPtProperty(Property, ndb.GeoPtProperty):
     def dialog(self, key, value, placeholder=None):
         pass
 
 
-class BooleanProperty(ndb.BooleanProperty, Property):
+class BooleanProperty(Property, ndb.BooleanProperty):
     def dialog(self, key, value, placeholder=None):
         g.html.DIV(style="display: block;")
         g.html.checkBox(key, value)
@@ -403,12 +413,12 @@ class BooleanProperty(ndb.BooleanProperty, Property):
         return value == "on"
 
 
-class JsonProperty(ndb.JsonProperty, Property):
+class JsonProperty(Property, ndb.JsonProperty):
     def dialog(self, key, value, placeholder=None):
         pass
 
 
-class KeyProperty(ndb.KeyProperty, Property):
+class KeyProperty(Property, ndb.KeyProperty):
     def dialog(self, key, value, placeholder=None):
         pass
 
@@ -422,7 +432,7 @@ class KeyProperty(ndb.KeyProperty, Property):
     # 	return True, None
 
 
-class IntegerProperty(ndb.IntegerProperty, Property):
+class IntegerProperty(Property, ndb.IntegerProperty):
     def dialog(self, key, value, placeholder=None):
         g.html.INPUT(type="text", id=key, value=value)
 
@@ -430,7 +440,7 @@ class IntegerProperty(ndb.IntegerProperty, Property):
         return int(value)
 
 
-class SemVerProperty(ndb.StringProperty, Property):
+class SemVerProperty(Property, ndb.StringProperty):
     def dialog(self, key, value, placeholder=None):
         g.html.textInput(key, value=value, type="text", placeholder=placeholder)
 
@@ -442,7 +452,7 @@ class SemVerProperty(ndb.StringProperty, Property):
             return False, f"{value} is not a valid semver version string"
 
 
-class FloatProperty(ndb.FloatProperty, Property):
+class FloatProperty(Property, ndb.FloatProperty):
     def dialog(self, key, value, placeholder=None):
         g.html.INPUT(type="text", id=key, value=value)
 
@@ -450,7 +460,7 @@ class FloatProperty(ndb.FloatProperty, Property):
         return float(value)
 
 
-class CountryProperty(ndb.StringProperty, Property):
+class CountryProperty(Property, ndb.StringProperty):
     def dialog(self, key, value, placeholder=None):
         g.html.SELECT(name=key, id=key, onchange="")
         for code, name in definitions.COUNTRIES:
@@ -460,7 +470,7 @@ class CountryProperty(ndb.StringProperty, Property):
         g.html._SELECT()
 
 
-class EUVATIDProperty(ndb.StringProperty, Property):
+class EUVATIDProperty(Property, ndb.StringProperty):
     def dialog(self, key, value, placeholder=None):
         g.html.textInput(key, value=value, type="text", placeholder=placeholder)
 
@@ -594,7 +604,7 @@ class EUVATIDProperty(ndb.StringProperty, Property):
         return False, responseText
 
 
-class ChoicesProperty(ndb.StringProperty, Property):
+class ChoicesProperty(Property, ndb.StringProperty):
     def __init__(self, *args, **kwargs):
         self.choicesData = kwargs["choices"]
         kwargs["choices"] = list(self.choicesData.keys())
@@ -895,6 +905,10 @@ class WebAppModel(ndb.Model):
                 attr._verbose_name or propertyName,
                 required=attr._required,
             )
+            if attr.description:
+                g.html.SPAN(class_="labelDescription")
+                g.html.T(attr.description)
+                g.html._SPAN()
             g.html.BR()
             attr.dialog(f"{FORM_PREFIX}{propertyName}", attribute)
             g.html._P()
