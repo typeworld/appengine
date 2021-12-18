@@ -181,8 +181,7 @@ def auth_authorize():
     return "<script>location.reload();</script>"
 
 
-@typeworldserver.app.route("/auth/userdata", methods=["POST"])
-def auth_userdata():
+def checkAuthorizationHeaderForToken():
 
     auth_header = request.headers.get("Authorization")
     if auth_header:
@@ -190,36 +189,48 @@ def auth_userdata():
     else:
         auth_token = ""
 
-    if auth_token:
-
-        token = classes.OAuthToken.query(classes.OAuthToken.authToken == auth_token).get()
-        if not token:
-            response = {"status": "fail", "message": "Token couldn't be found"}
-            return jsonify(response), 401
-        if token and token.revoked:
-            response = {"status": "fail", "message": "Token is revoked"}
-            return jsonify(response), 401
-
-        app = token.getApp()
-        payload = jwt.decode(auth_token, typeworldserver.secret("TYPE_WORLD_FLASK_SECRET_KEY"), algorithms=["HS256"])
-
-        user = classes.User.query(classes.User.uuid == payload["sub"]).get()
-        if not user:
-            response = {"status": "fail", "message": "User is unknown"}
-            return jsonify(response), 401
-
-        response = user.rawJSONData(app, token.oauthScopes.split(","))
-        response["status"] = "success"
-
-        # Save last access time
-        token.lastAccess = helpers.now()
-        token.put()
-
-        # return json.dumps(response), 200
-        return Response(json.dumps(response), mimetype="application/json", status=200)
-    else:
+    if not auth_token:
         response = {"status": "fail", "message": "Provide a valid auth token."}
+        return False, response
+
+    token = classes.OAuthToken.query(classes.OAuthToken.authToken == auth_token).get()
+    if not token:
+        response = {"status": "fail", "message": "Token couldn't be found"}
+        return False, response
+
+    if token and token.revoked:
+        response = {"status": "fail", "message": "Token is revoked"}
+        return False, response
+
+    return True, token
+
+
+@typeworldserver.app.route("/auth/userdata", methods=["POST"])
+def auth_userdata():
+
+    success, response = checkAuthorizationHeaderForToken()
+    if not success:
         return jsonify(response), 401
+    else:
+        token = response
+
+    app = token.getApp()
+    payload = jwt.decode(auth_token, typeworldserver.secret("TYPE_WORLD_FLASK_SECRET_KEY"), algorithms=["HS256"])
+
+    user = classes.User.query(classes.User.uuid == payload["sub"]).get()
+    if not user:
+        response = {"status": "fail", "message": "User is unknown"}
+        return jsonify(response), 401
+
+    response = user.rawJSONData(app, token.oauthScopes.split(","))
+    response["status"] = "success"
+
+    # Save last access time
+    token.lastAccess = helpers.now()
+    token.put()
+
+    # return json.dumps(response), 200
+    return Response(json.dumps(response), mimetype="application/json", status=200)
 
 
 @typeworldserver.app.route("/auth/edituserdata", methods=["GET"])
