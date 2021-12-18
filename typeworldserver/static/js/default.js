@@ -123,15 +123,13 @@ function dialogConfirm(message, container, URL) {
 
 
 function warning(text) {
-	enableButtons();
 	window.alert(text);
-	enableButtons();
+	setTimeout(enableButtons, 500);
 }
 
 function info(text) {
-	enableButtons();
 	window.alert(text);
-	enableButtons();
+	setTimeout(enableButtons, 500);
 }
 
 function stopAnimation() {
