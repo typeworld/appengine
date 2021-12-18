@@ -250,8 +250,12 @@ function processCreateUserAccount(data) {
 		warning('Email address is invalid');
 	}
 	else if (data.response == 'success') {
-		enableButtons();
-		login($('#username').val(), $('#password').val());
+		// enableButtons();
+		email = $('#createaccount-email').val();
+		if (email == undefined || email == '') {
+			email = $('#email').val();
+		}
+		login(email, $('#newpassword').val());
 	}
 }
 
