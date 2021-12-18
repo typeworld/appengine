@@ -64,7 +64,9 @@ class User(TWNDBModel):
     stripeTestSubscriptions = web.JsonProperty(default={})
     stripeTestSubscribedProductsHistory = web.JsonProperty(default={})
 
-    invoiceName = web.StringProperty(verbose_name=["Name", "Either <em>Name</em> or <em>Company</em> are reqired"])
+    invoiceName = web.StringProperty(
+        verbose_name=["First and Last Name", "Either <em>Name</em> or <em>Company</em> are reqired"]
+    )
     invoiceCompany = web.StringProperty(
         verbose_name=["Company", "Either <em>Name</em> or <em>Company</em> are reqired"]
     )
@@ -243,7 +245,7 @@ class User(TWNDBModel):
                     "invoiceCountry",
                 ],
                 "fields": {
-                    "name": {"name": "Name", "dbMapping": "invoiceName"},
+                    "name": {"name": "First and Last Name", "dbMapping": "invoiceName"},
                     "company": {"name": "Company", "dbMapping": "invoiceCompany"},
                     "address": {"name": "Address", "dbMapping": "invoiceStreet"},
                     "address_2": {
