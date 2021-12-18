@@ -1431,7 +1431,7 @@ Hello {self.name},
         body += f"""
 
 Please verify your email address by clicking on the following link:
-https://type.world/verifyemail/{self.emailVerificationCode}
+{g.rootURL}/verifyemail/{self.emailVerificationCode}
 
 """
         body += definitions.EMAILFOOTER

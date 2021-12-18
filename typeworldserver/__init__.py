@@ -136,6 +136,8 @@ def before_request():
     # logging.warning("####################")
 
     # starttime = time.time()
+    proto = request.headers["proto"] if "proto" in request.headers else "http"
+    g.rootURL = f"{proto}://{request.headers['Host']}"
 
     if "GAE_VERSION" in os.environ:
         g.instanceVersion = os.environ["GAE_VERSION"]
