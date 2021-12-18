@@ -47,6 +47,7 @@ class User(TWNDBModel):
     timezone = web.StringProperty()
     emailVerified = web.BooleanProperty(default=False)
     emailVerificationCode = web.StringProperty()
+    emailVerificationRedirectURL = web.StringProperty()
     emailToChange = web.EmailProperty(verbose_name="New Email Address")
     lastSeenOnline = web.DateTimeProperty()
     lastLogin = web.DateTimeProperty()
@@ -1413,10 +1414,12 @@ class User(TWNDBModel):
     def sentInvitations(self):
         return Subscription.query(Subscription.invitedByUserKey == self.key).fetch(read_consistency=ndb.STRONG)
 
-    def sendEmailVerificationLink(self):
+    def sendEmailVerificationLink(self, redirectURL=None):
 
         # TODO: avoid random duplicates
         self.emailVerificationCode = helpers.Garbage(40)
+        if redirectURL:
+            self.emailVerificationRedirectURL = redirectURL
 
         body = f"""\
 Hello {self.name},
@@ -1439,12 +1442,13 @@ Please verify your email address by clicking on the following link:
         # Send email
         success, message = helpers.email(
             "Type.World <hq@mail.type.world>",
-            [self.emailToChange],
+            [self.emailToChange or self.email],
             "Type.World: Confirm your email address",
             body,
         )
 
-        self.put()
+        if success:
+            self.put()
 
         return success, message
 

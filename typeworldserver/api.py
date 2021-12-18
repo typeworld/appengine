@@ -279,23 +279,37 @@ def saveStatistics():
 def verifyemail(code):
     user = classes.User.query(classes.User.emailVerificationCode == code).get(read_consistency=ndb.STRONG)
 
-    g.html.DIV(class_="content")
     if not user:
+        g.html.DIV(class_="content")
         g.html.T("No user could be found to verify for this code.")
+        g.html._DIV()
+        return g.html.generate()
 
     else:
+
+        # Save before overwriting
+        redirectURL = user.emailVerificationRedirectURL
+
         user.emailVerified = True
         user.emailVerificationCode = None
-        user.email = user.emailToChange
-        user.emailToChange = None
+        user.emailVerificationRedirectURL = None
+        if user.emailToChange:
+            user.email = user.emailToChange
+            user.emailToChange = None
         user.putnow()
         user.propagateEmailChange()
         user.announceChange()
-        g.html.T(
-            "Your email address has been verified, thank you. You may close this and return to the Type.World App."
-        )
-    g.html._DIV()
-    return g.html.generate()
+
+        if redirectURL:
+            return redirect(redirectURL)
+
+        else:
+            g.html.DIV(class_="content")
+            g.html.T(
+                "Your email address has been verified, thank you. You may close this and return to the Type.World App."
+            )
+            g.html._DIV()
+            return g.html.generate()
 
 
 @typeworldserver.app.route("/v1/<commandName>", methods=["POST"])
@@ -513,8 +527,8 @@ def createUserAccount(responses):
     if g.form._get("SECRETKEY") == typeworldserver.secret("TEST"):
         user.emailVerified = True
     else:
-        user.emailToChange = g.form._get("email")
-        user.sendEmailVerificationLink()
+        if g.form._get("redirected_from") != "email-verification":
+            user.sendEmailVerificationLink()
     user.put()
 
     responses["anonymousUserID"] = user.publicID()

@@ -33,12 +33,20 @@ def signin_authorization(app):
     g.html.T(f'Authorize <span class="black">{app.name}</span>')
     g.html._H1()
 
-    g.html.P()
-    g.html.T(
-        f'<span class="material-icons-outlined">account_circle</span> Not you, {g.user.name}? <a'
-        ' onclick="logout();">Switch&nbsp;Accounts.</a>'
-    )
-    g.html._P()
+    if g.form._get("redirected_from") == "email_verification":
+        g.html.P()
+        g.html.T(
+            '<span class="material-icons-outlined">check_circle</span> Thank you for verifying your email address.'
+        )
+        g.html._P()
+
+    else:
+        g.html.P()
+        g.html.T(
+            f'<span class="material-icons-outlined">account_circle</span> Not you, {g.user.name}? <a'
+            ' onclick="logout();">Switch&nbsp;Accounts.</a>'
+        )
+        g.html._P()
 
     # g.html.smallSeparator()
 
@@ -463,7 +471,7 @@ def signin_login(app):
         name="createUserAccountButton",
         onclick=(
             "$(this).addClass('disabled'); createUserAccount($('#name').val(), $('#createaccount-email').val(),"
-            " $('#newpassword').val(), $('#newpassword2').val()); return false;"
+            " $('#newpassword').val(), $('#newpassword2').val(), 'email-verification'); return false;"
         ),
     )
     g.html.T("Create Account")
@@ -496,6 +504,41 @@ def signin_login(app):
 
     g.html._DIV()  # .content
     g.html._DIV()  # .createAccountContent
+
+
+def signin_emailverification(app):
+
+    g.html.DIV(class_="content")
+
+    redirectURL = (
+        f"{g.rootURL}/signin?client_id={g.form._get('client_id')}"
+        f"&response_type={g.form._get('response_type')}&redirect_uri={g.form._get('redirect_uri')}"
+        f"&scope={g.form._get('scope')}&state={g.form._get('state')}&redirected_from=email_verification"
+    )
+    success, message = g.user.sendEmailVerificationLink(redirectURL)
+    if not success:
+        g.html.P()
+        g.html.T("Sending email verification link: ")
+        g.html.T(message)
+        g.html._P()
+
+    else:
+        g.html.H1()
+        g.html.T("Verify Your Email")
+        g.html._H1()
+
+        g.html.P()
+        g.html.T(
+            f"We’ve sent you an email to <b>{g.user.email}</b>.<br />"
+            "Please follow the link in the email to verify your email address."
+        )
+        g.html._P()
+
+        g.html.P()
+        g.html.T("You may close this window/tab now.")
+        g.html._P()
+
+    g.html._DIV()  # .content
 
 
 def signin_forward(app, token):
@@ -742,23 +785,30 @@ def signin():
     signin_header(app)
 
     if g.user:
-        token = getToken(app)
 
-        if token:
+        # Trigger email verification
+        if not g.user.emailVerified:
+            signin_emailverification(app)
 
-            # redirect
-            if g.form._get("redirect") == "true":
-                url = f"{g.form._get('redirect_uri')}?code={token.code}&state={g.form._get('state')}"
-
-                # Save last state
-                app.lastState = g.form._get("state")
-                app.put()
-
-                return redirect(url)
-            else:
-                signin_forward(app, token)
         else:
-            signin_authorization(app)
+
+            token = getToken(app)
+
+            if token:
+
+                # redirect
+                if g.form._get("redirect") == "true":
+                    url = f"{g.form._get('redirect_uri')}?code={token.code}&state={g.form._get('state')}"
+
+                    # Save last state
+                    app.lastState = g.form._get("state")
+                    app.put()
+
+                    return redirect(url)
+                else:
+                    signin_forward(app, token)
+            else:
+                signin_authorization(app)
     else:
         signin_login(app)
 

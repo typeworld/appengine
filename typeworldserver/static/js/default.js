@@ -219,7 +219,7 @@ function deRequiredMissing(element) {
 	$(element).removeClass('requiredmissing');
 }
 
-function createUserAccount(name, email, password1, password2) {
+function createUserAccount(name, email, password1, password2, redirectedFrom) {
 
 	if (!name || !email || !password1 || !password2) {
 		enableButtons();
@@ -234,7 +234,7 @@ function createUserAccount(name, email, password1, password2) {
 	}
 
 	else {
-		AJAX(null, '/v1/createUserAccount', { 'name': name, 'email': email, 'password': password1, 'inline': 'true' }, null, processCreateUserAccount);
+		AJAX(null, '/v1/createUserAccount', { 'name': name, 'email': email, 'password': password1, 'inline': 'true', 'redirected_from': redirectedFrom }, null, processCreateUserAccount);
 	}
 
 }
