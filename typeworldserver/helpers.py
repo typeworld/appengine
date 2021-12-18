@@ -84,7 +84,7 @@ def email(from_, to, subject, body, replyTo=None):
     auth = ("api", typeworldserver.secret("MAILGUN_PRIVATEKEY"))
     response = requests.post(url, data=parameters, auth=requests.auth.HTTPBasicAuth(*auth))
     if response.status_code != 200:
-        return False, f"HTTP Error {response.status_code}"
+        return False, f"HTTP Error {response.status_code}, {response.text}"
 
     # logging.warning(f"Sent email ({subject}) to {to}, request status: {response.status_code}")
 
