@@ -267,6 +267,8 @@ def auth_edituserdata():
 
     # TODO:
     # Check if signed in user (g.user) is identical to token’s user
+    # This probably involves sending the token again, probably via a POST request that returns an edit URL
+    # unless it's okay to send the token in a GET request (found out)
 
     g.html.DIV(class_="content")
 
