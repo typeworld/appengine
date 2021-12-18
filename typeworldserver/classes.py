@@ -143,8 +143,8 @@ class User(TWNDBModel):
                 "name": definitions.SIGNINSCOPES["billingaddress"]["name"],
                 "edit_uri": f"{typeworldserver.HTTPROOT}/auth/edituserdata?scope=billingaddress",
                 "data": {
-                    "name": self.invoiceName or "",
                     "company": self.invoiceCompany or "",
+                    "name": self.invoiceName or "",
                     "address": self.invoiceStreet or "",
                     "address_2": self.invoiceStreet2 or "",
                     # "address_3": self.invoiceStreet3 or "",
@@ -234,8 +234,8 @@ class User(TWNDBModel):
             },
             "billingaddress": {
                 "editable": [
-                    "invoiceName",
                     "invoiceCompany",
+                    "invoiceName",
                     "invoiceStreet",
                     "invoiceStreet2",
                     # "invoiceStreet3",
