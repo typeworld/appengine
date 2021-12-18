@@ -136,7 +136,7 @@ _iub.csConfiguration = {"gdprAppliesGlobally":false,"enableCcpa":true,"countryDe
 
             self.P(class_="createAccountContent")
             self.LABEL(for_="newpassword")
-            self.T("Repeat Password")
+            self.T("Password")
             self._LABEL()
             self.BR()
             self.INPUT(id="newpassword", type="password", autocomplete="new-password")
