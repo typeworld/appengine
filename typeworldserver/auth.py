@@ -215,9 +215,7 @@ def auth_userdata():
         token = response
 
     app = token.getApp()
-    payload = jwt.decode(auth_token, typeworldserver.secret("TYPE_WORLD_FLASK_SECRET_KEY"), algorithms=["HS256"])
-
-    user = classes.User.query(classes.User.uuid == payload["sub"]).get()
+    user = token.userKey.get()
     if not user:
         response = {"status": "fail", "message": "User is unknown"}
         return jsonify(response), 401
