@@ -160,7 +160,14 @@ def before_request():
         if user:
             performLogin(user)
 
-    if not g.user and "sessionID" in flaskSession:
+    # Get user from access_token
+    if g.form.get("access_token"):
+        token = classes.OAuthToken.query(classes.OAuthToken.authToken == g.form.get("access_token")).get()
+        if token:
+            g.user = token.userKey.get()
+
+    # Get user from session
+    elif not g.user and "sessionID" in flaskSession:
         sessionID = flaskSession["sessionID"]
         if sessionID:
 
@@ -169,10 +176,12 @@ def before_request():
             # Init user
             if g.session:
                 g.user = g.session.getUser()
-                if g.user:
-                    g.admin = g.user.admin
-                else:
+                if not g.user:
                     g.session.key.delete()
+
+    # Admin
+    if g.user:
+        g.admin = g.user.admin
 
 
 @app.after_request

@@ -1116,14 +1116,21 @@ def createDialog():
 
     item = getClass(g.form._get("key"), g.form._get("class"), g.form._get("parentKey"))
 
-    # Default values
     hiddenValues = {}
+
+    # access_token
+    if g.form.get("access_token"):
+        hiddenValues["access_token"] = g.form.get("access_token")
+
+    # Default values
     if g.form._get("hiddenValues"):
         for key in g.form._get("hiddenValues").split(","):
-            attr = getattr(item.__class__, key)
-            value = attr.shape(g.form._get(key))
-            setattr(item, key, value)
-            hiddenValues[key] = g.form._get(key)
+            if key not in hiddenValues:
+                attr = getattr(item.__class__, key)
+                value = attr.shape(g.form._get(key))
+                setattr(item, key, value)
+                hiddenValues[key] = g.form._get(key)
+
     values = {}
     if g.form._get("values"):
         for key in g.form._get("values").split(","):
