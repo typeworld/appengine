@@ -234,6 +234,10 @@ def auth_userdata():
 @typeworldserver.app.route("/auth/edituserdata", methods=["GET"])
 def auth_edituserdata():
 
+    # Check for user
+    if not g.user:
+        return "Couldn't identify user. Check access_token", 401
+
     # Check for valid client_id
     app = classes.SignInApp.query(classes.SignInApp.clientID == g.form._get("client_id")).get()
     if not app:
