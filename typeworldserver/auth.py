@@ -222,7 +222,7 @@ def auth_userdata():
         response = {"status": "fail", "message": "User is unknown"}
         return jsonify(response), 401
 
-    response = user.rawJSONData(app, token.oauthScopes.split(","))
+    response = user.rawJSONData(app, token.oauthScopes.split(","), token)
     response["status"] = "success"
 
     # Save last access time

@@ -98,12 +98,14 @@ class User(TWNDBModel):
             self.put()
         return self.uuid
 
-    def rawJSONData(self, app, scopes):
+    def rawJSONData(self, app, scopes, token=None):
         response = {
             "userdata": {
                 "user_id": self.getUUID(),
                 "edit_uri": (
-                    f"{typeworldserver.HTTPROOT}/auth/edituserdata?scope={','.join(scopes)}&client_id={app.clientID}"
+                    f"{typeworldserver.HTTPROOT}/auth/edituserdata?scope={','.join(scopes)}"
+                    f"&access_token={token.authToken if token else '__place_for_auth_token__'}"
+                    "&redirect_uri=__place_for_redirect_uri__"
                 ),
                 "scope": {},
             },
@@ -113,7 +115,10 @@ class User(TWNDBModel):
             response["userdata"]["scope"][scope] = self.oauth(scope)
             # Add clientID
             if "edit_uri" in response["userdata"]["scope"][scope]:
-                response["userdata"]["scope"][scope]["edit_uri"] += f"&client_id={app.clientID}"
+                response["userdata"]["scope"][scope]["edit_uri"] += (
+                    f"&access_token={token.authToken if token else '__place_for_auth_token__'}"
+                    "&redirect_uri=__place_for_redirect_uri__"
+                )
 
         return response
 
