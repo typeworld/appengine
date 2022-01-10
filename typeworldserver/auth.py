@@ -239,9 +239,11 @@ def auth_edituserdata():
         return "Couldn't identify user. Check access_token", 401
 
     # Check for valid client_id
-    app = classes.SignInApp.query(classes.SignInApp.clientID == g.form._get("client_id")).get()
-    if not app:
-        return "Missing or unknown client_id", 401
+    if g.form.get("access_token"):
+        token = classes.OAuthToken.query(classes.OAuthToken.authToken == g.form.get("access_token")).get()
+        if not token:
+            return "Missing or unknown access_token", 401
+        app = token.signinAppKey.get()
 
     # State
     if g.form._get("state") == app.lastState:
