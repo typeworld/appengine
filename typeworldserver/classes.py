@@ -104,7 +104,7 @@ class User(TWNDBModel):
                 "user_id": self.getUUID(),
                 "edit_uri": (
                     f"{typeworldserver.HTTPROOT}/auth/edituserdata?scope={','.join(scopes)}"
-                    f"&access_token={token.authToken if token else '__place_for_auth_token__'}"
+                    f"&edit_token={token.editCode if token and token.editCode else '__place_for_edit_token__'}"
                     "&redirect_uri=__place_for_redirect_uri__"
                 ),
                 "scope": {},
@@ -116,7 +116,7 @@ class User(TWNDBModel):
             # Add clientID
             if "edit_uri" in response["userdata"]["scope"][scope]:
                 response["userdata"]["scope"][scope]["edit_uri"] += (
-                    f"&access_token={token.authToken if token else '__place_for_auth_token__'}"
+                    f"&edit_token={token.editCode if token and token.editCode else '__place_for_edit_token__'}"
                     "&redirect_uri=__place_for_redirect_uri__"
                 )
 
@@ -302,7 +302,7 @@ class User(TWNDBModel):
         if self.oauthInfo()[scope]["editable"]:
             self.edit(
                 propertyNames=self.oauthInfo()[scope]["editable"],
-                hiddenValues={"access_token": g.form.get("access_token")}
+                hiddenValues={"edit_token": g.form.get("edit_token")}
                 # reloadURL="' + encodeURIComponent(window.location.href) + '",
             )
         g.html._DIV()  # .floatright
@@ -2761,6 +2761,7 @@ class OAuthToken(TWNDBModel):
     oauthScopes = web.StringProperty(required=True)
 
     code = web.StringProperty()  # One-time code to be returned
+    editCode = web.StringProperty()
     revoked = web.BooleanProperty(default=False)
     authToken = web.StringProperty()
     lastAccess = web.DateTimeProperty()

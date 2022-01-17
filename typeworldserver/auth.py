@@ -220,12 +220,13 @@ def auth_userdata():
         response = {"status": "fail", "message": "User is unknown"}
         return jsonify(response), 401
 
-    response = user.rawJSONData(app, token.oauthScopes.split(","), token)
-    response["status"] = "success"
-
     # Save last access time
     token.lastAccess = helpers.now()
+    token.editCode = helpers.Garbage(40)
     token.put()
+
+    response = user.rawJSONData(app, token.oauthScopes.split(","), token)
+    response["status"] = "success"
 
     # return json.dumps(response), 200
     return Response(json.dumps(response), mimetype="application/json", status=200)
@@ -236,13 +237,18 @@ def auth_edituserdata():
 
     # Check for user
     if not g.user:
-        return "Couldn't identify user. Check access_token", 401
+        return redirect(
+            helpers.addAttributeToURL(g.form.get("redirect_uri"), "status=failed&reason=invalid_edit_token")
+        )
 
     # Check for valid client_id
-    if g.form.get("access_token"):
-        token = classes.OAuthToken.query(classes.OAuthToken.authToken == g.form.get("access_token")).get()
+    if g.form.get("edit_token"):
+        token = classes.OAuthToken.query(classes.OAuthToken.editCode == g.form.get("edit_token")).get()
         if not token:
-            return "Missing or unknown access_token", 401
+            # return "Missing or unknown edit_token", 401
+            return redirect(
+                helpers.addAttributeToURL(g.form.get("redirect_uri"), "status=failed&reason=invalid_edit_token")
+            )
         app = token.signinAppKey.get()
 
     # State

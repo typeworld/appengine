@@ -12,6 +12,7 @@
 
 ###############################################################################
 
+import datetime
 import logging
 import os
 import time
@@ -160,11 +161,13 @@ def before_request():
         if user:
             performLogin(user)
 
-    # Get user from access_token
-    if g.form.get("access_token"):
-        token = classes.OAuthToken.query(classes.OAuthToken.authToken == g.form.get("access_token")).get()
+    # Get user from edit_token
+    if g.form.get("edit_token"):
+        token = classes.OAuthToken.query(classes.OAuthToken.editCode == g.form.get("edit_token")).get()
         if token:
-            g.user = token.userKey.get()
+            # Only attach user is token access is newer than an hour
+            if token.lastAccess > datetime.datetime.now() - datetime.timedelta(hours=1):
+                g.user = token.userKey.get()
 
     # Get user from session
     elif not g.user and "sessionID" in flaskSession:

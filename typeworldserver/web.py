@@ -1118,9 +1118,9 @@ def createDialog():
 
     hiddenValues = {}
 
-    # access_token
-    if g.form.get("access_token"):
-        hiddenValues["access_token"] = g.form.get("access_token")
+    # edit_token
+    if g.form.get("edit_token"):
+        hiddenValues["edit_token"] = g.form.get("edit_token")
 
     # Default values
     if g.form._get("hiddenValues"):
