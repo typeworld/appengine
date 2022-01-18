@@ -238,7 +238,9 @@ def auth_edituserdata():
     # Check for user
     if not g.user:
         return redirect(
-            helpers.addAttributeToURL(g.form.get("redirect_uri"), "status=failed&reason=invalid_edit_token")
+            helpers.addAttributeToURL(
+                g.form.get("redirect_uri"), "redirect_reason=userdata_edit&status=invalid_edit_token"
+            )
         )
 
     # Check for valid client_id
@@ -247,7 +249,9 @@ def auth_edituserdata():
         if not token:
             # return "Missing or unknown edit_token", 401
             return redirect(
-                helpers.addAttributeToURL(g.form.get("redirect_uri"), "status=failed&reason=invalid_edit_token")
+                helpers.addAttributeToURL(
+                    g.form.get("redirect_uri"), "redirect_reason=userdata_edit&status=invalid_edit_token"
+                )
             )
         app = token.signinAppKey.get()
 
@@ -303,7 +307,9 @@ def auth_edituserdata():
         name="returnButton",
         onclick="$(this).addClass('disabled')",
         class_="button",
-        href=urllib.parse.unquote_plus(g.form._get("redirect_uri")),
+        href=helpers.addAttributeToURL(
+            urllib.parse.unquote_plus(g.form._get("redirect_uri")), "redirect_reason=userdata_edit&status=success"
+        ),
     )
     g.html.T(f"Return to {app.name}")
     g.html._A()
