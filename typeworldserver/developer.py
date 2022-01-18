@@ -3236,13 +3236,14 @@ flightPath = new google.maps.Polyline({
 """
         )
 
+    apikey = typeworldserver.secret("GOOGLE_MAPS_APIKEY")
     g.html.T(
-        """
+        f"""
 
 
 const legend = document.getElementById("legend");
 
-  for (const key in icons) {
+  for (const key in icons) {{
     const type = icons[key];
     const name = type.icon.name;
     const icon = type.icon.url;
@@ -3250,16 +3251,16 @@ const legend = document.getElementById("legend");
     const div = document.createElement("div");
     div.innerHTML = '<img src="' + icon + '" style="width: 12px; height: 12px; margin: 2px;"> ' + name;
     legend.appendChild(div);
-  }
+  }}
 
   map.controls[google.maps.ControlPosition.LEFT_TOP].push(legend);
 
 
 
 
-      }
+      }}
     </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2fuNLbyk3CbvFBpxCF_UBIduP8NO0MaE&callback=initMap"
+    <script src="https://maps.googleapis.com/maps/api/js?key={apikey}&callback=initMap"
     async defer></script>
 </body>
 </html>
