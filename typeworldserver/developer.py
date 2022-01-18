@@ -971,13 +971,297 @@ def developer_protocol():
 
 @typeworldserver.app.route("/developer", methods=["POST", "GET"])
 @typeworldserver.app.route("/developer/", methods=["POST", "GET"])
-def developer():
+def developer_docs():
+
+    g.html.tabs(developerTabs, "/developer")
+
+    g.html.DIV(class_="content", style="width: 1200px;")
+
+    blob = typeworldserver.bucket.get_blob("developer/index.md")
+    text = blob.download_as_string().decode()
+
+    html = markdown.markdown(text)
+
+    # html_withtoc = markdown.markdown("[TOC]\n" + text, extensions=[TocExtension(toc_depth="1-2")])
+
+    # i = html_withtoc.find("<h1 id=")
+    # html = html_withtoc[i:]
+    # toc = html_withtoc[:i]
+
+    # dt_object = (blob.updated or blob.time_created).strftime("%c")
+    # html = html.replace("%timestamp%", dt_object + " +0000")
+
+    # # Add scroll detection areas
+    # for tag in ("h1", "h2"):
+    #     html = html.replace(f"<{tag}", f'</div><div class="scrolldetection"><{tag}')
+    # html = '<div class="scrolldetection">' + html + "</div>"
+
+    # toc = toc.replace('<a id="#', '<a id="')
+
+    # # Add links
+    # for tag in ("h1", "h2"):
+    #     html = html.replace(
+    #         f"</{tag}>",
+    #         '<span><a class="permalink" title="">#</a> <a title="Scroll to top"'
+    #         " onclick=\"$('html, body').animate({scrollTop: 0}, 500);"
+    #         " history.pushState(stateObj, '',"
+    #         f" '/developer');\">↑</a></span></{tag}>",
+    #     )
+
+    # g.html.DIV(class_="tocwrapper stickToTheTop")
+    # g.html.T(toc)
+    # g.html._DIV()
+
+    g.html.DIV(class_="doc")
+    g.html.T(html)
+    g.html._DIV()
+
+    # g.html._DIV() #.clear
+
+    g.html._DIV()
+
+    # g.html.STYLE()
+    # g.html.T(
+    #     """
+
+    # """
+    # )
+    # g.html._STYLE()
+
+    g.html.SCRIPT()
+    g.html.T(
+        """
+
+
+function makeLink(a, id) {
+a.attr('href', '/developer#' + id);
+a.attr('title', 'Permalink to #' + id);
+}
+
+function makeScrollDetection(div, id) {
+div.attr('id', id);
+}
+
+const stateObj = { foo: 'bar' };
+
+$(document).ready(function() {
+
+// Add permalinks to titles
+$(".doc h1").each(function(index) {
+    makeLink($(this).find('span a.permalink'), $(this).attr("id"));
+});
+
+$(".doc h2").each(function(index) {
+    makeLink($(this).find('span a.permalink'), $(this).attr("id"));
+});
+
+$(".toc a").each(function(index) {
+    $(this).attr('id', $(this).attr("href").slice(1));
+    $(this).removeAttr("href");
+});
+
+$(".toc a").click(function() {
+    history.pushState(stateObj, '', '/developer');
+    $("html, body").animate({scrollTop: $('div#' + $(this).attr('id')).offset().top - 20}, 500);
+});
+
+$(".doc h1").each(function(index) {
+    makeScrollDetection($(this).parent(), $(this).attr("id"));
+});
+$(".doc h2").each(function(index) {
+    makeScrollDetection($(this).parent(), $(this).attr("id"));
+});
+
+});
+
+
+
+        """
+    )
+
+    g.html._SCRIPT()
+
+    g.html.SCRIPT()
+    g.html.T(
+        """
+
+function track() {
+    mostVisible = $(".scrolldetection").mostVisible();
+    if (mostVisible) {
+        console.log(mostVisible);
+        $(".toc a").removeClass("selected");
+        console.log($(".toc a#" + mostVisible.attr("id") + ""));
+        $(".toc a#" + mostVisible.attr("id") + "").addClass("selected");
+    }
+    else {
+        $("tr.visibilityChange").removeClass("selected");
+    }
+}
+
+$( window ).scroll(function() {
+track();
+});
+
+track();
+
+"""
+    )
+    g.html._SCRIPT()
+
+    return g.html.generate()
+
+
+@typeworldserver.app.route("/developer/docs/fontdistribution", methods=["POST", "GET"])
+@typeworldserver.app.route("/developer/docs/fontdistribution/", methods=["POST", "GET"])
+def developer_docs_fontdistribution():
 
     g.html.tabs(developerTabs, "/developer")
 
     g.html.DIV(class_="content", style="width: 1200px;")
 
     blob = typeworldserver.bucket.get_blob("developer/documentation.md")
+    text = blob.download_as_string().decode()
+
+    from markdown.extensions.toc import TocExtension
+
+    html_withtoc = markdown.markdown("[TOC]\n" + text, extensions=[TocExtension(toc_depth="1-2")])
+
+    i = html_withtoc.find("<h1 id=")
+    html = html_withtoc[i:]
+    toc = html_withtoc[:i]
+
+    dt_object = (blob.updated or blob.time_created).strftime("%c")
+    html = html.replace("%timestamp%", dt_object + " +0000")
+
+    # Add scroll detection areas
+    for tag in ("h1", "h2"):
+        html = html.replace(f"<{tag}", f'</div><div class="scrolldetection"><{tag}')
+    html = '<div class="scrolldetection">' + html + "</div>"
+
+    toc = toc.replace('<a id="#', '<a id="')
+
+    # Add links
+    for tag in ("h1", "h2"):
+        html = html.replace(
+            f"</{tag}>",
+            '<span><a class="permalink" title="">#</a> <a title="Scroll to top"'
+            " onclick=\"$('html, body').animate({scrollTop: 0}, 500);"
+            " history.pushState(stateObj, '',"
+            f" '/developer');\">↑</a></span></{tag}>",
+        )
+
+    g.html.DIV(class_="tocwrapper stickToTheTop")
+    g.html.T(toc)
+    g.html._DIV()
+
+    g.html.DIV(class_="doc")
+    g.html.T(html)
+    g.html._DIV()
+
+    # g.html._DIV() #.clear
+
+    g.html._DIV()
+
+    # g.html.STYLE()
+    # g.html.T(
+    #     """
+
+    # """
+    # )
+    # g.html._STYLE()
+
+    g.html.SCRIPT()
+    g.html.T(
+        """
+
+
+function makeLink(a, id) {
+a.attr('href', '/developer#' + id);
+a.attr('title', 'Permalink to #' + id);
+}
+
+function makeScrollDetection(div, id) {
+div.attr('id', id);
+}
+
+const stateObj = { foo: 'bar' };
+
+$(document).ready(function() {
+
+// Add permalinks to titles
+$(".doc h1").each(function(index) {
+    makeLink($(this).find('span a.permalink'), $(this).attr("id"));
+});
+
+$(".doc h2").each(function(index) {
+    makeLink($(this).find('span a.permalink'), $(this).attr("id"));
+});
+
+$(".toc a").each(function(index) {
+    $(this).attr('id', $(this).attr("href").slice(1));
+    $(this).removeAttr("href");
+});
+
+$(".toc a").click(function() {
+    history.pushState(stateObj, '', '/developer');
+    $("html, body").animate({scrollTop: $('div#' + $(this).attr('id')).offset().top - 20}, 500);
+});
+
+$(".doc h1").each(function(index) {
+    makeScrollDetection($(this).parent(), $(this).attr("id"));
+});
+$(".doc h2").each(function(index) {
+    makeScrollDetection($(this).parent(), $(this).attr("id"));
+});
+
+});
+
+
+
+        """
+    )
+
+    g.html._SCRIPT()
+
+    g.html.SCRIPT()
+    g.html.T(
+        """
+
+function track() {
+    mostVisible = $(".scrolldetection").mostVisible();
+    if (mostVisible) {
+        console.log(mostVisible);
+        $(".toc a").removeClass("selected");
+        console.log($(".toc a#" + mostVisible.attr("id") + ""));
+        $(".toc a#" + mostVisible.attr("id") + "").addClass("selected");
+    }
+    else {
+        $("tr.visibilityChange").removeClass("selected");
+    }
+}
+
+$( window ).scroll(function() {
+track();
+});
+
+track();
+
+"""
+    )
+    g.html._SCRIPT()
+
+    return g.html.generate()
+
+
+@typeworldserver.app.route("/developer/docs/signin", methods=["POST", "GET"])
+@typeworldserver.app.route("/developer/docs/signin/", methods=["POST", "GET"])
+def developer_docs_signin():
+
+    g.html.tabs(developerTabs, "/developer")
+
+    g.html.DIV(class_="content", style="width: 1200px;")
+
+    blob = typeworldserver.bucket.get_blob("developer/signin.md")
     text = blob.download_as_string().decode()
 
     from markdown.extensions.toc import TocExtension
