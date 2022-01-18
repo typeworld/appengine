@@ -694,6 +694,10 @@ tr.highlight {
 	width: 900px;
 }
 
+.doc img {
+	max-width: 100%;
+}
+
 .doc h1 span, .doc h2 span {
 	margin-left: 15px;
 	font-size: 12pt;

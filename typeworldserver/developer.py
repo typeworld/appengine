@@ -1115,11 +1115,11 @@ track();
 @typeworldserver.app.route("/developer/docs/fontdistribution/", methods=["POST", "GET"])
 def developer_docs_fontdistribution():
 
-    g.html.tabs(developerTabs, "/developer")
+    g.html.tabs(developerTabs, "/developer", activeIsClickable=True)
 
     g.html.DIV(class_="content", style="width: 1200px;")
 
-    blob = typeworldserver.bucket.get_blob("developer/documentation.md")
+    blob = typeworldserver.bucket.get_blob("developer/fontdistribution.md")
     text = blob.download_as_string().decode()
 
     from markdown.extensions.toc import TocExtension
@@ -1257,7 +1257,7 @@ track();
 @typeworldserver.app.route("/developer/docs/signin/", methods=["POST", "GET"])
 def developer_docs_signin():
 
-    g.html.tabs(developerTabs, "/developer")
+    g.html.tabs(developerTabs, "/developer", activeIsClickable=True)
 
     g.html.DIV(class_="content", style="width: 1200px;")
 

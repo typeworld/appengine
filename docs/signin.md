@@ -21,6 +21,12 @@ At a glance:
 * Third parties may choose to access the user’s billing address (requires user consent) to further streamline the onboarding process
 * Onboarding the user onto the Type.World App becomes one and the same process with user authentication against the third party, as the Sign-In service also provides an anonymous Type.World user ID that can be utilized to invite the user to install fonts through the Type.World app, eliminating alternative onboarding routes
 
+## Live Example: Awesome Fonts
+
+Awesome Fonts is an imaginary font foundry that uses Type.World Sign-In for user authentication and onboarding to the Type.World app. Hop over to [awesomefonts.appspot.com](https://awesomefonts.appspot.com/) to try it out by fake-"purchasing" a number of fonts. Make sure you have the [Type.World App](https://type.world/app/) up and running and are logged in with the same user account you’ll use to authenticate at Awesome Fonts.
+
+The source code of the imaginary Awesome Fonts Foundry is available for your reference at [github.com/typeworld/awesomefontsfoundry](https://github.com/typeworld/awesomefontsfoundry).
+
 ## Usage
 
 ### Initial access
@@ -56,11 +62,11 @@ For that, *Type.World Sign-In* provides ready-made edit URLs that third parties 
 
 Currently, *Type.World Sign-In* offers the following so calles *scopes* of data. Depending on the type or country of residence of your business, not all scopes may be required for your users.
 
-To provide the best user experience for your users, restrict the scopes you request to the absolutely necessary. For example, a free font website requiring users to authorize access to their billing address may cause serious trust issues in the users and backfire on you. Professional font customers, however, may not find it untrustworthy to be asked for their billing address.
+To provide the best user experience for your users, restrict the scopes you request to the **absolutely necessary**. For example, a free font website requiring users to authorize access to their billing address may cause serious trust issues in the users and backfire on you. Professional font customers, however, may not find it untrustworthy to be asked for their billing address.
 
 The scopes in detail:
 
-* `account` contains the user’s **name**, **email address**, and **anonymous Type.World user ID**. If you choose to invite your users to install fonts through the Type.World app, this scope is the minumum one you want to use. Inviting a user through their anonymous Type.World user ID is the safest way to invite them, as email addresses can change. However, you are not required to *Type.World Sign-In* for that. You can still choose to invite them via the API using their email address, or simply by providing a button on your website and leave it up to the user, which Type.World user account to connect to your foundry.
+* `account` contains the user’s **name**, **email address**, and **anonymous Type.World user ID**. If you choose to invite your users to install fonts through the Type.World app, this scope is the minumum one you want to use. Inviting a user through their anonymous Type.World user ID is the safest way to invite them, as email addresses can change. However, you are not required to use *Type.World Sign-In* for that. You can still choose to invite them via the API using their email address, or simply by providing a button on your website and leave it up to the user which Type.World user account to connect to your foundry.
 * `billingaddress` contains the user’s **billing address**. Type.World performs basic data validation such as requiring ZIP codes or state/province data for countries that require it. Additionally, the user address is provided as a pre-formatted string following each country’s own address formatting conduct (where known), saving you the burden of correct formatting. A fallback formatting is provided for all other countries. If you find your country’s address formatting to be wrong or the ZIP code/state data obligation to be wrong, please get in touch at [hello@type.world](mailto:hello@type.world).
 * `euvatid` contains the user’s **European Union VAT ID**, intended for third party businesses located in the European Union. The VAT ID (if present) has been validated to be correctly formatted and existing as is required by the European tax authorities. However, it has not been verified to match the billing address given by the user. Only third parties in the EU should request this scope; all others ignore it.
 
@@ -79,12 +85,6 @@ Basic access to *Type.World Sign-In* using the `account` scope is free. This may
 Convenience functionality such as the `billingaddress` scope are subject to fees to be paid by the third party. See [price list](/developer/prices). Access is counted as monthly active token access, so several requests per month for the same user is counted only once. Normally, the amount of monthly requests should correlate strongly with monthly font purchases.
 
 Usage for the end user is free.
-
-## Live Example: Awesome Fonts
-
-Awesome Fonts is an imaginary font foundry that uses Type.World Sign-In for user authentication and onboarding to the Type.World app. Hop over to [awesomefonts.appspot.com](https://awesomefonts.appspot.com/) to try it out by fake-"purchasing" a number of fonts. Make sure you have the [Type.World App](https://type.world/app/) up and running and are logged in with the same user account you’ll use to authenticate at Awesome Fonts.
-
-The source code of the imaginary Awesome Fonts Foundry is available for your reference at [github.com/typeworld/awesomefontsfoundry](https://github.com/typeworld/awesomefontsfoundry).
 
 # How to Implement Type.World Sign-In for Your App
 
@@ -106,7 +106,7 @@ The sign-in URL given there may be used as is with the exception of replacing th
 
 ### Step 1: Authentication & Authorization
 
-When the user clicks on the *Sign In with Type.World* button, redirect them to the following link: `https://type.world/signin?client_id=AhIpObOtEtZqsADsmrUMo57d8Kh1E21TilgkZ6gV&response_type=code&redirect_uri=https%3A%2F%2Fawesomefonts.appspot.com&scope=account,billingaddress,euvatid&state=1234zyx`
+When the user clicks on the *Sign In with Type.World* button, redirect them to the following link: `https://type.world/signin?client_id=AhIpObOtEtZqsADsmrUMo57d8Kh1E21TilgkZ6gV &response_type=code&redirect_uri=https%3A%2F%2Fawesomefonts.appspot.com &scope=account,billingaddress,euvatid&state=1234zyx`
 
 * `response_type=code` - Indicates that your server expects to receive an authorization code
 * `client_id` - The client ID you received when you first created the application
