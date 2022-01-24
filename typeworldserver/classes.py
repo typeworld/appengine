@@ -1444,6 +1444,8 @@ Hello {self.name},
 Please verify your email address by clicking on the following link:
 {g.rootURL}/verifyemail/{self.emailVerificationCode}
 
+IMPORTANT NOTE: Make sure that the link opens in the same browser that you created the account with.
+
 """
         body += definitions.EMAILFOOTER
 
