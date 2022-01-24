@@ -422,7 +422,8 @@ class User(TWNDBModel):
 
     def editPermission(self, propertyNames=[]):
         allowed = list(set(["name", "email", "emailToChange"]) | set(self.invoiceFields))
-        return set(allowed) & set(propertyNames) and g.user == self
+        overlap = list(set(allowed) & set(propertyNames))
+        return overlap and g.user == self
 
     def viewPermission(self, methodName):
         return methodName in ("accountSubscriptionsView", "userAccountView", "editScopeView", "rawJSONDataView")
