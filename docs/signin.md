@@ -80,9 +80,13 @@ The third party carries a small portion of the security responsibility by checki
 
 ## Pricing
 
-Basic access to *Type.World Sign-In* using the `account` scope is free. This may be used for basic user authentication and onboarding to the Type.World App.
+To prevent abuse, even the basic usage of *Type.World Sign-In* needs to cost a little bit. The prices are very competitive.
 
-Convenience functionality such as the `billingaddress` scope are subject to fees to be paid by the third party. See [price list](/developer/prices). Access is counted as monthly active token access, so several requests per month for the same user is counted only once. Normally, the amount of monthly requests should correlate strongly with monthly font purchases.
+The access to *Type.World Sign-In* using the `account` scope (*Basic scope*) is priced between 0.01€ and 0.04€ per monthly active user, to be paid by the third party. See [price list](/developer/prices). The *Basic* scope may be used for basic user authentication and onboarding to the Type.World App.
+
+Convenience functionality such as the `billingaddress` scope (*Extended scopes*) which greatly enhance the professional font shopping experience are priced between 0.02€ and 0.08€ per monthly active user, to be paid by the third party. See [price list](/developer/prices).
+
+Access is counted as monthly active token access on the user data endpoint, so several requests per month for the same user is counted only once. Normally, the amount of monthly requests should correlate strongly with monthly font purchases.
 
 Usage for the end user is free.
 
@@ -206,7 +210,7 @@ The JSON data returned by the user data endpoint contains `edit_uri` fields for 
 
 These links are ready to use with the exception of the string `__place_for_redirect_uri__` which you need to replace for your url-escaped return link.
 
-The links contains a secret `edit_token` which is valid only for one hour. Therefore, if you want to send your user back to Type.World for editing their data, you must fetch a fresh copy of the user data to present the user with the correct links.
+The links contains a secret `edit_token` which is **valid only for one hour**. Therefore, if you want to send your user back to Type.World for editing their data, you must fetch a fresh copy of the user data to present the user with the correct links.
 
 ### Successful Editing
 
