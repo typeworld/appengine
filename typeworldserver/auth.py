@@ -260,6 +260,10 @@ def auth_edituserdata():
             )
         app = token.signinAppKey.get()
 
+    # Check billing
+    if not app.userKey.get().stripeSubscriptionReceivesService("world.type.signin_service_plan"):
+        return "Billing is not enabled for app for Type.World Sign-In", 401
+
     # State
     if g.form._get("state") == app.lastState:
         return "Reusing state is not allowed", 401
