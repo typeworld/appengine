@@ -220,6 +220,11 @@ def auth_userdata():
         response = {"status": "fail", "message": "User is unknown"}
         return jsonify(response), 401
 
+    # Check billing
+    if not app.userKey.get().stripeSubscriptionReceivesService("world.type.signin_service_plan"):
+        response = {"status": "fail", "message": "Billing is not enabled for app for Type.World Sign-In"}
+        return jsonify(response), 401
+
     # Save last access time
     token.lastAccess = helpers.now()
     token.editCode = helpers.Garbage(40)
@@ -709,6 +714,10 @@ def checkAuthorizationCredentialsForAuthorization():
     app = classes.SignInApp.query(classes.SignInApp.clientID == g.form._get("client_id")).get()
     if not app:
         return "Missing or unknown client_id", app
+
+    # Check for billing
+    if not app.userKey.get().stripeSubscriptionReceivesService("world.type.signin_service_plan"):
+        return "Billing is not enabled for app for Type.World Sign-In", app
 
     # Check for valid response_type
     if g.form._get("response_type") != "code":
