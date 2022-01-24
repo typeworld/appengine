@@ -302,7 +302,7 @@ class User(TWNDBModel):
         if self.oauthInfo()[scope]["editable"]:
             self.edit(
                 propertyNames=self.oauthInfo()[scope]["editable"],
-                hiddenValues={"edit_token": g.form.get("edit_token")}
+                hiddenValues={"edit_token": g.form.get("edit_token")} if g.form.get("edit_token") else {}
                 # reloadURL="' + encodeURIComponent(window.location.href) + '",
             )
         g.html._DIV()  # .floatright
