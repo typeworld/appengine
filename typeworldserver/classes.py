@@ -1307,23 +1307,30 @@ class User(TWNDBModel):
                     },
                 ],
             },
-            "typeworldsignins": {
-                "name": "Type.World Sign-Ins",
-                "type": "cumulative",
+            "typeworldsignins_basic": {
+                "name": "Type.World Sign-Ins, Basic Scope",
+                "type": "maximal",
                 "visible": True,
-                "definition": "Number of monthly sign-ins with the Type.World Sign-In service",
+                "definition": (
+                    "Number of monthly user data access via Type.World Sign-In, using the <b>Basic</b> scope"
+                ),
                 "description": (
-                    "If you offer Type.World Sign-In to the users of your app or website, these are the sign-ins per"
-                    " month. Normally, this number should correlate strongly with your monthly font sales."
+                    "If you offer Type.World Sign-In to the users of your app or website <em>accessing <b>only</b> the"
+                    " Basic scope (name, email, user ID)</em>, these are the number of times you access the user data"
+                    " endpoint using the access token you have previously received from Type.World"
+                    " Sign-In.</p><p>Normally, this number should correlate strongly with your monthly font"
+                    " sales.</p><p>Tokens that contain both Basic and Extended scopes are counted as Extended only"
+                    " (see below). The billed metric is the maximum number of tokens used per month on the user data"
+                    " endpoint. Multiple queries per month for the same token are billed only once."
                 ),
                 "textfields": [
-                    ["signins", "Number of monthly sign-ins"],
+                    ["signins_basic", "Number of monthly user data access per token, Basic scope"],
                 ],
-                "calculation": "signins",
+                "calculation": "signins_basic",
                 "tiers": [
                     {
                         "quantity": 100,
-                        "price": 0.06,
+                        "price": 0.04,
                     },
                     {
                         "quantity": 200,
@@ -1331,11 +1338,50 @@ class User(TWNDBModel):
                     },
                     {
                         "quantity": 1000,
-                        "price": 0.015,
+                        "price": 0.02,
                     },
                     {
                         "quantity": -1,
                         "price": 0.01,
+                    },
+                ],
+            },
+            "typeworldsignins_extended": {
+                "name": "Type.World Sign-Ins, Extended Scopes",
+                "type": "maximal",
+                "visible": True,
+                "definition": (
+                    "Number of monthly user data access via Type.World Sign-In, using the <b>Extended</b> scope"
+                ),
+                "description": (
+                    "If you offer Type.World Sign-In to the users of your app or website <em>accessing the Extended"
+                    " scopes (billing address, VAT ID etc.)</em>, these are the number of times you access the user"
+                    " data endpoint using the access token you have previously received from Type.World"
+                    " Sign-In.</p><p>Normally, this number should correlate strongly with your monthly font"
+                    " sales.</p><p>Tokens that contain both Basic and Extended scopes are counted as Extended only."
+                    " The billed metric is the maximum number of tokens used per month on the user data endpoint."
+                    " Multiple queries per month for the same token are billed only once."
+                ),
+                "textfields": [
+                    ["signins_extended", "Number of monthly user data access per token, Extended scopes"],
+                ],
+                "calculation": "signins_extended",
+                "tiers": [
+                    {
+                        "quantity": 100,
+                        "price": 0.08,
+                    },
+                    {
+                        "quantity": 200,
+                        "price": 0.06,
+                    },
+                    {
+                        "quantity": 1000,
+                        "price": 0.04,
+                    },
+                    {
+                        "quantity": -1,
+                        "price": 0.02,
                     },
                 ],
             },

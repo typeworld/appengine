@@ -57,10 +57,17 @@ if typeworldserver.STRIPELIVE:
             "ID": "prod_KbHcDcTYOYYmRS",
             "name": "Type.World Sign-In Service",
             "prices": [
+                # Basic scope
                 {
-                    "id": "price_1Jw533LUOp6Nnz1oTrmsGA9A",
-                    "tw_id": "signins",
-                    "name": "Sign-Ins",
+                    "id": "price_1KLTfCLUOp6Nnz1oppdvLVH7",
+                    "tw_id": "signins_basic",
+                    "name": "Sign-Ins, Basic Scope",
+                },
+                # Extended scope
+                {
+                    "id": "price_1KLTcbLUOp6Nnz1oCQNGi8pE",
+                    "tw_id": "signins_extended",
+                    "name": "Sign-Ins, Extended Scopes",
                 },
             ],
             "description": (
