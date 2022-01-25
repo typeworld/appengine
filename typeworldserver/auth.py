@@ -574,7 +574,7 @@ def signin_emailverification(app):
         g.html._P()
 
         g.html.P()
-        g.html.T("You may close this window/tab now.")
+        g.html.T("Make sure that you return to the same browser session, so <b>don’t</b> quit this browser.")
         g.html._P()
 
     g.html._DIV()  # .content
