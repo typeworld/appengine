@@ -57,3 +57,8 @@ indexes:
   - name: command
   - name: touched
     direction: desc
+
+- kind: OAuthToken
+  properties:
+  - name: signinAppKey
+  - name: lastAccess
