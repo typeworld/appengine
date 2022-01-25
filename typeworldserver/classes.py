@@ -1838,7 +1838,7 @@ class APIEndpointContract(TWNDBModel):
                     sum += qty * tier["price"]
                     return sum
 
-        prices = self.priceStructure[category]
+        prices = definitions.PRODUCTS[category]
         calculatedPrice = calculateSinglePrice(prices, quantity)
 
         return calculatedPrice
@@ -1856,10 +1856,10 @@ class APIEndpointContract(TWNDBModel):
             "positions": [],
             "total": 0,
         }
-        for incidentCategory in self.priceStructure:
+        for incidentCategory in definitions.PRODUCTS:
             if incidentCategory in quantityByCategory:
 
-                category = self.priceStructure[incidentCategory]
+                category = definitions.PRODUCTS[incidentCategory]
 
                 description = category["name"]
                 quantity = quantityByCategory[incidentCategory]
