@@ -1401,8 +1401,8 @@ def developer_prices():
 
     g.html.tabs(developerTabs, "/developer/prices")
 
-    contract = classes.User().APIEndpointContract()
-    prices = contract.priceStructure
+    contract = classes.APIEndpointContract()
+    prices = definitions.PRODUCTS
 
     textfields = []
     for price in prices:

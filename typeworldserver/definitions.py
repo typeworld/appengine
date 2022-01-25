@@ -2034,3 +2034,221 @@ SIGNINSCOPES = {
         "description": "European Union VAT ID <em>(optional)</em>",
     },
 }
+
+
+PRODUCTS = {
+    "subscriptionUpdateWithAddedFonts": {
+        "name": "Subscription Update <em>(First Appearance or Added Fonts)</em>",
+        "type": "cumulative",
+        "visible": True,
+        "definition": (
+            "Number of subscriptions that have been either "
+            "<ul>"
+            "<li>newly added to the Type.World system (first appearance)</li>"
+            "<li>or updated with added fonts</li>"
+            "</ul>"
+        ),
+        "description": (
+            "For a commercial type publisher, a <em>newly added"
+            " subscription</em> means either a sale to a completely new"
+            " customer or the first access of a Type.World subscription by an"
+            " existing customer. Therefore, this number will be a bit higher in"
+            " the beginning of each publisher’s Type.World rollout. In the long"
+            " run, first accesses of existing customers will vanish entirely"
+            " and only new sales will count.</p><p><em>Added fonts</em>"
+            " normally means a new sale for an existing customer where new"
+            " fonts are being added to an existing subscription."
+        ),
+        "calculationDescription": (
+            "For calculation of continuous costs, enter your average monthly"
+            " number of sales. </p><p><b>Attention:</b> You will have"
+            " additional initial roll-out costs, because you need to create one"
+            " subscription for each of your previously existing customers,"
+            " which to <em>Type.World</em> appears technically the same as a"
+            " new subscription for a new customer of yours. Therefore, make"
+            " sure you initiate this initial onboarding of your previously"
+            " existing customers within the <b>6 month free trial</b> period."
+        ),
+        "textfields": [
+            ["averagesales", "Average number of normal sales per month"],
+        ],
+        "calculation": "averagesales",
+        "tiers": [
+            {
+                "quantity": 100,
+                "price": 0.6,
+            },
+            {
+                "quantity": 200,
+                "price": 0.3,
+            },
+            {
+                "quantity": 1000,
+                "price": 0.15,
+            },
+            {
+                "quantity": -1,
+                "price": 0.1,
+            },
+        ],
+    },
+    "subscriptionUpdateWithAddedFontVersions": {
+        "name": "Subscription Update <em>(Added Font Versions)</em>",
+        "type": "cumulative",
+        "visible": True,
+        "definition": "Number of subscription updates that show a new font version for at least one of the fonts",
+        "description": (
+            "For a commercial publisher, this normally means no added revenue,"
+            " as font updates are normally published free of additional charge"
+            " to customers. But they do put strain on Type.World resources and"
+            " therefore need to be billed."
+        ),
+        "calculationDescription": (
+            "For an estimated calculation of continuous costs, enter the number"
+            " of font updates you publish per month as well as the average"
+            " number of your customers who hold access to that font. In other"
+            " words, if your customers hold access to about 10% of your library"
+            " on average, enter 10% of your total customers multiplied by the"
+            " amount of font updates per month.</p><p>The example calculation"
+            " will be a <em>multiplication</em> of the two values."
+        ),
+        "textfields": [
+            ["fontupdates", "Average number of font updates per month"],
+            ["usersperfont", "Average number of users per font"],
+        ],
+        "calculation": "fontupdates*usersperfont",
+        "tiers": [
+            {
+                "quantity": 100,
+                "price": 0.006,
+            },
+            {
+                "quantity": 200,
+                "price": 0.003,
+            },
+            {
+                "quantity": 1000,
+                "price": 0.0015,
+            },
+            {
+                "quantity": -1,
+                "price": 0.001,
+            },
+        ],
+    },
+    "users": {
+        "name": "Active Users",
+        "type": "maximal",
+        "visible": True,
+        "definition": "Number of monthly active users",
+        "description": (
+            "Active users are users that open their Type.World App at least"
+            " once per month and who hold at least one subscription originating"
+            " from your API Endpoint. Active users cause real costs mainly on"
+            " the messaging server that holds one connection per active user to"
+            " send out update notifications. The reason this billing metric"
+            " exists is mostly because of Free Font Websites who show no"
+            " measurable resource consumption other than a potentially very"
+            " high number of active users.</p><p><em>Note: In reality, your"
+            " number of active users will be lower than your total amout of"
+            " customers, but we don’t know by how many, so put the total amount"
+            " here for worst-case scenario.</em>"
+        ),
+        "textfields": [
+            ["activeusers", "Number of monthly active users"],
+        ],
+        "calculation": "activeusers",
+        "tiers": [
+            {
+                "quantity": 100,
+                "price": 0.06,
+            },
+            {
+                "quantity": 200,
+                "price": 0.03,
+            },
+            {
+                "quantity": 1000,
+                "price": 0.01,
+            },
+            {
+                "quantity": -1,
+                "price": 0.001,
+            },
+        ],
+    },
+    "typeworldsignins_basic": {
+        "name": "Type.World Sign-Ins, Basic Scope",
+        "type": "maximal",
+        "visible": True,
+        "definition": "Number of monthly user data access via Type.World Sign-In, using the <b>Basic</b> scope",
+        "description": (
+            "If you offer Type.World Sign-In to the users of your app or website <em>accessing <b>only</b> the"
+            " Basic scope (name, email, user ID)</em>, these are the number of times you access the user data"
+            " endpoint using the access token you have previously received from Type.World"
+            " Sign-In.</p><p>Normally, this number should correlate strongly with your monthly font"
+            " sales.</p><p>Tokens that contain both Basic and Extended scopes are counted as Extended only"
+            " (see below). The billed metric is the maximum number of tokens used per month on the user data"
+            " endpoint. Multiple queries per month for the same token are billed only once."
+        ),
+        "textfields": [
+            ["signins_basic", "Number of monthly user data access per token, Basic scope"],
+        ],
+        "calculation": "signins_basic",
+        "tiers": [
+            {
+                "quantity": 100,
+                "price": 0.04,
+            },
+            {
+                "quantity": 200,
+                "price": 0.03,
+            },
+            {
+                "quantity": 1000,
+                "price": 0.02,
+            },
+            {
+                "quantity": -1,
+                "price": 0.01,
+            },
+        ],
+    },
+    "typeworldsignins_extended": {
+        "name": "Type.World Sign-Ins, Extended Scopes",
+        "type": "maximal",
+        "visible": True,
+        "definition": "Number of monthly user data access via Type.World Sign-In, using the <b>Extended</b> scope",
+        "description": (
+            "If you offer Type.World Sign-In to the users of your app or website <em>accessing the Extended"
+            " scopes (billing address, VAT ID etc.)</em>, these are the number of times you access the user"
+            " data endpoint using the access token you have previously received from Type.World"
+            " Sign-In.</p><p>Normally, this number should correlate strongly with your monthly font"
+            " sales.</p><p>Tokens that contain both Basic and Extended scopes are counted as Extended only."
+            " The billed metric is the maximum number of tokens used per month on the user data endpoint."
+            " Multiple queries per month for the same token are billed only once."
+        ),
+        "textfields": [
+            ["signins_extended", "Number of monthly user data access per token, Extended scopes"],
+        ],
+        "calculation": "signins_extended",
+        "tiers": [
+            {
+                "quantity": 100,
+                "price": 0.08,
+            },
+            {
+                "quantity": 200,
+                "price": 0.06,
+            },
+            {
+                "quantity": 1000,
+                "price": 0.04,
+            },
+            {
+                "quantity": -1,
+                "price": 0.02,
+            },
+        ],
+    },
+}

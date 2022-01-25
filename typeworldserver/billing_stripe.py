@@ -60,13 +60,13 @@ if typeworldserver.STRIPELIVE:
                 # Basic scope
                 {
                     "id": "price_1KLTfCLUOp6Nnz1oppdvLVH7",
-                    "tw_id": "signins_basic",
+                    "tw_id": "typeworldsignins_basic",
                     "name": "Sign-Ins, Basic Scope",
                 },
                 # Extended scope
                 {
                     "id": "price_1KLTcbLUOp6Nnz1oCQNGi8pE",
-                    "tw_id": "signins_extended",
+                    "tw_id": "typeworldsignins_extended",
                     "name": "Sign-Ins, Extended Scopes",
                 },
             ],
@@ -76,7 +76,7 @@ if typeworldserver.STRIPELIVE:
                 " Billing starts after %%trial_period_days%% days of free trial. You"
                 " may pause the plan at any time to resume later."
             ),
-            "trial_period_days": 180,
+            "trial_period_days": 30,
             "cancelWarning": "Are you sure? Since this is a metered plan, service will be terminated immediately.",
             "cancelTime": "immediately",  # endOfBillingPeriod/immediately
             "type": "metered",

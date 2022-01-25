@@ -261,10 +261,24 @@ def statistics(month):
 
 
 def billNonCumulativeMetrics():
+
+    # Type.World Font Distribution
     endpoints = classes.APIEndpoint.query().fetch()
     for endpoint in endpoints:
         if endpoint.user():
-            endpoint.billNonCumulativeMetrics()
+            success, message = endpoint.billNonCumulativeMetrics()
+            print(endpoint.key, success, message)
+            # if not success:
+            #     print(endpoint.key, message)
+
+    # Type.World Sign-In
+    apps = classes.SignInApp.query().fetch()
+    for app in apps:
+        success, message = app.billNonCumulativeMetrics()
+        # if not success:
+        print(app.name, success, message)
+
+    print("done")
 
 
 def saveStatistics():
@@ -1735,7 +1749,11 @@ def updateSubscription(responses):
             log.reason = "firstAppearance"
         else:
             log.reason = "addedFonts"
-        success, message = endpoint.bill("subscriptionUpdateWithAddedFonts", g.form._get("subscriptionURL"))
+        success, message = endpoint.user().bill(
+            "world.type.professional_publisher_plan",
+            "subscriptionUpdateWithAddedFonts",
+            g.form._get("subscriptionURL"),
+        )
         if not success:
             responses["response"] = message
             responses[
@@ -1747,7 +1765,11 @@ def updateSubscription(responses):
 
     if "fontsWithAddedVersions" in changes:
         log.billedAs = "subscriptionUpdateWithAddedFontVersions"
-        success, message = endpoint.bill("subscriptionUpdateWithAddedFontVersions", g.form._get("subscriptionURL"))
+        success, message = endpoint.user().bill(
+            "world.type.professional_publisher_plan",
+            "subscriptionUpdateWithAddedFontVersions",
+            g.form._get("subscriptionURL"),
+        )
         if not success:
             responses["response"] = message
             responses[
