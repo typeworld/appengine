@@ -175,6 +175,7 @@ def auth_authorize():
         "iat": datetime.datetime.utcnow(),
         "sub": g.user.getUUID(),
     }
+    token.lastAccess = helpers.now()
     token.authToken = jwt.encode(payload, typeworldserver.secret("TYPE_WORLD_FLASK_SECRET_KEY"), algorithm="HS256")
     token.put()
 
