@@ -13,6 +13,8 @@ If you have any problems in understanding the system that probably means that it
 
 # Introduction
 
+<iframe width="800" height="450" src="https://www.youtube.com/embed/ApzuvcM6Q6k" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="margin-bottom: 25px;"></iframe>
+
 Similar to well known sign-in solutions such as *Sign in with Google* or *Sign in with Apple*, Type.World also provides its own sign-in service. It makes the Type.World user accounts available to third party websites and apps for user authentication. The main beneficiaries are independent type foundries who want to offer a smooth font shopping user experience, streamlining the onboarding for users that already hold a Type.World user account. With time, *Sign in with Type.World* will become the preferred sign-in solution as Type.World establishes its brand among font users and shoppers.
 
 At a glance:
