@@ -388,6 +388,37 @@ def index():
 
     g.html._DIV()  # .clear
 
+    g.html.H1()
+    g.html.T("Relationships")
+    g.html._H1()
+    g.html.P()
+    g.html.IMG(src="/static/images/relationship.svg", style="width: 70%; margin-left: auto; margin-right: auto;")
+    g.html._P()
+
+    # g.html.H2()
+    # g.html.T("1. One-Click Install")
+    # g.html._H2()
+    g.html.P()
+    g.html.T("The Type.World App is designed around around the principle of <b>decentrality</b>. ")
+    g.html._P()
+    g.html.P()
+    g.html.T(
+        "The fonts are <b>distributed directly</b> from the publisher’s servers to the user’s app. Other than"
+        " downloading and using the app and its user account, users never interact with Type.World directly, only with"
+        " the font publishers."
+    )
+    g.html._P()
+    g.html.P()
+    g.html.T(
+        "The app only ever calls its own servers to handle the Type.World <b>user accounts</b>, which help users"
+        " organize their various font subscriptions.<br />A user account is not required to handle free fonts. It is"
+        " required, however, for so called <b>protected fonts</b>, such as commercial retail fonts, for a streamlined"
+        " user experience around losing or crashing your computer. A re-installation of all your commercial fonts"
+        " would affect the licenses that you hold, and through the user account you can deauthorize and free that old"
+        " computer’s font licenses in one go."
+    )
+    g.html._P()
+
     g.html._DIV()
 
     return g.html.generate()
