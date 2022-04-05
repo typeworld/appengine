@@ -6,8 +6,9 @@ echo "Setting gcloud configuration..."
 gcloud config configurations activate default
 
 # URL
-export TEST_MOTHERSHIP="https://`date +"%Y%m%dt%H%M%S"`-dot-typeworld2.appspot.com"
-VERSION=`date +"%Y%m%dt%H%M%S"`
+export VERSION=`date +"%Y%m%dt%H%M%S"`
+export TEST_MOTHERSHIP="https://$VERSION-dot-typeworld2.appspot.com"
+
 echo $TEST_MOTHERSHIP
 
 echo "Syntax check..."
@@ -19,12 +20,12 @@ done
 echo "Uploading..."
 gcloud app deploy --quiet --project typeworld2 --version $VERSION --no-promote
 
-echo "PyTest..."
-pytest -s
-
 echo "API Test..."
 TYPEWORLD_LIB_PATH=`python3 -c 'import typeworld, os; print(os.path.join(os.path.dirname(typeworld.__file__)))'`
 python3 $TYPEWORLD_LIB_PATH/test.py $TEST_MOTHERSHIP
+
+echo "PyTest..."
+pytest -s
 
 echo "Migrating traffic..."
 gcloud app services set-traffic default --splits $VERSION=1 --quiet

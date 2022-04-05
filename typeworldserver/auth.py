@@ -328,7 +328,7 @@ def auth_edituserdata():
 
     g.html.DIV(class_="clear incomplete_user_data")
     g.html.SPAN(class_="floatleft", style="margin-right: 10px;")
-    g.html.A(name="returnButton", class_="button dead")
+    g.html.A(class_="button dead")
     g.html.T(f"Return to {app.name}")
     g.html._A()
     g.html._SPAN()

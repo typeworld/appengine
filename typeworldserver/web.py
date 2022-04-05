@@ -1008,7 +1008,7 @@ class WebAppModel(ndb.Model):
         g.html.T(text or ("+ Add %s" % self.__class__.__name__))
         g.html._A()
 
-    def edit(self, text=None, button=False, propertyNames=[], values={}, hiddenValues={}, reloadURL=None):
+    def edit(self, text=None, button=False, propertyNames=[], values={}, hiddenValues={}, reloadURL=None, id=None):
 
         url = "/createDialog?inline=true&class=%s" % (self.__class__.__name__)
         url += "&key=%s" % self.key.urlsafe().decode()
@@ -1025,7 +1025,7 @@ class WebAppModel(ndb.Model):
             for key in hiddenValues:
                 url += "&%s=%s" % (key, hiddenValues[key])
 
-        g.html.A(class_="button" if button else "", onclick="dialog('%s');" % url)
+        g.html.A(id=id, class_="button" if button else "", onclick="dialog('%s');" % url)
         g.html.T(text or '<span class="material-icons-outlined">edit</span>')
         g.html._A()
 

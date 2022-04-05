@@ -541,6 +541,7 @@ def createUserAccount(responses):
     if g.form._get("SECRETKEY") == typeworldserver.secret("TEST"):
         user.emailVerified = True
     else:
+        print("redirected_from:", g.form._get("redirected_from"))
         if g.form._get("redirected_from") != "email-verification":
             user.sendEmailVerificationLink()
     user.put()

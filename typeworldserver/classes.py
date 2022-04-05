@@ -363,7 +363,8 @@ class User(TWNDBModel):
         if self.oauthInfo()[scope]["editable"]:
             self.edit(
                 propertyNames=self.oauthInfo()[scope]["editable"],
-                hiddenValues={"edit_token": g.form.get("edit_token")} if g.form.get("edit_token") else {}
+                hiddenValues={"edit_token": g.form.get("edit_token")} if g.form.get("edit_token") else {},
+                id="edit_" + scope
                 # reloadURL="' + encodeURIComponent(window.location.href) + '",
             )
         g.html._DIV()  # .floatright
@@ -1302,6 +1303,9 @@ class User(TWNDBModel):
 
     def sendEmailVerificationLink(self, redirectURL=None):
 
+        print("sendEmailVerificationLink()")
+        print(traceback.format_stack())
+
         # TODO: avoid random duplicates
         self.emailVerificationCode = helpers.Garbage(40)
         if redirectURL:
@@ -1337,6 +1341,8 @@ IMPORTANT NOTE: Make sure that the link opens in the same browser that you creat
 
         if success:
             self.put()
+
+        print(body)
 
         return success, message
 

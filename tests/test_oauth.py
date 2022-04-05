@@ -6,13 +6,18 @@ import requests
 import typeworld.client
 import urllib.parse
 
+# Email
+import re
+import email
+import imaplib
+
+
 # Selenium
 from selenium import webdriver
 
 # from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 
-from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
 # Flask
@@ -50,6 +55,276 @@ print("Fetching passwords...")
 OAUTH_TEST_CLIENTID = secret("OAUTH_TEST_CLIENTID")
 OAUTH_TEST_CLIENTSECRET = secret("OAUTH_TEST_CLIENTSECRET")
 print("Done")
+
+SIGNINTEST_EMAIL = "signintest@type.world"
+SIGNINTEST_ACCOUNT_PASSWORD = secret("SIGNINTEST_ACCOUNT_PASSWORD")
+SIGNINTEST_EMAIL_PASSWORD = secret("SIGNINTEST_EMAIL_PASSWORD")
+SIGNINTEST_EMAIL_SERVER = secret("SIGNINTEST_EMAIL_SERVER")
+
+
+def delete_all_emails():
+
+    # connect to the server and go to its inbox
+    mail = imaplib.IMAP4_SSL(SIGNINTEST_EMAIL_SERVER)
+    mail.login(SIGNINTEST_EMAIL, SIGNINTEST_EMAIL_PASSWORD)
+    # we choose the inbox but you can select others
+    mail.select("INBOX")
+
+    # we'll search using the ALL criteria to retrieve
+    # every message inside the inbox
+    # it will return with its status and a list of ids
+    status, data = mail.search(None, "ALL")
+    # the list returned is a list of bytes separated
+    # by white spaces on this format: [b'1 2 3', b'4 5 6']
+    # so, to separate it first we create an empty list
+    mail_ids = []
+    # then we go through the list splitting its blocks
+    # of bytes and appending to the mail_ids list
+    for block in data:
+        # the split function called without parameter
+        # transforms the text or bytes into a list using
+        # as separator the white spaces:
+        # b'1 2 3'.split() => [b'1', b'2', b'3']
+        mail_ids += block.split()
+
+    # define the range for the operation
+    # start = mail_ids[0].decode()
+    # end = mail_ids[-1].decode()
+
+    # mark the emails to be deleted
+    if mail_ids:
+        mail.store("1:*", "+FLAGS", "\\Deleted")
+
+        # remove permanently the emails
+        mail.expunge()
+
+    # close the mailboxes
+    mail.close()
+    # close the connection
+    mail.logout()
+
+    return True
+
+
+def number_of_emails():
+
+    # connect to the server and go to its inbox
+    mail = imaplib.IMAP4_SSL(SIGNINTEST_EMAIL_SERVER)
+    mail.login(SIGNINTEST_EMAIL, SIGNINTEST_EMAIL_PASSWORD)
+    # we choose the inbox but you can select others
+    mail.select("INBOX")
+
+    # we'll search using the ALL criteria to retrieve
+    # every message inside the inbox
+    # it will return with its status and a list of ids
+    status, data = mail.search(None, "ALL")
+    # the list returned is a list of bytes separated
+    # by white spaces on this format: [b'1 2 3', b'4 5 6']
+    # so, to separate it first we create an empty list
+    mail_ids = []
+    # then we go through the list splitting its blocks
+    # of bytes and appending to the mail_ids list
+    for block in data:
+        # the split function called without parameter
+        # transforms the text or bytes into a list using
+        # as separator the white spaces:
+        # b'1 2 3'.split() => [b'1', b'2', b'3']
+        mail_ids += block.split()
+
+    # define the range for the operation
+    # start = mail_ids[0].decode()
+    # end = mail_ids[-1].decode()
+
+    # close the mailboxes
+    mail.close()
+    # close the connection
+    mail.logout()
+
+    return len(mail_ids)
+
+
+def print_all_emails():
+    # connect to the server and go to its inbox
+    mail = imaplib.IMAP4_SSL(SIGNINTEST_EMAIL_SERVER)
+    mail.login(SIGNINTEST_EMAIL, SIGNINTEST_EMAIL_PASSWORD)
+    # we choose the inbox but you can select others
+    mail.select("INBOX")
+
+    # we'll search using the ALL criteria to retrieve
+    # every message inside the inbox
+    # it will return with its status and a list of ids
+    status, data = mail.search(None, "ALL")
+    # the list returned is a list of bytes separated
+    # by white spaces on this format: [b'1 2 3', b'4 5 6']
+    # so, to separate it first we create an empty list
+    mail_ids = []
+    # then we go through the list splitting its blocks
+    # of bytes and appending to the mail_ids list
+    for block in data:
+        # the split function called without parameter
+        # transforms the text or bytes into a list using
+        # as separator the white spaces:
+        # b'1 2 3'.split() => [b'1', b'2', b'3']
+        mail_ids += block.split()
+
+    # now for every id we'll fetch the email
+    # to extract its content
+    for i in mail_ids:
+        # the fetch function fetch the email given its id
+        # and format that you want the message to be
+        status, data = mail.fetch(i, "(RFC822)")
+
+        # the content data at the '(RFC822)' format comes on
+        # a list with a tuple with header, content, and the closing
+        # byte b')'
+        for response_part in data:
+            # so if its a tuple...
+            if isinstance(response_part, tuple):
+                # we go for the content at its second element
+                # skipping the header at the first and the closing
+                # at the third
+                message = email.message_from_bytes(response_part[1])
+
+                # with the content we can extract the info about
+                # who sent the message and its subject
+                mail_from = message["from"]
+                mail_subject = message["subject"]
+
+                # then for the text we have a little more work to do
+                # because it can be in plain text or multipart
+                # if its not plain text we need to separate the message
+                # from its annexes to get the text
+                if message.is_multipart():
+                    mail_content = ""
+
+                    # on multipart we have the text message and
+                    # another things like annex, and html version
+                    # of the message, in that case we loop through
+                    # the email payload
+                    for part in message.get_payload():
+                        # if the content type is text/plain
+                        # we extract it
+                        if part.get_content_type() == "text/plain":
+                            mail_content += part.get_payload()
+                else:
+                    # if the message isn't multipart, just extract it
+                    mail_content = message.get_payload()
+
+                # and then let's show its result
+                print(f"From: {mail_from}")
+                print(f"Subject: {mail_subject}")
+                print(f"Content: {mail_content}")
+
+    # close the mailboxes
+    mail.close()
+    # close the connection
+    mail.logout()
+
+
+def get_first_email():
+    # connect to the server and go to its inbox
+    mail = imaplib.IMAP4_SSL(SIGNINTEST_EMAIL_SERVER)
+    mail.login(SIGNINTEST_EMAIL, SIGNINTEST_EMAIL_PASSWORD)
+    # we choose the inbox but you can select others
+    mail.select("INBOX")
+
+    # we'll search using the ALL criteria to retrieve
+    # every message inside the inbox
+    # it will return with its status and a list of ids
+    status, data = mail.search(None, "ALL")
+    # the list returned is a list of bytes separated
+    # by white spaces on this format: [b'1 2 3', b'4 5 6']
+    # so, to separate it first we create an empty list
+    mail_ids = []
+    # then we go through the list splitting its blocks
+    # of bytes and appending to the mail_ids list
+    for block in data:
+        # the split function called without parameter
+        # transforms the text or bytes into a list using
+        # as separator the white spaces:
+        # b'1 2 3'.split() => [b'1', b'2', b'3']
+        mail_ids += block.split()
+
+    # now for every id we'll fetch the email
+    # to extract its content
+    for i in reversed(mail_ids):
+        # the fetch function fetch the email given its id
+        # and format that you want the message to be
+        status, data = mail.fetch(i, "(RFC822)")
+
+        # the content data at the '(RFC822)' format comes on
+        # a list with a tuple with header, content, and the closing
+        # byte b')'
+        for response_part in data:
+            # so if its a tuple...
+            if isinstance(response_part, tuple):
+                # we go for the content at its second element
+                # skipping the header at the first and the closing
+                # at the third
+                message = email.message_from_bytes(response_part[1])
+
+                # with the content we can extract the info about
+                # who sent the message and its subject
+                # mail_from = message["from"]
+                # mail_subject = message["subject"]
+
+                # then for the text we have a little more work to do
+                # because it can be in plain text or multipart
+                # if its not plain text we need to separate the message
+                # from its annexes to get the text
+                if message.is_multipart():
+                    mail_content = ""
+
+                    # on multipart we have the text message and
+                    # another things like annex, and html version
+                    # of the message, in that case we loop through
+                    # the email payload
+                    for part in message.get_payload():
+                        # if the content type is text/plain
+                        # we extract it
+                        if part.get_content_type() == "text/plain":
+                            mail_content += part.get_payload()
+                else:
+                    # if the message isn't multipart, just extract it
+                    mail_content = message.get_payload()
+
+                # close the mailboxes
+                mail.close()
+                # close the connection
+                mail.logout()
+                return mail_content
+                # # and then let's show its result
+                # print(f"From: {mail_from}")
+                # print(f"Subject: {mail_subject}")
+                # print(f"Content: {mail_content}")
+
+    # close the mailboxes
+    mail.close()
+    # close the connection
+    mail.logout()
+
+
+# delete_all_emails()
+# print_all_emails()
+
+
+def return_first_email():
+
+    while get_first_email() is None:
+        time.sleep(1)
+
+    return get_first_email()
+
+
+def get_link():
+    body = return_first_email()
+
+    newline = r"(?:\n|\r\n?)"
+    compiled = re.compile(
+        rf"Please verify your email address by clicking on the following link:{newline}(.+?){newline}", re.MULTILINE
+    )
+    match = compiled.search(body)
+    return match.group(1).strip()
 
 
 class Form(dict):
@@ -233,7 +508,8 @@ def makeAccountLink(link):
     else:
         redirect_url = urllib.parse.quote_plus("http://127.0.0.1:5000/account")
 
-    url = link + "&redirect_uri=" + redirect_url + "&state=" + state
+    url = link + "&state=" + state
+    url = url.replace("__place_for_redirect_uri__", redirect_url)
     url = url.replace(ORIGINAL_MOTHERSHIP, MOTHERSHIP)
     print(g.form.get("testcase"), url)
     return url
@@ -289,21 +565,42 @@ def wait_for(condition_function):
     raise Exception("Timeout waiting for {}".format(condition_function.__name__))
 
 
+# class wait_for_page_load(object):
+#     def __init__(self, browser):
+#         self.browser = browser
+
+#     def __enter__(self):
+#         # self.old_page = self.browser.find_element(By.TAG_NAME, "body")
+
+#         self.old_page = WebDriverWait(self.browser, 5).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+
+#     def page_has_loaded(self):
+#         new_page = WebDriverWait(self.browser, 5).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+#         return new_page.id != self.old_page.id
+
+#     def __exit__(self, *_):
+#         wait_for(self.page_has_loaded)
+
+
 class wait_for_page_load(object):
     def __init__(self, browser):
         self.browser = browser
 
     def __enter__(self):
-        # self.old_page = self.browser.find_element(By.TAG_NAME, "body")
-
-        self.old_page = WebDriverWait(self.browser, 5).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+        self.old_page = self.browser.find_element(By.TAG_NAME, "html")
 
     def page_has_loaded(self):
-        new_page = WebDriverWait(self.browser, 5).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+        new_page = self.browser.find_element(By.TAG_NAME, "html")
         return new_page.id != self.old_page.id
 
     def __exit__(self, *_):
-        wait_for(self.page_has_loaded)
+        start_time = time.time()
+        while time.time() < start_time + 10:
+            if self.page_has_loaded():
+                return True
+            else:
+                time.sleep(0.1)
+        raise Exception("Timeout waiting for page load.")
 
 
 class TestFoo(flask_unittest.LiveTestCase):
@@ -317,12 +614,12 @@ class TestFoo(flask_unittest.LiveTestCase):
 
         # Create Type.World user account
         cls.client = typeworld.client.APIClient(
-            zmqSubscriptions=False,
-            online=True,
-            commercial=True,
-            appID="world.type.app",
+            zmqSubscriptions=False, online=True, commercial=True, appID="world.type.app", mothership=MOTHERSHIP + "/v1"
         )
-        success, message = cls.client.deleteUserAccount("test1@type.world", "0123456789")
+        # success, message = cls.client.deleteUserAccount(SIGNINTEST_EMAIL, SIGNINTEST_ACCOUNT_PASSWORD)
+
+        with wait_for_page_load(cls.driver):
+            cls.driver.get(MOTHERSHIP)
 
         # cls.driver.get(cls.root_url + "/reset")
 
@@ -398,6 +695,13 @@ class TestFoo(flask_unittest.LiveTestCase):
     # First complete successful run-through
     def test_authorization_complete(self):
 
+        # Delete user account
+        success, message = self.client.deleteUserAccount(SIGNINTEST_EMAIL, SIGNINTEST_ACCOUNT_PASSWORD)
+        # self.assertTrue(success)
+
+        self.assertTrue(delete_all_emails())
+        self.assertEqual(number_of_emails(), 0)
+
         with wait_for_page_load(self.driver):
             self.driver.get(self.root_url)
         self.assertIn("Sign In With Type.World", self.driver.page_source)
@@ -408,26 +712,59 @@ class TestFoo(flask_unittest.LiveTestCase):
 
         # Create user account
         success, message = self.client.createUserAccount(
-            "Test OAuth User", "test1@type.world", "0123456789", "0123456789"
+            "Test OAuth User",
+            SIGNINTEST_EMAIL,
+            SIGNINTEST_ACCOUNT_PASSWORD,
+            SIGNINTEST_ACCOUNT_PASSWORD,
+            {"redirected_from": "email-verification"},
         )
         self.assertTrue(success)
 
         # Log in
         email = self.driver.find_element(By.ID, "email")
-        email.send_keys("test1@type.world")
+        email.send_keys(SIGNINTEST_EMAIL)
         password = self.driver.find_element(By.ID, "password")
-        password.send_keys("0123456789")
+        password.send_keys(SIGNINTEST_ACCOUNT_PASSWORD)
+        # self.driver.find_element(By.XPATH("//html")).click()
         with wait_for_page_load(self.driver):
             self.driver.find_element(By.NAME, "loginButton").click()
+
+        # Wait for email link
+        email_confirmation_link = get_link()
+        print(email_confirmation_link)
+        self.assertIn(MOTHERSHIP, email_confirmation_link)
+
         with wait_for_page_load(self.driver):
-            self.driver.find_element(By.NAME, "authorizeTokenButton").click()
-        self.assertNotIn("Reusing state is not allowed", self.driver.page_source)
+            self.driver.get(email_confirmation_link)
+        self.assertNotIn("No user could be found to verify for this code.", self.driver.page_source)
+
+        # Insert missing data
+        # print(self.driver.page_source)
+        # with wait_for_page_load(self.driver):
+        time.sleep(2)
+        self.driver.execute_script("document.getElementById('edit_billingaddress').scrollIntoView();")
+        self.driver.execute_script("document.getElementById('edit_billingaddress').click();")
+        # self.driver.find_element(By.ID, "edit_billingaddress").click()
+        time.sleep(2)
+        self.driver.find_element(By.ID, "dialogform_invoiceName").send_keys("Test User")
+        self.driver.find_element(By.ID, "dialogform_invoiceStreet").send_keys("Downing Str 10")
+        self.driver.find_element(By.ID, "dialogform_invoiceZIPCode").send_keys("01234")
+        self.driver.find_element(By.ID, "dialogform_invoiceCity").send_keys("Kabul")
+        self.driver.find_element(By.LINK_TEXT, "Save").click()
+        time.sleep(3)
+
+        # with wait_for_page_load(self.driver):
+        self.driver.execute_script("document.getElementsByName('authorizeTokenButton')[1].click();")
+        # self.driver.find_element(By.LINK_TEXT, "Authorize").click()
+        # self.driver.find_element(By.NAME, "authorizeTokenButton").click()
+        with wait_for_page_load(self.driver):
+            self.assertNotIn("Reusing state is not allowed", self.driver.page_source)
         # with wait_for_page_load(self.driver):
         #     self.driver.find_element(By.NAME, "redirectButton").click()
-        time.sleep(7)
+        time.sleep(10)
 
         # Log in success
-        self.assertIn("Logged in as test1@type.world", self.driver.page_source)
+        self.assertIn(f"Logged in as {SIGNINTEST_EMAIL}", self.driver.page_source)
 
         # Log out
         with wait_for_page_load(self.driver):
@@ -451,12 +788,12 @@ class TestFoo(flask_unittest.LiveTestCase):
             self.driver.find_element(By.NAME, "redirectButton").click()
 
         # Log in success
-        self.assertIn("Logged in as test1@type.world", self.driver.page_source)
+        self.assertIn(f"Logged in as {SIGNINTEST_EMAIL}", self.driver.page_source)
 
         # User Account
         with wait_for_page_load(self.driver):
             self.driver.get(self.root_url + "/account")
-        self.assertIn("test1@type.world", self.driver.page_source)
+        self.assertIn(SIGNINTEST_EMAIL, self.driver.page_source)
 
         # Edit data
         with wait_for_page_load(self.driver):
@@ -468,16 +805,16 @@ class TestFoo(flask_unittest.LiveTestCase):
             self.driver.get(self.root_url + "/reset")
         with wait_for_page_load(self.driver):
             self.driver.get(self.root_url + "/account")
-        self.assertIn("test1@type.world", self.driver.page_source)
+        self.assertIn(SIGNINTEST_EMAIL, self.driver.page_source)
 
         # Edit data
+        self.driver.find_element(By.NAME, "edit_billingaddress").click()
         with wait_for_page_load(self.driver):
-            self.driver.find_element(By.NAME, "edit_billingaddress").click()
-        self.assertIn("Edit my Type.World account", self.driver.page_source)
+            self.assertIn("Edit my Type.World account", self.driver.page_source)
 
+        self.driver.find_element(By.NAME, "returnButton").click()
         with wait_for_page_load(self.driver):
-            self.driver.find_element(By.NAME, "returnButton").click()
-        self.assertIn("test1@type.world", self.driver.page_source)
+            self.assertIn("Downing Str 10", self.driver.page_source)
 
         # Test cases
         with wait_for_page_load(self.driver):
@@ -487,21 +824,10 @@ class TestFoo(flask_unittest.LiveTestCase):
         self.assertIn("Missing or unknown redirect_uri", self.driver.page_source)
 
         with wait_for_page_load(self.driver):
-            self.driver.get(self.root_url + "/account?testcase=account_wrong_client_id")
-        with wait_for_page_load(self.driver):
-            print("123", self.driver.page_source)
-            self.driver.find_element(By.NAME, "edit_billingaddress").click()
-        self.assertIn("Missing or unknown client_id", self.driver.page_source)
-
-        with wait_for_page_load(self.driver):
             self.driver.get(self.root_url + "/account?testcase=account_wrong_scope")
         with wait_for_page_load(self.driver):
             self.driver.find_element(By.NAME, "edit_billingaddress").click()
         self.assertIn("Missing or unknown or unauthorized scope", self.driver.page_source)
-
-        # Delete user account
-        success, message = self.client.deleteUserAccount("test1@type.world", "0123456789")
-        self.assertTrue(success)
 
 
 suite = flask_unittest.LiveTestSuite(app, timeout=60)

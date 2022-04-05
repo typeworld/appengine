@@ -2,7 +2,7 @@ bcrypt
 certifi
 CurrencyConverter
 deepdiff
-Flask==1.1.1
+Flask==2.1.0
 
 # testing
 flask-unittest
