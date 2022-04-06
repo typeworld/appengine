@@ -786,6 +786,7 @@ class TestFoo(flask_unittest.LiveTestCase):
             self.driver.find_element(By.LINK_TEXT, "Sign In With Type.World").click()
         with wait_for_page_load(self.driver):
             self.driver.find_element(By.NAME, "redirectButton").click()
+        time.sleep(10)
 
         # Log in success
         self.assertIn(f"Logged in as {SIGNINTEST_EMAIL}", self.driver.page_source)
@@ -807,14 +808,36 @@ class TestFoo(flask_unittest.LiveTestCase):
             self.driver.get(self.root_url + "/account")
         self.assertIn(SIGNINTEST_EMAIL, self.driver.page_source)
 
+        self.assertIn("Test User", self.driver.page_source)
+        self.assertIn("Downing Str 10", self.driver.page_source)
+        self.assertIn("01234", self.driver.page_source)
+        self.assertIn("Kabul", self.driver.page_source)
+        self.assertIn("Afghanistan", self.driver.page_source)
+
         # Edit data
         self.driver.find_element(By.NAME, "edit_billingaddress").click()
         with wait_for_page_load(self.driver):
             self.assertIn("Edit my Type.World account", self.driver.page_source)
 
+        # Edit data here
+        self.driver.execute_script("document.getElementById('edit_billingaddress').scrollIntoView();")
+        self.driver.execute_script("document.getElementById('edit_billingaddress').click();")
+        time.sleep(2)
+        self.driver.find_element(By.ID, "dialogform_invoiceName").send_keys("Test User 2")
+        self.driver.find_element(By.ID, "dialogform_invoiceStreet").send_keys("Downing Str 11")
+        self.driver.find_element(By.ID, "dialogform_invoiceZIPCode").send_keys("01235")
+        self.driver.find_element(By.ID, "dialogform_invoiceCity").send_keys("Kabull")
+        self.driver.find_element(By.LINK_TEXT, "Save").click()
+        time.sleep(3)
+
+        # Return
         self.driver.find_element(By.NAME, "returnButton").click()
         with wait_for_page_load(self.driver):
-            self.assertIn("Downing Str 10", self.driver.page_source)
+            self.assertIn("Test User 2", self.driver.page_source)
+            self.assertIn("Downing Str 11", self.driver.page_source)
+            self.assertIn("01235", self.driver.page_source)
+            self.assertIn("Kabull", self.driver.page_source)
+            self.assertIn("Afghanistan", self.driver.page_source)
 
         # Test cases
         with wait_for_page_load(self.driver):
