@@ -4,7 +4,6 @@ from typeworldserver import definitions
 from typeworldserver import billing_stripe
 from typeworldserver import web
 from typeworldserver import helpers
-from typeworldserver import mq
 from typeworldserver import translations
 
 # other
@@ -22,13 +21,13 @@ from pygments import highlight
 from pygments.lexers import PythonLexer
 from pygments.formatters import HtmlFormatter
 from flask import g, request
-from google.cloud import ndb
+from google.cloud import ndb, pubsub_v1
 import logging
 import urllib.parse
 import uuid
 
 typeworldserver.app.config["modules"].append("classes")
-
+pubsub_publisher = pubsub_v1.PublisherClient()
 
 ###
 
@@ -65,7 +64,10 @@ class User(TWNDBModel):
     stripeTestSubscribedProductsHistory = web.JsonProperty(default={})
 
     invoiceName = web.StringProperty(
-        verbose_name=["First and Last Name", "Either <em>Name</em> or <em>Company</em> are reqired"]
+        verbose_name=[
+            "First and Last Name",
+            "Either <em>Name</em> or <em>Company</em> are reqired",
+        ]
     )
     invoiceCompany = web.StringProperty(
         verbose_name=["Company", "Either <em>Name</em> or <em>Company</em> are reqired"]
@@ -73,11 +75,17 @@ class User(TWNDBModel):
     invoiceStreet = web.StringProperty(verbose_name=["Address", "Required"])
     invoiceStreet2 = web.StringProperty(verbose_name="Additional Address Information")
     # invoiceStreet3 = web.StringProperty(verbose_name="Additional Address Information")
-    invoiceZIPCode = web.StringProperty(verbose_name=["ZIP Code", "Required for certain countries"])
+    invoiceZIPCode = web.StringProperty(
+        verbose_name=["ZIP Code", "Required for certain countries"]
+    )
     invoiceCity = web.StringProperty(verbose_name=["City/Town", "Required"])
-    invoiceState = web.StringProperty(verbose_name=["State/Province", "Required for certain countries"])
+    invoiceState = web.StringProperty(
+        verbose_name=["State/Province", "Required for certain countries"]
+    )
     invoiceCountry = web.CountryProperty(verbose_name=["Country", "Required"])
-    invoiceEUVATID = web.EUVATIDProperty(verbose_name=["EU VAT ID", "Required only for E.U. businesses"])
+    invoiceEUVATID = web.EUVATIDProperty(
+        verbose_name=["EU VAT ID", "Required only for E.U. businesses"]
+    )
 
     invoiceFields = [
         "invoiceCompany",
@@ -207,7 +215,9 @@ class User(TWNDBModel):
         elif scope == "billingaddress":
             data = {
                 "name": definitions.SIGNINSCOPES["billingaddress"]["name"],
-                "edit_uri": f"{typeworldserver.HTTPROOT}/auth/edituserdata?scope=billingaddress",
+                "edit_uri": (
+                    f"{typeworldserver.HTTPROOT}/auth/edituserdata?scope=billingaddress"
+                ),
                 "data": {
                     "company": self.invoiceCompany or "",
                     "name": self.invoiceName or "",
@@ -217,7 +227,9 @@ class User(TWNDBModel):
                     "zipcode": self.invoiceZIPCode or "",
                     "town": self.invoiceCity or "",
                     "state": self.invoiceState or "",
-                    "country": definitions.COUNTRIES_DICT[self.invoiceCountry] if self.invoiceCountry else "",
+                    "country": definitions.COUNTRIES_DICT[self.invoiceCountry]
+                    if self.invoiceCountry
+                    else "",
                     "country_code": self.invoiceCountry or "",
                 },
             }
@@ -239,7 +251,8 @@ class User(TWNDBModel):
                 missing.append("town")
             if (
                 self.invoiceCountry
-                and self.invoiceCountry in definitions.COUNTRIES_THAT_REQUIRE_STATE_OR_PROVINCE
+                and self.invoiceCountry
+                in definitions.COUNTRIES_THAT_REQUIRE_STATE_OR_PROVINCE
                 and not self.invoiceState
             ):
                 missing.append("state")
@@ -251,14 +264,20 @@ class User(TWNDBModel):
             # Formatted address
             if self.invoiceCountry:
                 formattedData = definitions.ADDRESS_FORMAT[
-                    self.invoiceCountry if self.invoiceCountry in definitions.ADDRESS_FORMAT else "default"
+                    self.invoiceCountry
+                    if self.invoiceCountry in definitions.ADDRESS_FORMAT
+                    else "default"
                 ]
                 for key in data["data"]:
-                    formattedData = formattedData.replace(f"{{{key}}}", data["data"][key])
+                    formattedData = formattedData.replace(
+                        f"{{{key}}}", data["data"][key]
+                    )
                 # Strip beginning and end
                 formattedData = formattedData.strip()
                 # Strip each line
-                formattedData = "\n".join([x.strip() for x in formattedData.splitlines() if x])
+                formattedData = "\n".join(
+                    [x.strip() for x in formattedData.splitlines() if x]
+                )
                 # Remove leftovers (probably unnecessary at this point except for spaces)
                 formattedData = (
                     formattedData.replace("\n\n", "\n")
@@ -277,7 +296,9 @@ class User(TWNDBModel):
         elif scope == "euvatid":
             data = {
                 "name": definitions.SIGNINSCOPES["euvatid"]["name"],
-                "edit_uri": f"{typeworldserver.HTTPROOT}/auth/edituserdata?scope=euvatid",
+                "edit_uri": (
+                    f"{typeworldserver.HTTPROOT}/auth/edituserdata?scope=euvatid"
+                ),
                 "data": {
                     "euvatid": self.invoiceEUVATID or "",
                 },
@@ -345,7 +366,9 @@ class User(TWNDBModel):
 
         if methodName == "editScopeView":
             return web.encodeDataContainer(
-                self.publicID(), "rawJSONDataView", {"scopes": parameters["scopes"], "appKey": parameters["appKey"]}
+                self.publicID(),
+                "rawJSONDataView",
+                {"scopes": parameters["scopes"], "appKey": parameters["appKey"]},
             )
 
     def editScopeView(self, parameters={}, directCallParameters={}):
@@ -363,7 +386,9 @@ class User(TWNDBModel):
         if self.oauthInfo()[scope]["editable"]:
             self.edit(
                 propertyNames=self.oauthInfo()[scope]["editable"],
-                hiddenValues={"edit_token": g.form.get("edit_token")} if g.form.get("edit_token") else {},
+                hiddenValues={"edit_token": g.form.get("edit_token")}
+                if g.form.get("edit_token")
+                else {},
                 id="edit_" + scope
                 # reloadURL="' + encodeURIComponent(window.location.href) + '",
             )
@@ -376,14 +401,22 @@ class User(TWNDBModel):
         for key in oauth["data"]:
             if key in self.oauthInfo()[scope]["fields"]:
                 g.html.TR()
-                g.html.TD(style="width: 40%; text-align: right; color: #777; font-size: 10pt;")
+                g.html.TD(
+                    style="width: 40%; text-align: right; color: #777; font-size: 10pt;"
+                )
                 g.html.T(self.oauthInfo()[scope]["fields"][key]["name"] + ":")
                 g.html._TD()
                 g.html.TD()
-                if "missing_required_data" in oauth and key in oauth["missing_required_data"]:
+                if (
+                    "missing_required_data" in oauth
+                    and key in oauth["missing_required_data"]
+                ):
                     g.html.T('<span style="color: #ff8b47;">&lt;missing&gt;</span>')
                 else:
-                    g.html.T(oauth["data"][key] or '<span style="color: #777;">&lt;empty&gt;</span>')
+                    g.html.T(
+                        oauth["data"][key]
+                        or '<span style="color: #777;">&lt;empty&gt;</span>'
+                    )
                 g.html._TD()
                 g.html._TR()
 
@@ -395,31 +428,40 @@ class User(TWNDBModel):
         # Missing data
         if self.oauth_incompleteUserData(parameters["scopes"]):
             g.html.SCRIPT()
-            g.html.T("$('.incomplete_user_data').show(); $('.complete_user_data').hide();")
+            g.html.T(
+                "$('.incomplete_user_data').show(); $('.complete_user_data').hide();"
+            )
             g.html._SCRIPT()
         else:
             g.html.SCRIPT()
-            g.html.T("$('.incomplete_user_data').hide(); $('.complete_user_data').show();")
+            g.html.T(
+                "$('.incomplete_user_data').hide(); $('.complete_user_data').show();"
+            )
             g.html._SCRIPT()
 
     def rawJSONDataView(self, parameters={}, directCallParameters={}):
         scopes = parameters["scopes"]
-        app = ndb.Key(urlsafe=parameters["appKey"].encode()).get(read_consistency=ndb.STRONG)
+        app = ndb.Key(urlsafe=parameters["appKey"].encode()).get(
+            read_consistency=ndb.STRONG
+        )
 
         g.html.DIV(class_="scope")
         g.html.DIV(class_="content")
 
         g.html.P()
         g.html.T(
-            f'<span class="material-icons-outlined">view_in_ar</span> This is the precise data that <b>{app.name}</b>'
-            " will receive. Nothing more, nothing less."
+            '<span class="material-icons-outlined">view_in_ar</span> This is the'
+            f" precise data that <b>{app.name}</b> will receive. Nothing more, nothing"
+            " less."
         )
         g.html._P()
         g.html.mediumSeparator()
 
         g.html.P()
         g.html.PRE()
-        g.html.T(json.dumps(self.rawJSONData(app, scopes), indent=1))  # .replace("\n", "<br />")
+        g.html.T(
+            json.dumps(self.rawJSONData(app, scopes), indent=1)
+        )  # .replace("\n", "<br />")
         g.html._PRE()
         g.html._P()
 
@@ -435,15 +477,21 @@ class User(TWNDBModel):
             if rawDataLink:
                 g.html.DIV(style="text-align: right;")
                 g.html.T(
-                    "Show raw JSON data <a onclick=\"$('.raw_data_on').show(); $('.raw_data_off').hide();\">"
-                    '<span class="material-icons-outlined">toggle_off</span></a>'
+                    "Show raw JSON data <a onclick=\"$('.raw_data_on').show();"
+                    " $('.raw_data_off').hide();\"><span"
+                    ' class="material-icons-outlined">toggle_off</span></a>'
                 )
                 g.html._DIV()
                 g.html.smallSeparator()
 
             for i, scope in enumerate(scopes):
                 self.container(
-                    "editScopeView", parameters={"scope": scope, "scopes": scopes, "appKey": app.publicID()}
+                    "editScopeView",
+                    parameters={
+                        "scope": scope,
+                        "scopes": scopes,
+                        "appKey": app.publicID(),
+                    },
                 )
 
             g.html._DIV()  # .raw_data_off
@@ -453,13 +501,17 @@ class User(TWNDBModel):
                 g.html.DIV(class_="raw_data_on", style="display: none;")
                 g.html.DIV(style="text-align: right;")
                 g.html.T(
-                    "Show raw JSON data <a onclick=\"$('.raw_data_on').hide(); $('.raw_data_off').show();\">"
-                    '<span class="material-icons-outlined">toggle_on</span></a>'
+                    "Show raw JSON data <a onclick=\"$('.raw_data_on').hide();"
+                    " $('.raw_data_off').show();\"><span"
+                    ' class="material-icons-outlined">toggle_on</span></a>'
                 )
                 g.html._DIV()
 
                 g.html.smallSeparator()
-                self.container("rawJSONDataView", parameters={"scopes": scopes, "appKey": app.publicID()})
+                self.container(
+                    "rawJSONDataView",
+                    parameters={"scopes": scopes, "appKey": app.publicID()},
+                )
 
                 g.html._DIV()  # .raw_data_on
 
@@ -468,7 +520,10 @@ class User(TWNDBModel):
             # g.html.DIV(class_="content")
             for i, scope in enumerate(scopes):
                 g.html.P()
-                g.html.T('<span class="material-icons-outlined">view_in_ar</span>&nbsp;&nbsp;')
+                g.html.T(
+                    "<span"
+                    ' class="material-icons-outlined">view_in_ar</span>&nbsp;&nbsp;'
+                )
                 g.html.T(definitions.SIGNINSCOPES[scope]["name"])
                 g.html._P()
             # g.html._DIV()  # .content
@@ -483,12 +538,19 @@ class User(TWNDBModel):
         return incompleteData
 
     def editPermission(self, propertyNames=[]):
-        allowed = list(set(["name", "email", "emailToChange"]) | set(self.invoiceFields))
+        allowed = list(
+            set(["name", "email", "emailToChange"]) | set(self.invoiceFields)
+        )
         overlap = list(set(allowed) & set(propertyNames))
         return overlap and g.user == self
 
     def viewPermission(self, methodName):
-        return methodName in ("accountSubscriptionsView", "userAccountView", "editScopeView", "rawJSONDataView")
+        return methodName in (
+            "accountSubscriptionsView",
+            "userAccountView",
+            "editScopeView",
+            "rawJSONDataView",
+        )
 
     def checkPassword(self, password):
         return bcrypt.checkpw(password.encode(), self.passwordHash.encode())
@@ -546,9 +608,13 @@ class User(TWNDBModel):
 
     def stripeUpdateSubscriptions(self):
         if typeworldserver.STRIPELIVE:
-            self.stripeSubscriptions = stripe.Subscription.list(customer=self.stripeGetCustomerId(), status="all")
+            self.stripeSubscriptions = stripe.Subscription.list(
+                customer=self.stripeGetCustomerId(), status="all"
+            )
         else:
-            self.stripeTestSubscriptions = stripe.Subscription.list(customer=self.stripeGetCustomerId(), status="all")
+            self.stripeTestSubscriptions = stripe.Subscription.list(
+                customer=self.stripeGetCustomerId(), status="all"
+            )
         self.put()
 
     def stripeSubscriptionByProductID(self, productID, statuses=[]):
@@ -573,14 +639,22 @@ class User(TWNDBModel):
 
         product = billing_stripe.stripeProducts[productID]
 
-        if g.form._get("testScenario") == "simulateTestUser1IsPro" and self.email == "test1@type.world":
+        if (
+            g.form._get("testScenario") == "simulateTestUser1IsPro"
+            and self.email == "test1@type.world"
+        ):
             return True
-        if g.form._get("testScenario") == "simulateTestUser2IsPro" and self.email == "test2@type.world":
+        if (
+            g.form._get("testScenario") == "simulateTestUser2IsPro"
+            and self.email == "test2@type.world"
+        ):
             return True
 
         # Test User
         if product["allowTestUsers"]:
-            if TestUserForAPIEndpoint.query(TestUserForAPIEndpoint.userKey == self.key).count():
+            if TestUserForAPIEndpoint.query(
+                TestUserForAPIEndpoint.userKey == self.key
+            ).count():
                 return True
 
         subscription = self.stripeSubscriptionByProductID(productID)
@@ -608,7 +682,9 @@ class User(TWNDBModel):
                 and stripeCustomer.invoice_settings
                 and stripeCustomer.invoice_settings.default_payment_method
             ):
-                return stripe.PaymentMethod.retrieve(stripeCustomer.invoice_settings.default_payment_method)
+                return stripe.PaymentMethod.retrieve(
+                    stripeCustomer.invoice_settings.default_payment_method
+                )
 
     def stripeSubscriptionPreviousRunningPeriodDays(self, productID):
         """
@@ -690,8 +766,14 @@ class User(TWNDBModel):
             return False, "The new email address is identical with the old one."
 
         if self.emailToChange:
-            previousUser = User.query(User.email == self.emailToChange).get(read_consistency=ndb.STRONG)
-            if previousUser and previousUser.email == self.emailToChange and self != previousUser:
+            previousUser = User.query(User.email == self.emailToChange).get(
+                read_consistency=ndb.STRONG
+            )
+            if (
+                previousUser
+                and previousUser.email == self.emailToChange
+                and self != previousUser
+            ):
                 self.emailToChange = None
                 return False, f"The email address {self.emailToChange} already exists."
 
@@ -772,7 +854,10 @@ class User(TWNDBModel):
         def paymentMethodForUser():
             pm = []
             for paymentMethod in paymentMethods:
-                if paymentMethod["countries"] == "all" or self.invoiceCountry in paymentMethod["countries"]:
+                if (
+                    paymentMethod["countries"] == "all"
+                    or self.invoiceCountry in paymentMethod["countries"]
+                ):
                     pm.append(paymentMethod)
             return pm
 
@@ -806,7 +891,9 @@ class User(TWNDBModel):
                 g.html.P()
                 g.html.T("Account Holder Name")
                 g.html.BR()
-                g.html.INPUT(type="text", name="account-holder-name", id="account-holder-name")
+                g.html.INPUT(
+                    type="text", name="account-holder-name", id="account-holder-name"
+                )
                 g.html._P()
             g.html.P()
             if paymentMethod["inputName"]:
@@ -862,7 +949,10 @@ class User(TWNDBModel):
         oauth = self.oauth("billingaddress")
         if oauth["missing_required_data"]:
             g.html.P(class_="warning", id="adblockerwarning")
-            g.html.T('<span class="material-icons-outlined">error_outline</span> Billing address is incomplete')
+            g.html.T(
+                '<span class="material-icons-outlined">error_outline</span> Billing'
+                " address is incomplete"
+            )
             g.html._P()
         else:
             g.html.P()
@@ -874,7 +964,9 @@ class User(TWNDBModel):
             g.html._P()
 
         g.html.P()
-        self.edit(text="Edit Billing Address", button=True, propertyNames=self.invoiceFields)
+        self.edit(
+            text="Edit Billing Address", button=True, propertyNames=self.invoiceFields
+        )
         g.html._P()
 
         g.html.separator()
@@ -891,12 +983,17 @@ class User(TWNDBModel):
 
         if oauth["missing_required_data"]:
             g.html.P(class_="warning", id="adblockerwarning")
-            g.html.T('<span class="material-icons-outlined">error_outline</span> Billing address is incomplete')
+            g.html.T(
+                '<span class="material-icons-outlined">error_outline</span> Billing'
+                " address is incomplete"
+            )
             g.html._P()
         else:
 
             if paymentMethod:
-                g.html.DIV(id="paymentMethod")  # , class_="hidden" if not paymentMethod else ""
+                g.html.DIV(
+                    id="paymentMethod"
+                )  # , class_="hidden" if not paymentMethod else ""
 
                 if paymentMethod.type == "card":
                     g.html.P()
@@ -911,14 +1008,19 @@ class User(TWNDBModel):
                 elif paymentMethod.type == "sepa_debit":
                     # print(paymentMethod)
                     g.html.P()
-                    g.html.T(f"IBAN ({paymentMethod.sepa_debit.country} •••• {paymentMethod.sepa_debit.last4})")
+                    g.html.T(
+                        f"IBAN ({paymentMethod.sepa_debit.country} ••••"
+                        f" {paymentMethod.sepa_debit.last4})"
+                    )
                     g.html.BR()
                     g.html.T(f"Account Holder: {paymentMethod.billing_details.name}")
                     g.html._P()
 
                     if paymentMethod.billing_details.email != self.email:
                         g.html.P()
-                        g.html.T(f"Account Email: {paymentMethod.billing_details.email}")
+                        g.html.T(
+                            f"Account Email: {paymentMethod.billing_details.email}"
+                        )
                         g.html._P()
                         g.html.P(class_="warning")
                         g.html.T(
@@ -927,15 +1029,18 @@ class User(TWNDBModel):
                             " Make sure to update the payment method after you’ve"
                             " changed your Type.World account’s email address to"
                             " receive payment related information on the new email"
-                            " address (your account’s new email address will be linked)."
-                            " This process cannot be automated."
+                            " address (your account’s new email address will be"
+                            " linked). This process cannot be automated."
                         )
                         g.html._P()
 
                 g.html.P()
                 g.html.A(
                     class_="button",
-                    onclick="enableButtons(); $('#updatePaymentMethod').show(); $('#paymentMethod').hide();",
+                    onclick=(
+                        "enableButtons(); $('#updatePaymentMethod').show();"
+                        " $('#paymentMethod').hide();"
+                    ),
                 )
                 g.html.T("Update Payment Method")
                 g.html._A()
@@ -944,13 +1049,17 @@ class User(TWNDBModel):
                 g.html._DIV()  # paymentMethod
 
                 # Update Payment method
-                g.html.DIV(id="updatePaymentMethod", class_="hidden" if paymentMethod else "")
+                g.html.DIV(
+                    id="updatePaymentMethod", class_="hidden" if paymentMethod else ""
+                )
 
                 # Payment
                 self.stripeElement()
 
                 g.html.P()
-                g.html.A(class_="button", onclick="enableButtons(); updatePaymentMethod();")
+                g.html.A(
+                    class_="button", onclick="enableButtons(); updatePaymentMethod();"
+                )
                 g.html.T("Update Payment Method")
                 g.html._A()
                 g.html._P()
@@ -1005,7 +1114,10 @@ class User(TWNDBModel):
             if taxStatus == "none":
                 g.html.T("Tax: Add 19% German VAT")
             elif taxStatus == "reverse":
-                g.html.T(f"Tax: Reverse Charge; you owe VAT to {definitions.COUNTRIES_DICT[g.user.invoiceCountry]}")
+                g.html.T(
+                    "Tax: Reverse Charge; you owe VAT to"
+                    f" {definitions.COUNTRIES_DICT[g.user.invoiceCountry]}"
+                )
             elif taxStatus == "exempt":
                 g.html.T("Tax: No VAT owed")
 
@@ -1025,16 +1137,28 @@ class User(TWNDBModel):
                     g.html.T(f"Trial ends: {fromtimestamp(subscription['trial_end'])}")
                 if subscription["status"] == "active":
                     g.html.BR()
-                    g.html.T(f"Current billing period ends: {fromtimestamp(subscription['current_period_end'])}")
-                if self.stripeSubscriptionReceivesService(productID) and subscription["status"] == "canceled":
+                    g.html.T(
+                        "Current billing period ends:"
+                        f" {fromtimestamp(subscription['current_period_end'])}"
+                    )
+                if (
+                    self.stripeSubscriptionReceivesService(productID)
+                    and subscription["status"] == "canceled"
+                ):
                     g.html.BR()
-                    g.html.T(f"Receives service until: {fromtimestamp(subscription['current_period_end'])}")
+                    g.html.T(
+                        "Receives service until:"
+                        f" {fromtimestamp(subscription['current_period_end'])}"
+                    )
                 g.html._P()
 
             else:
                 if stripeSubscriptionPreviousRunningPeriodDays:
                     g.html.P(style="color: #999;")
-                    g.html.T(f"Previously active: {stripeSubscriptionPreviousRunningPeriodDays} day(s)")
+                    g.html.T(
+                        "Previously active:"
+                        f" {stripeSubscriptionPreviousRunningPeriodDays} day(s)"
+                    )
                     g.html._P()
 
             # Upcoming invoice
@@ -1096,7 +1220,9 @@ class User(TWNDBModel):
                         g.html.TR()
                         g.html.TD()
                         g.html.B()
-                        g.html.T(f"{invoice['default_tax_rates'][0]['percentage']}% VAT")
+                        g.html.T(
+                            f"{invoice['default_tax_rates'][0]['percentage']}% VAT"
+                        )
                         g.html._B()
                         g.html._TD()
                         g.html.TD()
@@ -1140,14 +1266,19 @@ class User(TWNDBModel):
                 g.html._P()
             else:
                 g.html.P()
-                method = "createAdditionalSubscription" if paymentMethod else "createInitialSubscription"
+                method = (
+                    "createAdditionalSubscription"
+                    if paymentMethod
+                    else "createInitialSubscription"
+                )
                 g.html.A(
-                    class_="button " + ("dead" if not self.invoiceDataComplete() else ""),
+                    class_="button "
+                    + ("dead" if not self.invoiceDataComplete() else ""),
                     onclick=(
-                        "enableButtons(); if(confirm('Are you sure you want to subscribe to this product? Billing"
-                        " will be activated after"
-                        f" this.')){{{method}('{productID}');}}"
-                        " else { enableButtons(); }"
+                        "enableButtons(); if(confirm('Are you sure you want to"
+                        " subscribe to this product? Billing will be activated after"
+                        f" this.')){{{method}('{productID}');}} else {{"
+                        " enableButtons(); }"
                     ),
                 )
                 g.html.T("Subscribe to Plan")
@@ -1176,7 +1307,10 @@ class User(TWNDBModel):
         g.html.BR()
         if self.emailToChange:
             g.html.SPAN(class_="warning")
-            g.html.T(f"▲ The email address {self.emailToChange} is awaiting verification. Please check your inbox.")
+            g.html.T(
+                f"▲ The email address {self.emailToChange} is awaiting verification."
+                " Please check your inbox."
+            )
             g.html._SPAN()
             g.html.BR()
         self.edit(
@@ -1228,14 +1362,26 @@ class User(TWNDBModel):
         if key:
             deletes.extend(AppInstance.query(ancestor=key).fetch(keys_only=True))
             deletes.extend(Subscription.query(ancestor=key).fetch(keys_only=True))
-            deletes.extend(Subscription.query(Subscription.invitedByUserKey == key).fetch(keys_only=True))
-            deletes.extend(TestUserForAPIEndpoint.query(TestUserForAPIEndpoint.userKey == key).fetch(keys_only=True))
-            for endpoint in APIEndpoint.query(APIEndpoint.userKey == key).fetch(read_consistency=ndb.STRONG):
+            deletes.extend(
+                Subscription.query(Subscription.invitedByUserKey == key).fetch(
+                    keys_only=True
+                )
+            )
+            deletes.extend(
+                TestUserForAPIEndpoint.query(
+                    TestUserForAPIEndpoint.userKey == key
+                ).fetch(keys_only=True)
+            )
+            for endpoint in APIEndpoint.query(APIEndpoint.userKey == key).fetch(
+                read_consistency=ndb.STRONG
+            ):
                 endpoint.userKey = None
                 puts.append(endpoint)
 
                 # TODO: Delete Stripe subscriptions
-            deletes.extend(OAuthToken.query(OAuthToken.userKey == key).fetch(keys_only=True))
+            deletes.extend(
+                OAuthToken.query(OAuthToken.userKey == key).fetch(keys_only=True)
+            )
 
         if puts:
             ndb.put_multi(puts)
@@ -1249,24 +1395,39 @@ class User(TWNDBModel):
 
     def announceChange(self, sourceAnonymousAppID=""):
 
+        topic_path = pubsub_publisher.topic_path(
+            definitions.GC_PROJECT_ID, "user-updates"
+        )
+
         parameters = {}
         parameters["topic"] = self.pubSubTopicID()
         parameters["command"] = "pullUpdates"
         if sourceAnonymousAppID:
             parameters["sourceAnonymousAppID"] = sourceAnonymousAppID
 
-        success, response = mq.announceToMQ(parameters)
+        data = json.dumps(parameters).encode("utf-8")
+        future = pubsub_publisher.publish(topic_path, data=data)
 
-        if success:
+        if future.result():
             return True, None
         else:
-            return False, response
+            return False, "future.result() failed"
 
     def appInstances(self):
-        return AppInstance.query(ancestor=self.key).order(-AppInstance.lastUsed).fetch(read_consistency=ndb.STRONG)  #
+        return (
+            AppInstance.query(ancestor=self.key)
+            .order(-AppInstance.lastUsed)
+            .fetch(read_consistency=ndb.STRONG)
+        )  #
 
     def subscriptions(self):
-        return [x for x in Subscription.query(ancestor=self.key).fetch(read_consistency=ndb.STRONG) if x.key.id()]
+        return [
+            x
+            for x in Subscription.query(ancestor=self.key).fetch(
+                read_consistency=ndb.STRONG
+            )
+            if x.key.id()
+        ]
 
     def subscriptionByURL(self, url, subscriptions=None):
         if subscriptions is None:
@@ -1288,7 +1449,11 @@ class User(TWNDBModel):
     def regularSubscriptions(self, subscriptions=None):
         if subscriptions is None:
             subscriptions = self.subscriptions()
-        return [x for x in subscriptions if x and x.confirmed is True and x.type != "invitation"]
+        return [
+            x
+            for x in subscriptions
+            if x and x.confirmed is True and x.type != "invitation"
+        ]
 
     def subscriptionInvitations(self, subscriptions=None):
         if subscriptions is None:
@@ -1296,10 +1461,14 @@ class User(TWNDBModel):
         return [x for x in subscriptions if x and x.type == "invitation"]
 
     def APIEndpoints(self):
-        return APIEndpoint.query(APIEndpoint.userKey == self.key).fetch(read_consistency=ndb.STRONG)
+        return APIEndpoint.query(APIEndpoint.userKey == self.key).fetch(
+            read_consistency=ndb.STRONG
+        )
 
     def sentInvitations(self):
-        return Subscription.query(Subscription.invitedByUserKey == self.key).fetch(read_consistency=ndb.STRONG)
+        return Subscription.query(Subscription.invitedByUserKey == self.key).fetch(
+            read_consistency=ndb.STRONG
+        )
 
     def sendEmailVerificationLink(self, redirectURL=None):
 
@@ -1348,17 +1517,17 @@ IMPORTANT NOTE: Make sure that the link opens in the same browser that you creat
 
     def isTranslator(self):
         if g.user:
-            if translations.Translation_User.query(translations.Translation_User.userKey == self.key).fetch(
-                read_consistency=ndb.STRONG
-            ):
+            if translations.Translation_User.query(
+                translations.Translation_User.userKey == self.key
+            ).fetch(read_consistency=ndb.STRONG):
                 return True
 
         return False
 
     def isTranslatorForLocales(self):
-        return translations.Translation_User.query(translations.Translation_User.userKey == self.key).fetch(
-            read_consistency=ndb.STRONG
-        )
+        return translations.Translation_User.query(
+            translations.Translation_User.userKey == self.key
+        ).fetch(read_consistency=ndb.STRONG)
 
 
 class AppInstance(TWNDBModel):
@@ -1457,7 +1626,10 @@ class AppInstance(TWNDBModel):
             ]
 
             for modelName, fileName in models:
-                if self.machineModelIdentifier and self.machineModelIdentifier.startswith(modelName):
+                if (
+                    self.machineModelIdentifier
+                    and self.machineModelIdentifier.startswith(modelName)
+                ):
                     return "apple/" + fileName
 
         return "other/pc.svg"
@@ -1480,17 +1652,21 @@ class AppInstance(TWNDBModel):
                         return False, client
 
                     client.set("typeworldUserAccount", user.publicID())
-                    success, message, publisher, subscription = client.addSubscription(subscription.url, remotely=True)
+                    success, message, publisher, subscription = client.addSubscription(
+                        subscription.url, remotely=True
+                    )
                     if not success:
                         return (
                             False,
-                            f"Couldn’t revoke app instance. Adding subscription for revocation returned: {message}",
+                            "Couldn’t revoke app instance. Adding subscription for"
+                            f" revocation returned: {message}",
                         )
                     success, message = client.uninstallAllProtectedFonts(dryRun=True)
                     if not success:
                         return (
                             False,
-                            f"Couldn’t revoke app instance. uninstallAllProtectedFonts() returned: {message}",
+                            "Couldn’t revoke app instance."
+                            f" uninstallAllProtectedFonts() returned: {message}",
                         )
             else:
                 return False, "noAPIEndpoint"
@@ -1570,7 +1746,9 @@ class APIEndpoint(TWNDBModel):
 
     def client(self):
         if "GAE_VERSION" in os.environ:
-            mothership = f"https://{os.environ['GAE_VERSION']}-dot-typeworld2.appspot.com/v1"
+            mothership = (
+                f"https://{os.environ['GAE_VERSION']}-dot-typeworld2.appspot.com/v1"
+            )
             client = typeworld.client.APIClient(
                 online=True,
                 mothership=mothership,
@@ -1629,7 +1807,9 @@ class APIEndpoint(TWNDBModel):
         # if self.userKey:
         #     users.append(TestUserForAPIEndpoint(userKey=self.userKey))
         # Add others
-        for user in TestUserForAPIEndpoint.query(ancestor=self.key).fetch(read_consistency=ndb.STRONG):
+        for user in TestUserForAPIEndpoint.query(ancestor=self.key).fetch(
+            read_consistency=ndb.STRONG
+        ):
             if user:
                 users.append(user)
         return users
@@ -1645,20 +1825,31 @@ class APIEndpoint(TWNDBModel):
 
         # Stripe Subscriptions
         user = self.user()
-        return user.stripeSubscriptionReceivesService("world.type.professional_publisher_plan")
+        return user.stripeSubscriptionReceivesService(
+            "world.type.professional_publisher_plan"
+        )
 
     def billNonCumulativeMetrics(self):
 
         # Stripe subscription
         user = self.user()
         print(self.key, user.email)
-        stripeSubscription = user.stripeSubscriptionByProductID("world.type.professional_publisher_plan")
+        stripeSubscription = user.stripeSubscriptionByProductID(
+            "world.type.professional_publisher_plan"
+        )
         if not stripeSubscription:
-            return False, "APIEndpoint.billNonCumulativeMetrics():unknownStripeSubscription"
-        assert stripeSubscription["current_period_start"], "No invoice period start value available"
+            return (
+                False,
+                "APIEndpoint.billNonCumulativeMetrics():unknownStripeSubscription",
+            )
+        assert stripeSubscription[
+            "current_period_start"
+        ], "No invoice period start value available"
 
         # Users
-        subscriptions = Subscription.query(Subscription.endpointKey == self.key).fetch(read_consistency=ndb.STRONG)
+        subscriptions = Subscription.query(Subscription.endpointKey == self.key).fetch(
+            read_consistency=ndb.STRONG
+        )
         userKeys = []
         activeUsers = []
         for subscription in subscriptions:
@@ -1671,13 +1862,19 @@ class APIEndpoint(TWNDBModel):
         # See if they were active
         for activeUser in users:
             if activeUser:
-                if activeUser.lastSeenOnline and activeUser.lastSeenOnline >= datetime.datetime.fromtimestamp(
-                    stripeSubscription["current_period_start"]
+                if (
+                    activeUser.lastSeenOnline
+                    and activeUser.lastSeenOnline
+                    >= datetime.datetime.fromtimestamp(
+                        stripeSubscription["current_period_start"]
+                    )
                 ):
                     # print("Last seen online:", user)
                     activeUsers.append(activeUser)
 
-        success, message = user.bill("world.type.professional_publisher_plan", "users", quantity=len(activeUsers))
+        success, message = user.bill(
+            "world.type.professional_publisher_plan", "users", quantity=len(activeUsers)
+        )
         if not success:
             return False, message
 
@@ -1700,7 +1897,10 @@ class APIEndpoint(TWNDBModel):
         g.html.T("</style>")
 
         g.html.P()
-        g.html.T("Last 20 items are shown. Records older than April 13th 2021 are not available.")
+        g.html.T(
+            "Last 20 items are shown. Records older than April 13th 2021 are not"
+            " available."
+        )
         g.html._P()
 
         buttonColor = "purple"
@@ -1714,7 +1914,9 @@ class APIEndpoint(TWNDBModel):
         # g.html._P()
 
         # Unique used commands
-        categories = APILog.query(ancestor=self.key, distinct_on=["command"]).fetch(read_consistency=ndb.STRONG)
+        categories = APILog.query(ancestor=self.key, distinct_on=["command"]).fetch(
+            read_consistency=ndb.STRONG
+        )
         commands = sorted(list(set([data.command for data in categories])))
 
         # g.html.P()
@@ -1736,7 +1938,11 @@ class APIEndpoint(TWNDBModel):
                 .fetch(20, read_consistency=ndb.STRONG)
             )
         else:
-            logs = APILog.query(ancestor=self.key).order(-APILog.touched).fetch(20, read_consistency=ndb.STRONG)
+            logs = (
+                APILog.query(ancestor=self.key)
+                .order(-APILog.touched)
+                .fetch(20, read_consistency=ndb.STRONG)
+            )
         if logs:
 
             for log in logs:
@@ -1798,7 +2004,9 @@ class TestUserForAPIEndpoint(TWNDBModel):
     userKey = web.KeyProperty(required=True)
 
     def deletePermission(self):
-        return g.user == self.key.parent().get(read_consistency=ndb.STRONG).userKey.get(read_consistency=ndb.STRONG)
+        return g.user == self.key.parent().get(read_consistency=ndb.STRONG).userKey.get(
+            read_consistency=ndb.STRONG
+        )
 
 
 class APIEndpointContract(TWNDBModel):
@@ -1869,9 +2077,15 @@ class APIEndpointContract(TWNDBModel):
 
                 description = category["name"]
                 quantity = quantityByCategory[incidentCategory]
-                freeQuota = category["tiers"][0]["quantity"] if category["tiers"][0]["price"] == 0 else 0
+                freeQuota = (
+                    category["tiers"][0]["quantity"]
+                    if category["tiers"][0]["price"] == 0
+                    else 0
+                )
                 # quantityAfterFreeQuota = max(0, (quantity - freeQuota))
-                singlePrice = roundDecimals(self.calculatePrices(incidentCategory, quantity))
+                singlePrice = roundDecimals(
+                    self.calculatePrices(incidentCategory, quantity)
+                )
                 tiers = []
                 total = 0
 
@@ -1963,7 +2177,9 @@ class RawSubscription(TWNDBModel):
     foundries = web.IntegerProperty(default=0)
     contentLastUpdated = web.DateTimeProperty()
     installableFontsCommand = web.JsonProperty()
-    lastErrorReported = web.DateTimeProperty()  # by api.type.world/v1/reportAPIEndpointError
+    lastErrorReported = (
+        web.DateTimeProperty()
+    )  # by api.type.world/v1/reportAPIEndpointError
 
     def __repr__(self):
         return f"<RawSubscription '{self.key.urlsafe().decode()}'>"
@@ -1976,9 +2192,15 @@ class RawSubscription(TWNDBModel):
         """
         Short URL without secretKey and accessToken
         """
-        return "subscription-%s" % urllib.parse.quote_plus(typeworld.client.URL(self.secretURL).shortUnsecretURL())
+        return "subscription-%s" % urllib.parse.quote_plus(
+            typeworld.client.URL(self.secretURL).shortUnsecretURL()
+        )
 
     def announceChange(self, delay, sourceAnonymousAppID):
+
+        topic_path = pubsub_publisher.topic_path(
+            definitions.GC_PROJECT_ID, "subscription-updates"
+        )
 
         parameters = {}
         parameters["topic"] = self.pubSubTopicID()
@@ -1988,12 +2210,13 @@ class RawSubscription(TWNDBModel):
         parameters["sourceAnonymousAppID"] = sourceAnonymousAppID
         parameters["delay"] = int(delay)
 
-        success, response = mq.announceToMQ(parameters)
+        data = json.dumps(parameters).encode("utf-8")
+        future = pubsub_publisher.publish(topic_path, data=data)
 
-        if success:
+        if future.result():
             return True, None
         else:
-            return False, response
+            return False, "future.result() failed"
 
     def client(self, withAPIKey=True):
 
@@ -2032,7 +2255,10 @@ class RawSubscription(TWNDBModel):
         if (
             force
             or not self.contentLastUpdated
-            or (self.contentLastUpdated and ((helpers.now() - self.contentLastUpdated).seconds > 24 * 60 * 60))
+            or (
+                self.contentLastUpdated
+                and ((helpers.now() - self.contentLastUpdated).seconds > 24 * 60 * 60)
+            )
         ):  # 1 day
 
             # start = time.time()
@@ -2041,7 +2267,9 @@ class RawSubscription(TWNDBModel):
             if not success:
                 return False, client, {}
 
-            success, message, publisher, subscription = client.addSubscription(self.secretURL, remotely=True)
+            success, message, publisher, subscription = client.addSubscription(
+                self.secretURL, remotely=True
+            )
             if not success:
                 if type(message) in (
                     typeworld.api.MultiLanguageText,
@@ -2074,7 +2302,9 @@ class RawSubscription(TWNDBModel):
             ) = subscription.protocol.installableFontsCommand()
             if not success:
                 return False, installableFontsCommand, {}
-            self.installableFontsCommand = installableFontsCommand.dumpDict(validate=False)
+            self.installableFontsCommand = installableFontsCommand.dumpDict(
+                validate=False
+            )
 
             # Save canonicalURL
             success, endpointCommand = subscription.protocol.endpointCommand()
@@ -2088,7 +2318,9 @@ class RawSubscription(TWNDBModel):
 
             # Save subscription name
             if installableFontsCommand.name.getText():
-                self.subscriptionName = installableFontsCommand.name.dumpDict(validate=False)
+                self.subscriptionName = installableFontsCommand.name.dumpDict(
+                    validate=False
+                )
 
             # Changes
             if oldInstallableFontsCommand:
@@ -2125,7 +2357,10 @@ class RawSubscription(TWNDBModel):
 
     def APIEndpoint(self):
 
-        if not self.canonicalURL or typeworld.client.urlIsValid(self.canonicalURL)[0] is False:
+        if (
+            not self.canonicalURL
+            or typeworld.client.urlIsValid(self.canonicalURL)[0] is False
+        ):
 
             success, protocol = typeworld.client.getProtocol(self.secretURL)
             if not success:
@@ -2144,8 +2379,15 @@ class RawSubscription(TWNDBModel):
             success = True
             message = None
 
-        if success and self.canonicalURL or success is False and message == "notUpdated":
-            return True, APIEndpoint.get_or_insert(self.canonicalURL)  # , read_consistency=ndb.STRONG
+        if (
+            success
+            and self.canonicalURL
+            or success is False
+            and message == "notUpdated"
+        ):
+            return True, APIEndpoint.get_or_insert(
+                self.canonicalURL
+            )  # , read_consistency=ndb.STRONG
         else:
             return False, message
 
@@ -2166,7 +2408,9 @@ class RawSubscription(TWNDBModel):
             )
 
         if self.subscriptionName:
-            body += "Subscription Name: %s\n" % (typeworld.api.MultiLanguageText(dict=self.subscriptionName).getText())
+            body += "Subscription Name: %s\n" % (
+                typeworld.api.MultiLanguageText(dict=self.subscriptionName).getText()
+            )
         if self.foundries != 0 and self.families != 0 and self.fonts != 0:
             body += "With %s font/s in %s family/ies from %s foundry/ies\n" % (
                 self.fonts,
@@ -2230,7 +2474,8 @@ class Subscription(TWNDBModel):
                 return False, endpoint
 
             invitedByUser = (
-                self.invitedByUserKey or self.invitedByAPIEndpointKey.get(read_consistency=ndb.STRONG).userKey
+                self.invitedByUserKey
+                or self.invitedByAPIEndpointKey.get(read_consistency=ndb.STRONG).userKey
             ).get(read_consistency=ndb.STRONG)
 
             body = f"""\
@@ -2278,7 +2523,8 @@ Open the Type.World App now to access the fonts in the subscription: typeworldap
             if not getEndpointSuccess:
                 return False, endpoint
             invitedByUser = (
-                self.invitedByUserKey or self.invitedByAPIEndpointKey.get(read_consistency=ndb.STRONG).userKey
+                self.invitedByUserKey
+                or self.invitedByAPIEndpointKey.get(read_consistency=ndb.STRONG).userKey
             ).get(read_consistency=ndb.STRONG)
             reason = "accepted"
 
@@ -2331,7 +2577,8 @@ Here are the details:
             if not getEndpointSuccess:
                 return False, endpoint
             invitedByUser = (
-                self.invitedByUserKey or self.invitedByAPIEndpointKey.get(read_consistency=ndb.STRONG).userKey
+                self.invitedByUserKey
+                or self.invitedByAPIEndpointKey.get(read_consistency=ndb.STRONG).userKey
             ).get(read_consistency=ndb.STRONG)
 
             body = f"""\
@@ -2372,27 +2619,31 @@ Here are the details:
             if not getEndpointSuccess:
                 return False, endpoint
             invitedByUser = (
-                self.invitedByUserKey or self.invitedByAPIEndpointKey.get(read_consistency=ndb.STRONG).userKey
+                self.invitedByUserKey
+                or self.invitedByAPIEndpointKey.get(read_consistency=ndb.STRONG).userKey
             ).get(read_consistency=ndb.STRONG)
 
             body = f"Hi {user.name} ({user.email}),\n\n"
 
             if (
                 self.invitationRevokedByUserKey == self.invitedByUserKey
-                or self.invitationRevokedByAPIEndpointKey == self.invitedByAPIEndpointKey
+                or self.invitationRevokedByAPIEndpointKey
+                == self.invitedByAPIEndpointKey
             ):
 
                 body += (
-                    f"the user {invitedByUser.name} ({invitedByUser.email}) who has invited you share a font"
-                    f" subscription has {reason} your invitation.\n"
+                    f"the user {invitedByUser.name} ({invitedByUser.email}) who has"
+                    f" invited you share a font subscription has {reason} your"
+                    " invitation.\n"
                 )
 
             else:
 
                 body += (
-                    "the original inviter to the subscription to which you’ve been invited by"
-                    f" {invitedByUser.name} ({invitedByUser.email}) has revoked the invitation.\nSubsequently, your"
-                    " invitation to this subscription has also been revoked.\n"
+                    "the original inviter to the subscription to which you’ve been"
+                    f" invited by {invitedByUser.name} ({invitedByUser.email}) has"
+                    " revoked the invitation.\nSubsequently, your invitation to this"
+                    " subscription has also been revoked.\n"
                 )
 
             body += "Here are the details:\n\n"
@@ -2484,8 +2735,12 @@ class SignInApp(TWNDBModel):
     name = web.StringProperty(required=True, verbose_name="Application/Website Name")
     websiteURL = web.HTTPURLProperty(required=True, verbose_name="Website URL")
     logoURL = web.HTTPURLProperty(required=True, verbose_name="Logo URL")
-    redirectURLs = web.TextProperty(required=True, verbose_name="Redirect URLs (one per line)")
-    oauthScopes = web.ChoicesProperty(choices=definitions.SIGNINSCOPES, verbose_name="OAuth Scopes")
+    redirectURLs = web.TextProperty(
+        required=True, verbose_name="Redirect URLs (one per line)"
+    )
+    oauthScopes = web.ChoicesProperty(
+        choices=definitions.SIGNINSCOPES, verbose_name="OAuth Scopes"
+    )
 
     # Internal
     userKey = web.KeyProperty(required=True)
@@ -2508,7 +2763,14 @@ class SignInApp(TWNDBModel):
         return False
 
     def editPermission(self, propertyNames=[]):
-        allowed = ["name", "websiteURL", "logoURL", "redirectURLs", "userKey", "oauthScopes"]
+        allowed = [
+            "name",
+            "websiteURL",
+            "logoURL",
+            "redirectURLs",
+            "userKey",
+            "oauthScopes",
+        ]
         return (
             (propertyNames and set(allowed) & set(propertyNames)) or not propertyNames
         ) and g.user.key == self.userKey
@@ -2538,19 +2800,27 @@ class SignInApp(TWNDBModel):
         if self.redirectURLs:
             redirectURL = [x for x in self.redirectURLs.splitlines() if x][0]
         g.html.T(
-            'Example of Sign-In URL (replace <span style="color: red;">red</span> with your actual values):'
-            " <pre>https://type.world/signin<br />"
-            f"?client_id={self.clientID}<br />"
-            "&response_type=code<br />"
-            f'&redirect_uri=<span style="color: red;">{urllib.parse.quote_plus(redirectURL)}</span><br />'
-            f'&scope={",".join(self.oauthScopesList())}<br />'
-            '&state=<span style="color: red;">__YOUR_STATE__</span></pre>'
+            'Example of Sign-In URL (replace <span style="color: red;">red</span> with'
+            " your actual values): <pre>https://type.world/signin<br"
+            f" />?client_id={self.clientID}<br />&response_type=code<br"
+            ' />&redirect_uri=<span style="color:'
+            f' red;">{urllib.parse.quote_plus(redirectURL)}</span><br'
+            f' />&scope={",".join(self.oauthScopesList())}<br />&state=<span'
+            ' style="color: red;">__YOUR_STATE__</span></pre>'
         )
         g.html._P()
         # g.html._DIV()
         g.html._TD()
         g.html.TD(style="width: 20%;")
-        self.edit(propertyNames=["name", "websiteURL", "logoURL", "redirectURLs", "oauthScopes"])
+        self.edit(
+            propertyNames=[
+                "name",
+                "websiteURL",
+                "logoURL",
+                "redirectURLs",
+                "oauthScopes",
+            ]
+        )
         self.delete(text='<span class="material-icons-outlined">delete</span>')
         g.html._TD()
         g.html._TR()
@@ -2560,10 +2830,17 @@ class SignInApp(TWNDBModel):
 
         # Stripe subscription
         user = self.userKey.get()
-        stripeSubscription = user.stripeSubscriptionByProductID("world.type.signin_service_plan")
+        stripeSubscription = user.stripeSubscriptionByProductID(
+            "world.type.signin_service_plan"
+        )
         if not stripeSubscription:
-            return False, "SignInApp.billNonCumulativeMetrics():unknownStripeSubscription"
-        assert stripeSubscription["current_period_start"], "No invoice period start value available"
+            return (
+                False,
+                "SignInApp.billNonCumulativeMetrics():unknownStripeSubscription",
+            )
+        assert stripeSubscription[
+            "current_period_start"
+        ], "No invoice period start value available"
 
         basic = 0
         extended = 0
@@ -2571,7 +2848,10 @@ class SignInApp(TWNDBModel):
         # Tokens
         tokens = OAuthToken.query(
             OAuthToken.signinAppKey == self.key,
-            OAuthToken.lastAccess >= datetime.datetime.fromtimestamp(stripeSubscription["current_period_start"]),
+            OAuthToken.lastAccess
+            >= datetime.datetime.fromtimestamp(
+                stripeSubscription["current_period_start"]
+            ),
         ).fetch(read_consistency=ndb.STRONG)
         for token in tokens:
             if token.oauthScopes == "account":
@@ -2579,10 +2859,16 @@ class SignInApp(TWNDBModel):
             else:
                 extended += 1
 
-        success, message = user.bill("world.type.signin_service_plan", "typeworldsignins_basic", quantity=basic)
+        success, message = user.bill(
+            "world.type.signin_service_plan", "typeworldsignins_basic", quantity=basic
+        )
         print(success, message)
 
-        success, message = user.bill("world.type.signin_service_plan", "typeworldsignins_extended", quantity=extended)
+        success, message = user.bill(
+            "world.type.signin_service_plan",
+            "typeworldsignins_extended",
+            quantity=extended,
+        )
         print(success, message)
 
         return True, None
