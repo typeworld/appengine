@@ -3,7 +3,7 @@ runtime: python37
 instance_class: F2
 # scaling: see https://medium.com/google-cloud/app-engine-scheduler-settings-and-instance-count-4d1e669f33d5
 automatic_scaling:
-  min_instances: 1
+  # min_instances: 1
   max_instances: 1
   # max_concurrent_requests: 80 # standard: 10, max: 80
   # max_pending_latency: 8s

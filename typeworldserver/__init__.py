@@ -501,6 +501,11 @@ def cron_hourly():
     return Response("ok", mimetype="text/plain")
 
 
+@app.route("/cron/30minutely", methods=["GET", "POST"])
+def cron_30minutely():
+    return Response("ok", mimetype="text/plain")
+
+
 @app.route("/cron/10minutely", methods=["GET", "POST"])
 def cron_10minutely():
 
@@ -532,7 +537,6 @@ def cron_10minutely():
 
 @app.route("/cron/minutely", methods=["GET", "POST"])
 def cron_minutely():
-    mq.updateMQInstances()
     return Response("ok", mimetype="text/plain")
 
 

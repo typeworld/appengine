@@ -22,6 +22,7 @@ keyring
 lxml
 Markdown
 markdown2
+protobuf<4.0.0dev
 Pygments
 pyjwt
 pyzmq
