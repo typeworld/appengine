@@ -1,6 +1,5 @@
 # project
 import typeworldserver
-from typeworldserver import mq
 from typeworldserver import definitions
 from typeworldserver import classes
 from typeworldserver import helpers
@@ -13,7 +12,6 @@ import typeworld.client
 import time
 import urllib
 import re
-import random
 import json
 import semver
 from flask import abort, g, redirect, Response
@@ -52,10 +50,14 @@ def registerNewAPIEndpoint():
     # 	g.html.warning(message)
     # 	return g.html.generate(), 900
 
-    endpoint = classes.APIEndpoint.get_or_insert(g.form._get("canonicalURL"))  # , read_consistency=ndb.STRONG
+    endpoint = classes.APIEndpoint.get_or_insert(
+        g.form._get("canonicalURL")
+    )  # , read_consistency=ndb.STRONG
 
     if endpoint.userKey and endpoint.userKey != g.user.key:
-        g.html.warning("This API Endpoint is already registered with another user account.")
+        g.html.warning(
+            "This API Endpoint is already registered with another user account."
+        )
         return g.html.generate(), 900
 
     endpoint.userKey = g.user.key
@@ -66,7 +68,9 @@ def registerNewAPIEndpoint():
         g.html.SCRIPT()
         g.html.T(
             "AJAX('#stage', '%s');"
-            % helpers.addAttributeToURL(urllib.parse.unquote(g.form._get("reloadURL")), "inline=true")
+            % helpers.addAttributeToURL(
+                urllib.parse.unquote(g.form._get("reloadURL")), "inline=true"
+            )
         )
         g.html._SCRIPT()
 
@@ -77,7 +81,8 @@ userAccountTabs = [
     ["/account", '<span class="material-icons-outlined">account_circle</span> Account'],
     [
         "/account/signin",
-        '<span class="material-icons-outlined">app_registration</span> Sign-In Apps & Websites',
+        '<span class="material-icons-outlined">app_registration</span> Sign-In Apps &'
+        " Websites",
     ],
 ]
 
@@ -97,7 +102,11 @@ def account():
     g.html._area()
 
     g.html.T('<script src="https://js.stripe.com/v3/"></script>')
-    g.html.T('<script src="/static/js/billing-stripe.js?v=' + g.instanceVersion + '"></script>')
+    g.html.T(
+        '<script src="/static/js/billing-stripe.js?v='
+        + g.instanceVersion
+        + '"></script>'
+    )
 
     g.html.area("Pro User Subscription")
     g.user.container(
@@ -124,13 +133,16 @@ def account_signin():
     g.html.area("Sign-In Apps & Websites")
 
     tokens = classes.OAuthToken.query(
-        classes.OAuthToken.userKey == g.user.key, classes.OAuthToken.revoked == False  # noqa E712
+        classes.OAuthToken.userKey == g.user.key,
+        classes.OAuthToken.revoked == False,  # noqa E712
     ).fetch()
     if tokens:
         for token in tokens:
             app = token.getApp()
             g.html.P()
-            g.html.T(f'<b>{app.name}</b> at <a href="{app.websiteURL}">{app.websiteURL}</a>')
+            g.html.T(
+                f'<b>{app.name}</b> at <a href="{app.websiteURL}">{app.websiteURL}</a>'
+            )
             g.html.BR()
             g.html.T(
                 "Scopes:"
@@ -144,9 +156,11 @@ def account_signin():
             g.html.A(
                 class_="button",
                 onclick=(
-                    "if(confirm('Are you sure that you want to revoke this authorization? Hint: This will not delete"
-                    " data of yours that the app/website already has. But it will disable future access to that"
-                    f" data.')) {{ AJAX('#action', '/auth/revoketoken', {{'token': '{token.authToken}'}}); }}"
+                    "if(confirm('Are you sure that you want to revoke this"
+                    " authorization? Hint: This will not delete data of yours that the"
+                    " app/website already has. But it will disable future access to"
+                    " that data.')) { AJAX('#action', '/auth/revoketoken', {'token':"
+                    f" '{token.authToken}'}}); }}"
                 ),
             )
             g.html.T("Revoke This Authorization")
@@ -170,7 +184,9 @@ def addTestUserForAPIEndpoint():
     # Security
     if not g.user:
         return abort(401)
-    endpoint = classes.APIEndpoint.get_or_insert(g.form._get("canonicalURL"))  # , read_consistency=ndb.STRONG
+    endpoint = classes.APIEndpoint.get_or_insert(
+        g.form._get("canonicalURL")
+    )  # , read_consistency=ndb.STRONG
 
     # Endpoint doesn't exist
     if not endpoint:
@@ -181,13 +197,17 @@ def addTestUserForAPIEndpoint():
 
     # Process
     testUsersForAPIEndpoint = endpoint.testUsers()
-    testUsers = [x.userKey.get(read_consistency=ndb.STRONG) for x in testUsersForAPIEndpoint]
+    testUsers = [
+        x.userKey.get(read_consistency=ndb.STRONG) for x in testUsersForAPIEndpoint
+    ]
 
     if len(testUsers) >= definitions.AMOUNTTESTUSERSFORAPIENTPOINT:
         g.html.warning("Maximum amount of test users reached.")
         return g.html.generate()
 
-    newUser = classes.User.query(classes.User.email == g.form._get("email")).get(read_consistency=ndb.STRONG)
+    newUser = classes.User.query(classes.User.email == g.form._get("email")).get(
+        read_consistency=ndb.STRONG
+    )
     if not newUser:
         g.html.warning("User account doesn’t exist.")
         return g.html.generate()
@@ -197,14 +217,18 @@ def addTestUserForAPIEndpoint():
         return g.html.generate()
 
     # Success:
-    newTestUserForAPIEndpoint = classes.TestUserForAPIEndpoint(parent=endpoint.key, userKey=newUser.key)
+    newTestUserForAPIEndpoint = classes.TestUserForAPIEndpoint(
+        parent=endpoint.key, userKey=newUser.key
+    )
     newTestUserForAPIEndpoint.put()
 
     if g.form._get("reloadURL"):
         g.html.SCRIPT()
         g.html.T(
             "AJAX('#stage', '%s');"
-            % helpers.addAttributeToURL(urllib.parse.unquote(g.form._get("reloadURL")), "inline=true")
+            % helpers.addAttributeToURL(
+                urllib.parse.unquote(g.form._get("reloadURL")), "inline=true"
+            )
         )
         g.html._SCRIPT()
 
@@ -291,7 +315,9 @@ def saveStatistics():
 
 @typeworldserver.app.route("/verifyemail/<code>", methods=["GET"])
 def verifyemail(code):
-    user = classes.User.query(classes.User.emailVerificationCode == code).get(read_consistency=ndb.STRONG)
+    user = classes.User.query(classes.User.emailVerificationCode == code).get(
+        read_consistency=ndb.STRONG
+    )
 
     if not user:
         g.html.DIV(class_="content")
@@ -320,7 +346,8 @@ def verifyemail(code):
         else:
             g.html.DIV(class_="content")
             g.html.T(
-                "Your email address has been verified, thank you. You may close this and return to the Type.World App."
+                "Your email address has been verified, thank you. You may close this"
+                " and return to the Type.World App."
             )
             g.html._DIV()
             return g.html.generate()
@@ -349,7 +376,10 @@ def v1(commandName):
 
     if testScenario == "simulateCentralServerErrorInResponse":
         responses["response"] = "simulateCentralServerErrorInResponse"
-        logging.warning("API Call Finished: %.2f s. Responses: %s" % (time.time() - starttime, responses))
+        logging.warning(
+            "API Call Finished: %.2f s. Responses: %s"
+            % (time.time() - starttime, responses)
+        )
         return Response(json.dumps(responses), mimetype="application/json")
 
     # Check if command exists
@@ -357,7 +387,10 @@ def v1(commandName):
         responses["response"] = "commandUnknown"
         # stat.bump(['commandUnknown', '__undefined__'], 1)
         # stat.put()
-        logging.warning("API Call Finished: %.2f s. Responses: %s" % (time.time() - starttime, responses))
+        logging.warning(
+            "API Call Finished: %.2f s. Responses: %s"
+            % (time.time() - starttime, responses)
+        )
         return Response(json.dumps(responses), mimetype="application/json")
 
     command = definitions.APICOMMANDS[commandName]
@@ -390,7 +423,10 @@ def v1(commandName):
             responses["response"] = "clientVersionInvalid"
             # stat.bump(['clientVersionInvalid'], 1)
             # stat.put()
-            logging.warning("API Call Finished: %.2f s. Responses: %s" % (time.time() - starttime, responses))
+            logging.warning(
+                "API Call Finished: %.2f s. Responses: %s"
+                % (time.time() - starttime, responses)
+            )
             return Response(json.dumps(responses), mimetype="application/json")
     # logging.warning('API Call %s after version was verified: %.2f s'
     # % (commandName, time.time() - starttime))
@@ -398,13 +434,16 @@ def v1(commandName):
     parameterStrings = []
     for parameter in command["parameters"]:
         parameterStrings.append("%s=%s" % (parameter, g.form._get(parameter)))
-        if command["parameters"][parameter]["required"] is True and not g.form._get(parameter):
+        if command["parameters"][parameter]["required"] is True and not g.form._get(
+            parameter
+        ):
             responses["response"] = "Required parameter %s is missing." % parameter
             # stat.bump(['command', commandName, 'failed', 'missingParameter',
             # parameter], 1)
             # stat.put()
             logging.warning(
-                "API Call %s finished: %.2f s. Responses: %s" % (commandName, time.time() - starttime, responses)
+                "API Call %s finished: %.2f s. Responses: %s"
+                % (commandName, time.time() - starttime, responses)
             )
             return Response(json.dumps(responses), mimetype="application/json")
     # logging.warning('API Call %s after parameters were verified: %.2f s' %
@@ -413,13 +452,17 @@ def v1(commandName):
     # Call method
     if commandName in globals():
         globals()[commandName](responses)
-        logging.warning("API Call %s after method was called: %.2f s" % (commandName, time.time() - starttime))
+        logging.warning(
+            "API Call %s after method was called: %.2f s"
+            % (commandName, time.time() - starttime)
+        )
     else:
         responses["response"] = "commandUnknown"
         # stat.bump(['commandUnknown', commandName], 1)
         # stat.put()
         logging.warning(
-            "API Call %s finished: %.2f s. Responses: %s" % (commandName, time.time() - starttime, responses)
+            "API Call %s finished: %.2f s. Responses: %s"
+            % (commandName, time.time() - starttime, responses)
         )
         return Response(json.dumps(responses), mimetype="application/json")
 
@@ -428,7 +471,10 @@ def v1(commandName):
 
     # stat.bump(['command', commandName, responses['response']], 1)
     # stat.put()
-    logging.warning("API Call %s finished: %.2f s. Responses: %s" % (commandName, time.time() - starttime, responses))
+    logging.warning(
+        "API Call %s finished: %.2f s. Responses: %s"
+        % (commandName, time.time() - starttime, responses)
+    )
     return Response(json.dumps(responses), mimetype="application/json")
 
 
@@ -473,7 +519,9 @@ def linkTypeWorldUserAccount(responses):
     else:
 
         # Exists
-        appInstance = classes.AppInstance(parent=userKey, id=g.form._get("anonymousAppID"))
+        appInstance = classes.AppInstance(
+            parent=userKey, id=g.form._get("anonymousAppID")
+        )
         appInstance.updateUsage()
         appInstance.put()
 
@@ -517,7 +565,9 @@ def unlinkTypeWorldUserAccount(responses):
 @ndb.transactional()
 def createUserAccount(responses):
 
-    previousUser = classes.User.query(classes.User.email == g.form._get("email")).get(read_consistency=ndb.STRONG)
+    previousUser = classes.User.query(classes.User.email == g.form._get("email")).get(
+        read_consistency=ndb.STRONG
+    )
     if previousUser:
         responses["response"] = "userExists"
         return
@@ -553,7 +603,9 @@ def createUserAccount(responses):
 
 @ndb.transactional()
 def deleteUserAccount(responses):
-    user = classes.User.query(classes.User.email == g.form._get("email")).get(read_consistency=ndb.STRONG)
+    user = classes.User.query(classes.User.email == g.form._get("email")).get(
+        read_consistency=ndb.STRONG
+    )
     if user:
         if user.checkPassword(g.form._get("password")):
             # Delete
@@ -568,7 +620,9 @@ def deleteUserAccount(responses):
         responses["response"] = "userUnknown"
         return
 
-    user = classes.User.query(classes.User.email == g.form._get("email")).get(read_consistency=ndb.STRONG)
+    user = classes.User.query(classes.User.email == g.form._get("email")).get(
+        read_consistency=ndb.STRONG
+    )
     if user:
         responses["response"] = "userStillExists"
         return
@@ -576,7 +630,9 @@ def deleteUserAccount(responses):
 
 def logInUserAccount(responses):
 
-    user = classes.User.query(classes.User.email == g.form._get("email")).get(read_consistency=ndb.STRONG)
+    user = classes.User.query(classes.User.email == g.form._get("email")).get(
+        read_consistency=ndb.STRONG
+    )
     if user:
         if user.checkPassword(g.form._get("password")):
             responses["anonymousUserID"] = user.publicID()
@@ -602,7 +658,9 @@ def registerAPIEndpoint(responses):
         responses["response"] = "urlInvalid"
         return
 
-    endpoint = classes.APIEndpoint.get_or_insert(g.form._get("url"))  # , read_consistency=ndb.STRONG
+    endpoint = classes.APIEndpoint.get_or_insert(
+        g.form._get("url")
+    )  # , read_consistency=ndb.STRONG
     updated, message = endpoint.updateJSON()
     if updated is True:
         endpoint.put()
@@ -665,7 +723,9 @@ def syncUserSubscriptions(responses):
 
         if user.stripeSubscriptionReceivesService("world.type.professional_user_plan"):
             if set(oldURLs) != set([x.url for x in user.regularSubscriptions() if x]):
-                success, message = user.announceChange(g.form._get("sourceAnonymousAppID"))
+                success, message = user.announceChange(
+                    g.form._get("sourceAnonymousAppID")
+                )
                 if not success:
                     responses["response"] = message
                     return
@@ -677,7 +737,9 @@ def uploadUserSubscriptions(responses):
         responses["response"] = "userUnknown"
         return
 
-    user = ndb.Key(urlsafe=g.form._get("anonymousUserID").encode()).get(read_consistency=ndb.STRONG)
+    user = ndb.Key(urlsafe=g.form._get("anonymousUserID").encode()).get(
+        read_consistency=ndb.STRONG
+    )
     if not user:
         responses["response"] = "userUnknown"
         return
@@ -689,8 +751,12 @@ def uploadUserSubscriptions(responses):
     subscriptions = user.subscriptions()
     oldConfirmedSubscriptions = user.confirmedSubscriptions(subscriptions=subscriptions)
     oldConfirmedURLs = [x.url for x in oldConfirmedSubscriptions if x]
-    oldUnsecretConfirmedURLs = [typeworld.client.URL(x).unsecretURL() for x in oldConfirmedURLs]
-    oldUnconfirmedSubscriptions = user.unconfirmedSubscriptions(subscriptions=subscriptions)
+    oldUnsecretConfirmedURLs = [
+        typeworld.client.URL(x).unsecretURL() for x in oldConfirmedURLs
+    ]
+    oldUnconfirmedSubscriptions = user.unconfirmedSubscriptions(
+        subscriptions=subscriptions
+    )
     oldUnconfirmedURLs = [x.url for x in oldUnconfirmedSubscriptions if x]
     if g.form._get("subscriptionURLs") == "empty":
         newURLs = []
@@ -707,7 +773,10 @@ def uploadUserSubscriptions(responses):
             # Change secret key
             if typeworld.client.URL(url).unsecretURL() in oldUnsecretConfirmedURLs:
                 for subscription in oldConfirmedSubscriptions:
-                    if typeworld.client.URL(subscription.url).unsecretURL() == typeworld.client.URL(url).unsecretURL():
+                    if (
+                        typeworld.client.URL(subscription.url).unsecretURL()
+                        == typeworld.client.URL(url).unsecretURL()
+                    ):
                         subscription.url = url
                         subscription.putnow()
                         changes = True
@@ -792,7 +861,11 @@ def downloadUserSubscriptions(responses):
         responses["appInstanceIsRevoked"] = appInstance.revoked
         responses["userAccountEmailIsVerified"] = user.emailVerified
         responses["userAccountStatus"] = (
-            "pro" if user.stripeSubscriptionReceivesService("world.type.professional_user_plan") else "normal"
+            "pro"
+            if user.stripeSubscriptionReceivesService(
+                "world.type.professional_user_plan"
+            )
+            else "normal"
         )
 
         # Token
@@ -814,7 +887,9 @@ def downloadUserSubscriptions(responses):
             s = {}
             s["url"] = subscription.url
             if subscription.rawSubscription().contentLastUpdated:
-                s["serverTimestamp"] = int(subscription.rawSubscription().contentLastUpdated.timestamp())
+                s["serverTimestamp"] = int(
+                    subscription.rawSubscription().contentLastUpdated.timestamp()
+                )
             responses["heldSubscriptions"].append(s)
         # Old API < 0.2.3-beta
         # TODO: Delete later
@@ -836,7 +911,9 @@ def downloadUserSubscriptions(responses):
             if subscription.invitedByUserKey:
                 sourceUserKey = subscription.invitedByUserKey
             if subscription.invitedByAPIEndpointKey:
-                sourceUserKey = subscription.invitedByAPIEndpointKey.get(read_consistency=ndb.STRONG).userKey
+                sourceUserKey = subscription.invitedByAPIEndpointKey.get(
+                    read_consistency=ndb.STRONG
+                ).userKey
             sourceUser = sourceUserKey.get(read_consistency=ndb.STRONG)
 
             s["url"] = typeworld.client.URL(subscription.url).unsecretURL()
@@ -845,7 +922,9 @@ def downloadUserSubscriptions(responses):
             s["invitedByUserEmail"] = sourceUser.email
             s["time"] = int(subscription.touched.timestamp())
             s["canonicalURL"] = subscription.rawSubscription().canonicalURL
-            s["subscriptionName"] = subscription.rawSubscription().subscriptionName or ""
+            s["subscriptionName"] = (
+                subscription.rawSubscription().subscriptionName or ""
+            )
             s["fonts"] = subscription.rawSubscription().fonts
             s["families"] = subscription.rawSubscription().families
             s["foundries"] = subscription.rawSubscription().foundries
@@ -876,11 +955,17 @@ def downloadUserSubscriptions(responses):
 
             s["url"] = typeworld.client.URL(subscription.url).unsecretURL()
 
-            s["invitedUserName"] = subscription.key.parent().get(read_consistency=ndb.STRONG).name
-            s["invitedUserEmail"] = subscription.key.parent().get(read_consistency=ndb.STRONG).email
+            s["invitedUserName"] = (
+                subscription.key.parent().get(read_consistency=ndb.STRONG).name
+            )
+            s["invitedUserEmail"] = (
+                subscription.key.parent().get(read_consistency=ndb.STRONG).email
+            )
             s["invitedTime"] = int(subscription.touched.timestamp())
             s["acceptedTime"] = (
-                int(subscription.invitationAcceptedTime.timestamp()) if subscription.invitationAcceptedTime else ""
+                int(subscription.invitationAcceptedTime.timestamp())
+                if subscription.invitationAcceptedTime
+                else ""
             )
             s["confirmed"] = subscription.confirmed
 
@@ -893,9 +978,9 @@ def downloadUserSubscriptions(responses):
 
 def verifyCredentials(responses):
 
-    endpoint = classes.APIEndpoint.query(classes.APIEndpoint.APIKey == g.form._get("APIKey")).get(
-        read_consistency=ndb.STRONG
-    )
+    endpoint = classes.APIEndpoint.query(
+        classes.APIEndpoint.APIKey == g.form._get("APIKey")
+    ).get(read_consistency=ndb.STRONG)
     if endpoint:
 
         log = classes.APILog(parent=endpoint.key)
@@ -903,7 +988,9 @@ def verifyCredentials(responses):
         log.incoming = dict(g.form)
 
         # User
-        if g.form._get("anonymousTypeWorldUserID") == typeworldserver.secret("TEST_TYPEWORLDUSERACCOUNTID"):
+        if g.form._get("anonymousTypeWorldUserID") == typeworldserver.secret(
+            "TEST_TYPEWORLDUSERACCOUNTID"
+        ):
             pass  # simulate success
 
         else:
@@ -912,7 +999,10 @@ def verifyCredentials(responses):
 
             if not user:
                 responses["response"] = "unknownAnonymousTypeWorldUserID"
-                responses["explanation"] = "The parameter `anonymousTypeWorldUserID` did not yield a known user"
+                responses["explanation"] = (
+                    "The parameter `anonymousTypeWorldUserID` did not yield a known"
+                    " user"
+                )
                 log.response = responses
                 log.put()
                 # stat.bump([endpoint.key.id(), 'command', 'verifyCredentials',
@@ -921,10 +1011,14 @@ def verifyCredentials(responses):
 
             # Check validity of URL
             if g.form._get("subscriptionURL"):
-                success, message = typeworld.client.urlIsValid(g.form._get("subscriptionURL"))
+                success, message = typeworld.client.urlIsValid(
+                    g.form._get("subscriptionURL")
+                )
                 if not success:
                     responses["response"] = "invalid"
-                    responses["explanation"] = "The format of `subscriptionURL` is invalid."
+                    responses[
+                        "explanation"
+                    ] = "The format of `subscriptionURL` is invalid."
                     log.response = responses
                     log.put()
                     # stat.bump([endpoint.key.id(), 'command', 'verifyCredentials',
@@ -933,9 +1027,14 @@ def verifyCredentials(responses):
 
             # Check if user holds subscription
             if g.form._get("subscriptionURL"):
-                if not g.form._get("subscriptionURL") in [x.url for x in user.confirmedSubscriptions()]:
+                if not g.form._get("subscriptionURL") in [
+                    x.url for x in user.confirmedSubscriptions()
+                ]:
                     responses["response"] = "invalid"
-                    responses["explanation"] = "The user doesn’t hold the subscription given in `subscriptionURL`"
+                    responses["explanation"] = (
+                        "The user doesn’t hold the subscription given in"
+                        " `subscriptionURL`"
+                    )
                     log.response = responses
                     log.put()
                     # stat.bump([endpoint.key.id(), 'command', 'verifyCredentials',
@@ -945,9 +1044,10 @@ def verifyCredentials(responses):
             if not user.emailVerified:
                 user.sendEmailVerificationLink()
                 responses["response"] = "emailNotVerified"
-                responses[
-                    "explanation"
-                ] = "The user’s email address isn’t verified. A new verification email has been sent."
+                responses["explanation"] = (
+                    "The user’s email address isn’t verified. A new verification email"
+                    " has been sent."
+                )
                 log.response = responses
                 log.put()
                 # stat.bump([endpoint.key.id(), 'command', 'verifyCredentials',
@@ -961,7 +1061,9 @@ def verifyCredentials(responses):
                     appFound = True
                     if appInstance.revoked:
                         responses["response"] = "invalid"
-                        responses["explanation"] = "The app instance identified by `anonymousAppID` is revoked"
+                        responses[
+                            "explanation"
+                        ] = "The app instance identified by `anonymousAppID` is revoked"
                         log.response = responses
                         log.put()
                         # stat.bump([endpoint.key.id(), 'command', 'verifyCredentials',
@@ -971,7 +1073,9 @@ def verifyCredentials(responses):
 
             if not appFound:
                 responses["response"] = "invalid"
-                responses["explanation"] = "The app instance identified by `anonymousAppID` doesn't exist"
+                responses[
+                    "explanation"
+                ] = "The app instance identified by `anonymousAppID` doesn't exist"
                 log.response = responses
                 log.put()
                 # stat.bump([endpoint.key.id(), 'command', 'verifyCredentials',
@@ -985,7 +1089,9 @@ def verifyCredentials(responses):
 
     else:
         responses["response"] = "unknownAPIKey"
-        responses["explanation"] = "The app instance identified by `anonymousAppID` doesn't exist"
+        responses[
+            "explanation"
+        ] = "The app instance identified by `anonymousAppID` doesn't exist"
         # stat.bump(['command', 'verifyCredentials', 'unknownAPIKey'], 1)
         return
 
@@ -995,9 +1101,9 @@ def inviteUserToSubscription(responses):
     url = urllib.parse.unquote(g.form._get("subscriptionURL"))
 
     if g.form._get("APIKey"):
-        sourceAPIEndpoint = classes.APIEndpoint.query(classes.APIEndpoint.APIKey == g.form._get("APIKey")).get(
-            read_consistency=ndb.STRONG
-        )
+        sourceAPIEndpoint = classes.APIEndpoint.query(
+            classes.APIEndpoint.APIKey == g.form._get("APIKey")
+        ).get(read_consistency=ndb.STRONG)
         if sourceAPIEndpoint:
             log = classes.APILog(parent=sourceAPIEndpoint.key)
             log.command = "inviteUserToSubscription"
@@ -1011,7 +1117,9 @@ def inviteUserToSubscription(responses):
     success, message = typeworld.client.urlIsValid(url)
     if not success:
         responses["response"] = "invalidSubscriptionURL"
-        responses["explanation"] = f"The `subscriptionURL` is of an invalid format: {message}"
+        responses[
+            "explanation"
+        ] = f"The `subscriptionURL` is of an invalid format: {message}"
         if log:
             log.response = responses
             log.put()
@@ -1025,27 +1133,31 @@ def inviteUserToSubscription(responses):
             log.put()
         return
 
-    targetUser = classes.User.query(classes.User.email == g.form._get("targetUserEmail")).get(
-        read_consistency=ndb.STRONG
-    )
+    targetUser = classes.User.query(
+        classes.User.email == g.form._get("targetUserEmail")
+    ).get(read_consistency=ndb.STRONG)
     if not targetUser:
         responses["response"] = "unknownTargetEmail"
-        responses["explanation"] = "The `targetUserEmail` does not yield a valid user account"
+        responses[
+            "explanation"
+        ] = "The `targetUserEmail` does not yield a valid user account"
         if log:
             log.response = responses
             log.put()
         return
 
     if g.form._get("sourceUserEmail"):
-        sourceUser = classes.User.query(classes.User.email == g.form._get("sourceUserEmail")).get(
-            read_consistency=ndb.STRONG
-        )
+        sourceUser = classes.User.query(
+            classes.User.email == g.form._get("sourceUserEmail")
+        ).get(read_consistency=ndb.STRONG)
     else:
         sourceUser = None
 
     if g.form._get("sourceUserEmail") and not sourceUser:
         responses["response"] = "unknownSourceEmail"
-        responses["explanation"] = "The `sourceUserEmail` does not yield a valid user account"
+        responses[
+            "explanation"
+        ] = "The `sourceUserEmail` does not yield a valid user account"
         if log:
             log.response = responses
             log.put()
@@ -1053,7 +1165,10 @@ def inviteUserToSubscription(responses):
 
     if not sourceUser and not sourceAPIEndpoint:
         responses["response"] = "invalidSource"
-        responses["explanation"] = "A valid source could not be identified either by `sourceUserEmail` or by `APIKey`"
+        responses["explanation"] = (
+            "A valid source could not be identified either by `sourceUserEmail` or by"
+            " `APIKey`"
+        )
         if log:
             log.response = responses
             log.put()
@@ -1062,7 +1177,9 @@ def inviteUserToSubscription(responses):
     if (
         sourceUser
         and not sourceAPIEndpoint
-        and not sourceUser.stripeSubscriptionReceivesService("world.type.professional_user_plan")
+        and not sourceUser.stripeSubscriptionReceivesService(
+            "world.type.professional_user_plan"
+        )
     ):
         responses["response"] = "invitationsRequireProAccount"
         responses["explanation"] = (
@@ -1092,15 +1209,18 @@ def inviteUserToSubscription(responses):
     else:
         APIEndpointUser = None
 
-    tempSubscription = classes.Subscription()  # parent=targetUser.key leads to error down the stream
+    tempSubscription = (
+        classes.Subscription()
+    )  # parent=targetUser.key leads to error down the stream
     tempSubscription.url = url
 
     success, endpoint = tempSubscription.rawSubscription().APIEndpoint()
     if not success:
         responses["response"] = endpoint
-        responses[
-            "explanation"
-        ] = "Error while retrieving subscription’s associated API Endpoint object. See `response` field for details."
+        responses["explanation"] = (
+            "Error while retrieving subscription’s associated API Endpoint object. See"
+            " `response` field for details."
+        )
         if log:
             log.response = responses
             log.put()
@@ -1119,9 +1239,10 @@ def inviteUserToSubscription(responses):
     # does not point to same API endpoint
     elif endpoint and sourceAPIEndpoint and endpoint != sourceAPIEndpoint:
         responses["response"] = "invalidSourceAPIEndpoint"
-        responses[
-            "explanation"
-        ] = "Subscription’s canonical URL does not point at API Endpoint yielded by `APIKey` field"
+        responses["explanation"] = (
+            "Subscription’s canonical URL does not point at API Endpoint yielded by"
+            " `APIKey` field"
+        )
         if log:
             log.response = responses
             log.put()
@@ -1150,7 +1271,9 @@ def inviteUserToSubscription(responses):
         assert sourceUser or sourceAPIEndpoint
 
         oldSubscriptions = targetUser.subscriptions()
-        oldURLs = [x.url for x in oldSubscriptions if (x is not None and x.key is not None)]
+        oldURLs = [
+            x.url for x in oldSubscriptions if (x is not None and x.key is not None)
+        ]
 
         # Save new subscription
         if url in oldURLs:
@@ -1188,21 +1311,27 @@ def inviteUserToSubscription(responses):
             success, message = subscription.sendInvitationEmail()
             if not success:
                 responses["response"] = message
-                responses[
-                    "explanation"
-                ] = "Error while sending invitation notification email. See `response` field for details."
+                responses["explanation"] = (
+                    "Error while sending invitation notification email. See `response`"
+                    " field for details."
+                )
                 if log:
                     log.response = responses
                     log.put()
                 return
 
-            if targetUser.stripeSubscriptionReceivesService("world.type.professional_user_plan"):
-                success, message = targetUser.announceChange(g.form._get("sourceAnonymousAppID"))
+            if targetUser.stripeSubscriptionReceivesService(
+                "world.type.professional_user_plan"
+            ):
+                success, message = targetUser.announceChange(
+                    g.form._get("sourceAnonymousAppID")
+                )
                 if not success:
                     responses["response"] = message
-                    responses[
-                        "explanation"
-                    ] = "Error while announcing invitation to target user. See `response` field for details."
+                    responses["explanation"] = (
+                        "Error while announcing invitation to target user. See"
+                        " `response` field for details."
+                    )
                     if log:
                         log.response = responses
                         log.put()
@@ -1218,9 +1347,9 @@ def revokeSubscriptionInvitation(responses):
     url = urllib.parse.unquote(g.form._get("subscriptionURL"))
 
     if g.form._get("APIKey"):
-        sourceAPIEndpoint = classes.APIEndpoint.query(classes.APIEndpoint.APIKey == g.form._get("APIKey")).get(
-            read_consistency=ndb.STRONG
-        )
+        sourceAPIEndpoint = classes.APIEndpoint.query(
+            classes.APIEndpoint.APIKey == g.form._get("APIKey")
+        ).get(read_consistency=ndb.STRONG)
         if sourceAPIEndpoint:
             log = classes.APILog(parent=sourceAPIEndpoint.key)
             log.command = "revokeSubscriptionInvitation"
@@ -1234,7 +1363,9 @@ def revokeSubscriptionInvitation(responses):
     success, message = typeworld.client.urlIsValid(url)
     if not success:
         responses["response"] = "invalidSubscriptionURL"
-        responses["explanation"] = f"The `subscriptionURL` is of an invalid format: {message}"
+        responses[
+            "explanation"
+        ] = f"The `subscriptionURL` is of an invalid format: {message}"
         if log:
             log.response = responses
             log.put()
@@ -1249,31 +1380,33 @@ def revokeSubscriptionInvitation(responses):
         return
 
     if g.form._get("targetUserEmail"):
-        targetUser = classes.User.query(classes.User.email == g.form._get("targetUserEmail")).get(
-            read_consistency=ndb.STRONG
-        )
+        targetUser = classes.User.query(
+            classes.User.email == g.form._get("targetUserEmail")
+        ).get(read_consistency=ndb.STRONG)
     else:
         targetUser = None
 
     if not targetUser:
         responses["response"] = "unknownTargetEmail"
-        responses["explanation"] = "The `targetUserEmail` does not yield a valid user account"
+        responses[
+            "explanation"
+        ] = "The `targetUserEmail` does not yield a valid user account"
         if log:
             log.response = responses
             log.put()
         return
 
     if g.form._get("sourceUserEmail"):
-        sourceUser = classes.User.query(classes.User.email == g.form._get("sourceUserEmail")).get(
-            read_consistency=ndb.STRONG
-        )
+        sourceUser = classes.User.query(
+            classes.User.email == g.form._get("sourceUserEmail")
+        ).get(read_consistency=ndb.STRONG)
     else:
         sourceUser = None
 
     if g.form._get("APIKey"):
-        sourceAPIEndpoint = classes.APIEndpoint.query(classes.APIEndpoint.APIKey == g.form._get("APIKey")).get(
-            read_consistency=ndb.STRONG
-        )
+        sourceAPIEndpoint = classes.APIEndpoint.query(
+            classes.APIEndpoint.APIKey == g.form._get("APIKey")
+        ).get(read_consistency=ndb.STRONG)
     else:
         sourceAPIEndpoint = None
 
@@ -1284,13 +1417,18 @@ def revokeSubscriptionInvitation(responses):
 
     if not sourceUser and not sourceAPIEndpoint:
         responses["response"] = "invalidSource"
-        responses["explanation"] = "A valid source could not be identified either by `sourceUserEmail` or by `APIKey`"
+        responses["explanation"] = (
+            "A valid source could not be identified either by `sourceUserEmail` or by"
+            " `APIKey`"
+        )
         if log:
             log.response = responses
             log.put()
         return
 
-    subscription = targetUser.subscriptionByURL(url, subscriptions=targetUser.subscriptionInvitations())
+    subscription = targetUser.subscriptionByURL(
+        url, subscriptions=targetUser.subscriptionInvitations()
+    )
 
     # TODO:
 
@@ -1307,11 +1445,17 @@ def revokeSubscriptionInvitation(responses):
     # not point to same API endpoint
     if subscription:
         success, endpoint = subscription.rawSubscription().APIEndpoint()
-        if sourceAPIEndpoint and subscription and endpoint and (endpoint != sourceAPIEndpoint):
+        if (
+            sourceAPIEndpoint
+            and subscription
+            and endpoint
+            and (endpoint != sourceAPIEndpoint)
+        ):
             responses["response"] = "invalidSourceAPIEndpoint"
-            responses[
-                "explanation"
-            ] = "Subscription’s canonical URL does not point at API Endpoint yielded by `APIKey` field"
+            responses["explanation"] = (
+                "Subscription’s canonical URL does not point at API Endpoint yielded by"
+                " `APIKey` field"
+            )
             if log:
                 log.response = responses
                 log.put()
@@ -1327,7 +1471,10 @@ def revokeSubscriptionInvitation(responses):
 
     targetUserHoldsSubscription = subscription.key.parent() == targetUser.key
     invitedBySourceUser = sourceUser and subscription.invitedByUserKey == sourceUser.key
-    invitedByAPIEndpoint = sourceAPIEndpoint and subscription.invitedByAPIEndpointKey == sourceAPIEndpoint.key
+    invitedByAPIEndpoint = (
+        sourceAPIEndpoint
+        and subscription.invitedByAPIEndpointKey == sourceAPIEndpoint.key
+    )
 
     if not targetUserHoldsSubscription:
         responses["response"] = "unknownSubscription"
@@ -1353,7 +1500,10 @@ def revokeSubscriptionInvitation(responses):
     success, message = subscription.sendRevokedEmail()
     if not success:
         responses["response"] = message
-        responses["explanation"] = "Error while sending invitation revocation email. See `response` field for details."
+        responses["explanation"] = (
+            "Error while sending invitation revocation email. See `response` field for"
+            " details."
+        )
         if log:
             log.response = responses
             log.put()
@@ -1361,13 +1511,18 @@ def revokeSubscriptionInvitation(responses):
 
     subscription.key.delete()
 
-    if targetUser.stripeSubscriptionReceivesService("world.type.professional_user_plan"):
-        success, message = targetUser.announceChange(g.form._get("sourceAnonymousAppID"))
+    if targetUser.stripeSubscriptionReceivesService(
+        "world.type.professional_user_plan"
+    ):
+        success, message = targetUser.announceChange(
+            g.form._get("sourceAnonymousAppID")
+        )
         if not success:
             responses["response"] = message
-            responses[
-                "explanation"
-            ] = "Error while announcing invitation revocation to target user. See `response` field for details."
+            responses["explanation"] = (
+                "Error while announcing invitation revocation to target user. See"
+                " `response` field for details."
+            )
             if log:
                 log.response = responses
                 log.put()
@@ -1405,7 +1560,11 @@ def acceptInvitations(responses):
     else:
 
         # Add new subscriptions
-        keys = [ndb.Key(urlsafe=x.encode()) for x in g.form._get("subscriptionIDs").split(",") if x and x != "empty"]
+        keys = [
+            ndb.Key(urlsafe=x.encode())
+            for x in g.form._get("subscriptionIDs").split(",")
+            if x and x != "empty"
+        ]
         for subscription in user.subscriptions():
 
             if subscription.key in keys:
@@ -1453,7 +1612,11 @@ def declineInvitations(responses):
     else:
 
         # Delete subscriptions
-        keys = [ndb.Key(urlsafe=x.encode()) for x in g.form._get("subscriptionIDs").split(",") if x and x != "empty"]
+        keys = [
+            ndb.Key(urlsafe=x.encode())
+            for x in g.form._get("subscriptionIDs").split(",")
+            if x and x != "empty"
+        ]
         for subscription in user.subscriptions():
 
             if subscription.key in keys:
@@ -1618,7 +1781,9 @@ def addAPIEndpointToUserAccount(responses):
         responses["response"] = "urlInvalid"
         return
 
-    endpoint = classes.APIEndpoint.get_or_insert(g.form._get("canonicalURL"))  # , read_consistency=ndb.STRONG
+    endpoint = classes.APIEndpoint.get_or_insert(
+        g.form._get("canonicalURL")
+    )  # , read_consistency=ndb.STRONG
 
     if endpoint.userKey and endpoint.userKey != user.key:
         responses["response"] = "APIEndpointTaken"
@@ -1667,9 +1832,9 @@ def updateSubscription(responses):
     # otherwise reject
 
     # Check for endpoint by API key
-    endpoint = classes.APIEndpoint.query(classes.APIEndpoint.APIKey == g.form._get("APIKey")).get(
-        read_consistency=ndb.STRONG
-    )
+    endpoint = classes.APIEndpoint.query(
+        classes.APIEndpoint.APIKey == g.form._get("APIKey")
+    ).get(read_consistency=ndb.STRONG)
     if not endpoint:
         responses["response"] = "unknownAPIKey"
         return
@@ -1682,7 +1847,9 @@ def updateSubscription(responses):
     success, message = typeworld.client.urlIsValid(g.form._get("subscriptionURL"))
     if not success:
         responses["response"] = "invalidSubscriptionURL"
-        responses["explanation"] = f"The `subscriptionURL` is of an invalid format: {message}"
+        responses[
+            "explanation"
+        ] = f"The `subscriptionURL` is of an invalid format: {message}"
         log.response = responses
         log.put()
         return
@@ -1714,7 +1881,9 @@ def updateSubscription(responses):
     rawSubscription = classes.RawSubscription.get_or_insert(
         classes.RawSubscription.keyURL(g.form._get("subscriptionURL"))
     )  # , read_consistency=ndb.STRONG
-    rawSubscription.secretURL = typeworld.client.URL(g.form._get("subscriptionURL")).secretURL()
+    rawSubscription.secretURL = typeworld.client.URL(
+        g.form._get("subscriptionURL")
+    ).secretURL()
     if rawSubscription.key:
         new = False
     else:
@@ -1724,15 +1893,18 @@ def updateSubscription(responses):
     success, message, changes = rawSubscription.updateJSON(force=True, save=True)
     if not success:
         responses["response"] = message
-        responses[
-            "explanation"
-        ] = "An error occurred while accessing the API Endpoint. See `response` field for details."
+        responses["explanation"] = (
+            "An error occurred while accessing the API Endpoint. See `response` field"
+            " for details."
+        )
         log.response = responses
         log.put()
         return
 
     # Announce change
-    success, message = rawSubscription.announceChange(int(delay), g.form._get("sourceAnonymousAppID") or "")
+    success, message = rawSubscription.announceChange(
+        int(delay), g.form._get("sourceAnonymousAppID") or ""
+    )
     if not success:
         responses["response"] = message
         responses["explanation"] = (
@@ -1757,9 +1929,10 @@ def updateSubscription(responses):
         )
         if not success:
             responses["response"] = message
-            responses[
-                "explanation"
-            ] = "An error occurred while billing the API call to the publisher. See `response` field for details."
+            responses["explanation"] = (
+                "An error occurred while billing the API call to the publisher. See"
+                " `response` field for details."
+            )
             log.response = responses
             log.put()
             return
@@ -1773,9 +1946,10 @@ def updateSubscription(responses):
         )
         if not success:
             responses["response"] = message
-            responses[
-                "explanation"
-            ] = "An error occurred while billing the API call to the publisher. See `response` field for details."
+            responses["explanation"] = (
+                "An error occurred while billing the API call to the publisher. See"
+                " `response` field for details."
+            )
             log.response = responses
             log.put()
             return
@@ -1788,7 +1962,9 @@ def handleTraceback(responses):
 
     # Check for endpoint by API key
     payload = g.form._get("payload")[:1500]
-    traceback = classes.AppTraceback.query(classes.AppTraceback.payload == payload).get(read_consistency=ndb.STRONG)
+    traceback = classes.AppTraceback.query(classes.AppTraceback.payload == payload).get(
+        read_consistency=ndb.STRONG
+    )
 
     # Parse incoming version number
     incomingVersion = payload.splitlines()[0].split(":")[1].strip()
@@ -1802,9 +1978,9 @@ def handleTraceback(responses):
         return
 
     # Get handleTracebackMinimumVersion
-    minimumVersion = classes.Preference.query(classes.Preference.name == "handleTracebackMinimumVersion").get(
-        read_consistency=ndb.STRONG
-    )
+    minimumVersion = classes.Preference.query(
+        classes.Preference.name == "handleTracebackMinimumVersion"
+    ).get(read_consistency=ndb.STRONG)
     if minimumVersion:
         minimumVersion = minimumVersion.content
     else:
@@ -1823,7 +1999,8 @@ def handleTraceback(responses):
             traceback.putnow()
 
             body = (
-                f"View error on server: https://type.world/tracebacks/{traceback.key.urlsafe().decode()}\n\n"
+                "View error on server:"
+                f" https://type.world/tracebacks/{traceback.key.urlsafe().decode()}\n\n"
                 + traceback.payload
             )
             helpers.email(
@@ -1856,9 +2033,7 @@ def downloadSettings(responses):
         user.lastSeenOnline = helpers.now()
         user.put()
 
-    IP = random.choice([x.ip for x in mq.availableMQInstances()])
     settings = {
-        "messagingQueue": f"tcp://{IP}:5556",
         "breakingAPIVersions": typeworld.api.BREAKINGVERSIONS,
     }
 
@@ -1867,7 +2042,9 @@ def downloadSettings(responses):
 
 def resendEmailVerification(responses):
 
-    user = classes.User.query(classes.User.email == g.form._get("email")).get(read_consistency=ndb.STRONG)
+    user = classes.User.query(classes.User.email == g.form._get("email")).get(
+        read_consistency=ndb.STRONG
+    )
     if not user:
         responses["response"] = "userUnknown"
         return
@@ -1886,12 +2063,15 @@ def reportAPIEndpointError(responses):
     rawSubscription = classes.RawSubscription.get_or_insert(
         classes.RawSubscription.keyURL(g.form._get("subscriptionURL"))
     )  # , read_consistency=ndb.STRONG
-    rawSubscription.secretURL = typeworld.client.URL(g.form._get("subscriptionURL")).secretURL()
+    rawSubscription.secretURL = typeworld.client.URL(
+        g.form._get("subscriptionURL")
+    ).secretURL()
 
     if (
         rawSubscription.lastErrorReported is None
         or rawSubscription.lastErrorReported is not None
-        and (helpers.now() - rawSubscription.lastErrorReported).seconds > 7 * 24 * 60 * 60
+        and (helpers.now() - rawSubscription.lastErrorReported).seconds
+        > 7 * 24 * 60 * 60
     ):  # once per week:
 
         print("Investigating error", g.form._get("subscriptionURL"))
@@ -1932,7 +2112,9 @@ def reportAPIEndpointError(responses):
                             emails.append(match.group(1))
 
                         # Catch canonical URL
-                        match = re.search(r'.*"canonicalURL".+?"(.+?)".*', content, re.M)
+                        match = re.search(
+                            r'.*"canonicalURL".+?"(.+?)".*', content, re.M
+                        )
                         if match:
                             canonicalURL = match.group(1)
                             endpoint = classes.APIEndpoint.get_or_insert(canonicalURL)
@@ -1947,14 +2129,18 @@ def reportAPIEndpointError(responses):
                 if emails:
 
                     subscriptionURL = g.form._get("subscriptionURL")
-                    body = f"The subscription {subscriptionURL} showed the following error:\n\n"
+                    body = (
+                        f"The subscription {subscriptionURL} showed the following"
+                        " error:\n\n"
+                    )
                     body += message
                     body += (
-                        "\n\nThis page describes how to validate your API Endpoint before"
-                        " publication: https://type.world/developer/validate\n I hope to be"
-                        " able to offer you an online validator again soon under that same"
-                        " URL.\n\nThis is an automated email which you will receive at most"
-                        " once per week.\n\nYours truly, Type.World HQ"
+                        "\n\nThis page describes how to validate your API Endpoint"
+                        " before publication: https://type.world/developer/validate\n I"
+                        " hope to be able to offer you an online validator again soon"
+                        " under that same URL.\n\nThis is an automated email which you"
+                        " will receive at most once per week.\n\nYours truly,"
+                        " Type.World HQ"
                     )
 
                     success, message = helpers.email(
