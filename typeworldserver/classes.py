@@ -1396,7 +1396,7 @@ class User(TWNDBModel):
     def announceChange(self, sourceAnonymousAppID=""):
 
         topic_path = pubsub_publisher.topic_path(
-            definitions.GC_PROJECT_ID, "user-updates"
+            definitions.GC_PROJECT_ID, "clientapp-updates"
         )
 
         parameters = {}
@@ -1404,6 +1404,8 @@ class User(TWNDBModel):
         parameters["command"] = "pullUpdates"
         if sourceAnonymousAppID:
             parameters["sourceAnonymousAppID"] = sourceAnonymousAppID
+
+        print("PUBLISHING", parameters)
 
         data = json.dumps(parameters).encode("utf-8")
         future = pubsub_publisher.publish(topic_path, data=data)
@@ -2199,7 +2201,7 @@ class RawSubscription(TWNDBModel):
     def announceChange(self, delay, sourceAnonymousAppID):
 
         topic_path = pubsub_publisher.topic_path(
-            definitions.GC_PROJECT_ID, "subscription-updates"
+            definitions.GC_PROJECT_ID, "clientapp-updates"
         )
 
         parameters = {}
