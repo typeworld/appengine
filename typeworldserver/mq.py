@@ -1,3 +1,14 @@
+#
+#
+#
+#
+#  This whole sections is unused atm because I replaced the zeroMQ servers with Google Cloud’s own Pub/Sub.
+#  I’m keeping it here for now because I might want to use it again in the future.
+#
+#
+#
+
+
 # project
 import typeworldserver
 from typeworldserver import classes
