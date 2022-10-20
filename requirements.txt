@@ -12,6 +12,7 @@ git+https://github.com/typeworld/typeworld.git
 git+https://github.com/yanone/hotmetal.git
 google-api-python-client
 google-cloud-ndb
+google-cloud-pubsub
 google-cloud-secret-manager
 google-cloud-storage
 google-cloud-translate
@@ -25,7 +26,6 @@ markdown2
 protobuf<4.0.0dev
 Pygments
 pyjwt
-pyzmq
 selenium
 semver
 
