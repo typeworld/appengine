@@ -683,7 +683,8 @@ APICOMMANDS = collections.OrderedDict()
 APICOMMANDS["validateAPIEndpoint"] = {
     "public": False,
     "description": (
-        "Remotely validate your Type.World API endpoint to build error messages right into your own backend."
+        "Remotely validate your Type.World API endpoint to build error messages right"
+        " into your own backend."
     ),
     "parameters": collections.OrderedDict(
         {
@@ -694,7 +695,8 @@ APICOMMANDS["validateAPIEndpoint"] = {
             "profiles": {
                 "description": (
                     "Comma-separated list of profile keywords. See"
-                    " [https://type.world/developer/validate](/developer/validate) for a complete list."
+                    " [https://type.world/developer/validate](/developer/validate) for"
+                    " a complete list."
                 ),
                 "required": True,
             },
@@ -703,8 +705,9 @@ APICOMMANDS["validateAPIEndpoint"] = {
     "return": collections.OrderedDict(
         {
             "failure": (
-                "Validation failed. Please see the additional data fields `information`, `warnings`, `errors`, and"
-                " especially `stages` for details on the process."
+                "Validation failed. Please see the additional data fields"
+                " `information`, `warnings`, `errors`, and especially `stages` for"
+                " details on the process."
             ),
         }
     ),
@@ -713,13 +716,17 @@ APICOMMANDS["validateAPIEndpoint"] = {
             "information": "A list of non-critical information.",
             "warnings": "A list of warnings that you must pay attention to.",
             "errors": "A list of critical errors that must be fixed.",
-            "stages": "Dictionary of test stages with detailed descriptions, results, and comments.",
+            "stages": (
+                "Dictionary of test stages with detailed descriptions, results, and"
+                " comments."
+            ),
         }
     ),
     "exampleParameters": collections.OrderedDict(
         {
             "subscriptionURL": (
-                "typeworld://json+https//subscriptionID:secretKey@awesomefonts.com/typeworldapi/daz4Ub54mut2XDLz6vGx"
+                "typeworld://json+https//subscriptionID:"
+                "secretKey@awesomefonts.com/typeworldapi/daz4Ub54mut2XDLz6vGx"
             ),
         }
     ),
@@ -736,7 +743,10 @@ APICOMMANDS["validateAPIEndpoint"] = {
 
 APICOMMANDS["registerAPIEndpoint"] = {
     "public": False,
-    "description": "The app calls this command when an endpoint is being accessed, for internal use.",
+    "description": (
+        "The app calls this command when an endpoint is being accessed, for internal"
+        " use."
+    ),
     "parameters": collections.OrderedDict(
         {
             "url": {
@@ -751,7 +761,8 @@ APICOMMANDS["registerAPIEndpoint"] = {
 APICOMMANDS["linkTypeWorldUserAccount"] = {
     "public": False,
     "description": (
-        "The app calls this command when a user links his/her user account to the app through the web site."
+        "The app calls this command when a user links his/her user account to the app"
+        " through the web site."
     ),
     "parameters": collections.OrderedDict(
         {
@@ -804,7 +815,10 @@ APICOMMANDS["linkTypeWorldUserAccount"] = {
 
 APICOMMANDS["unlinkTypeWorldUserAccount"] = {
     "public": False,
-    "description": "The app calls this command when a user unlinks his/her user account from the app.",
+    "description": (
+        "The app calls this command when a user unlinks his/her user account from the"
+        " app."
+    ),
     "parameters": collections.OrderedDict(
         {
             "clientVersion": {
@@ -832,7 +846,9 @@ APICOMMANDS["unlinkTypeWorldUserAccount"] = {
 
 APICOMMANDS["syncUserSubscriptions"] = {
     "public": False,
-    "description": "Update all the users subscriptions on the central database, return list",
+    "description": (
+        "Update all the users subscriptions on the central database, return list"
+    ),
     "parameters": collections.OrderedDict(
         {
             "clientVersion": {
@@ -857,13 +873,17 @@ APICOMMANDS["syncUserSubscriptions"] = {
             },
         }
     ),
-    "return": "Returns newly compiled complete list of subscriptions in dictionary under `subscriptions`",
+    "return": (
+        "Returns newly compiled complete list of subscriptions in dictionary under"
+        " `subscriptions`"
+    ),
 }
 
 APICOMMANDS["uploadUserSubscriptions"] = {
     "public": False,
     "description": (
-        "Update all the users subscriptions on the central database, possibly delete subscription in the database"
+        "Update all the users subscriptions on the central database, possibly delete"
+        " subscription in the database"
     ),
     "parameters": collections.OrderedDict(
         {
@@ -896,8 +916,8 @@ APICOMMANDS["uploadUserSubscriptions"] = {
 APICOMMANDS["verifyCredentials"] = {
     "public": True,
     "description": (
-        "Verify that a Type.World user account exists and that it is linked to a known app instance. In other words:"
-        " Verify a valid user."
+        "Verify that a Type.World user account exists and that it is linked to a known"
+        " app instance. In other words: Verify a valid user."
     ),
     "parameters": collections.OrderedDict(
         {
@@ -911,15 +931,17 @@ APICOMMANDS["verifyCredentials"] = {
             },
             "APIKey": {
                 "description": (
-                    "Secret API Key for an API Endpoint, to be obtained through the Type.World user account"
+                    "Secret API Key for an API Endpoint, to be obtained through the"
+                    " Type.World user account"
                 ),
                 "required": True,
             },
             "subscriptionURL": {
                 "description": (
-                    "Complete subscription URL (Format C) that the user is trying to access. If this parameter is"
-                    " given, the user must already hold the subscription for the verification to be valid. This"
-                    ' conforms with "Security Level 2" of the developer documention.'
+                    "Complete subscription URL (Format C) that the user is trying to"
+                    " access. If this parameter is given, the user must already hold"
+                    " the subscription for the verification to be valid. This conforms"
+                    ' with "Security Level 2" of the developer documention.'
                 ),
                 "required": False,
             },
@@ -929,11 +951,17 @@ APICOMMANDS["verifyCredentials"] = {
         {
             "success": "This user and app are known and not revoked.",
             "invalid": (
-                "The combination of anonymousAppID and anonymousTypeWorldUserID is either unkown or known and revoked."
+                "The combination of anonymousAppID and anonymousTypeWorldUserID is"
+                " either unkown or known and revoked."
             ),
-            "unknownAnonymousTypeWorldUserID": "The user identified by unknownAnonymousTypeWorldUserID is unknown.",
+            "unknownAnonymousTypeWorldUserID": (
+                "The user identified by unknownAnonymousTypeWorldUserID is unknown."
+            ),
             "unknownAPIKey": "The secret API Key for this API endpoint is unknown.",
-            "emailNotVerified": "The user’s email address isn’t verified. A new verification email has been sent.",
+            "emailNotVerified": (
+                "The user’s email address isn’t verified. A new verification email has"
+                " been sent."
+            ),
         }
     ),
     "exampleParameters": collections.OrderedDict(
@@ -949,10 +977,12 @@ APICOMMANDS["verifyCredentials"] = {
 APICOMMANDS["inviteUserToSubscription"] = {
     "public": True,
     "description": (
-        "Invite an existing Type.World user (identified by his/her email address) to a subscription link. This is the"
-        " only secure way to share a subscription between users. The inviter is identified either by a source email"
-        " address, which must also be a valid Type.World user account and actually hold that subscription, or by a API"
-        " endpoint secret key, in which case the subscription must originate from that same API endpoint."
+        "Invite an existing Type.World user (identified by his/her email address) to a"
+        " subscription link. This is the only secure way to share a subscription"
+        " between users. The inviter is identified either by a source email address,"
+        " which must also be a valid Type.World user account and actually hold that"
+        " subscription, or by a API endpoint secret key, in which case the subscription"
+        " must originate from that same API endpoint."
     ),
     "parameters": collections.OrderedDict(
         {
@@ -961,20 +991,23 @@ APICOMMANDS["inviteUserToSubscription"] = {
                 "required": True,
             },
             "subscriptionURL": {
-                "description": "Full subscription link including typeworld:// protocol and secret key and all.",
+                "description": (
+                    "Full subscription link including typeworld:// protocol and secret"
+                    " key and all."
+                ),
                 "required": True,
             },
             "sourceUserEmail": {
                 "description": (
-                    "Email address of source Type.World user (not required, but either `sourceUserEmail` or `APIKey`"
-                    " needs to be present)"
+                    "Email address of source Type.World user (not required, but either"
+                    " `sourceUserEmail` or `APIKey` needs to be present)"
                 ),
                 "required": False,
             },
             "APIKey": {
                 "description": (
-                    "Secret API Key of inviting API endpoint (not required, but either `sourceUserEmail` or `APIKey`"
-                    " needs to be present)"
+                    "Secret API Key of inviting API endpoint (not required, but either"
+                    " `sourceUserEmail` or `APIKey` needs to be present)"
                 ),
                 "required": False,
             },
@@ -983,15 +1016,24 @@ APICOMMANDS["inviteUserToSubscription"] = {
     "return": collections.OrderedDict(
         {
             "invalidSubscriptionURL": "The subscription URL is of invalid format.",
-            "invalidSource": "The system could not identify a valid source by either `sourceUserEmail` or `APIKey`.",
-            "unknownTargetEmail": "The email of the invited user is unknown.",
-            "sourceAndTargetIdentical": "The source user and the target user are identical.",
-            "unknownSubscriptionForUser": "The source user doesn’t hold that subscription.",
-            "invalidSourceAPIEndpoint": (
-                "In case of an API Endpoint being the source of this request, it could not be identified by the APIKey"
-                " parameter."
+            "invalidSource": (
+                "The system could not identify a valid source by either"
+                " `sourceUserEmail` or `APIKey`."
             ),
-            "invitationsRequireProAccount": "Inviting users requires a Pro Plan for the user account.",
+            "unknownTargetEmail": "The email of the invited user is unknown.",
+            "sourceAndTargetIdentical": (
+                "The source user and the target user are identical."
+            ),
+            "unknownSubscriptionForUser": (
+                "The source user doesn’t hold that subscription."
+            ),
+            "invalidSourceAPIEndpoint": (
+                "In case of an API Endpoint being the source of this request, it could"
+                " not be identified by the APIKey parameter."
+            ),
+            "invitationsRequireProAccount": (
+                "Inviting users requires a Pro Plan for the user account."
+            ),
         }
     ),
     "exampleParameters": collections.OrderedDict(
@@ -1007,8 +1049,9 @@ APICOMMANDS["inviteUserToSubscription"] = {
 APICOMMANDS["revokeSubscriptionInvitation"] = {
     "public": True,
     "description": (
-        "Revoke the invitation to a subscription for a Type.World user (identified by his/her email address). All"
-        " subsequent invitation by that user to others will also be deleted."
+        "Revoke the invitation to a subscription for a Type.World user (identified by"
+        " his/her email address). All subsequent invitation by that user to others will"
+        " also be deleted."
     ),
     "parameters": collections.OrderedDict(
         {
@@ -1017,20 +1060,23 @@ APICOMMANDS["revokeSubscriptionInvitation"] = {
                 "required": True,
             },
             "subscriptionURL": {
-                "description": "Full subscription link including typeworld:// protocol and secret key and all.",
+                "description": (
+                    "Full subscription link including typeworld:// protocol and secret"
+                    " key and all."
+                ),
                 "required": True,
             },
             "sourceUserEmail": {
                 "description": (
-                    "Email address of source Type.World user (not required, but either `sourceUserEmail` or `APIKey`"
-                    " needs to be present)"
+                    "Email address of source Type.World user (not required, but either"
+                    " `sourceUserEmail` or `APIKey` needs to be present)"
                 ),
                 "required": False,
             },
             "APIKey": {
                 "description": (
-                    "Secret API Key of inviting API endpoint (not required, but either `sourceUserEmail` or `APIKey`"
-                    " needs to be present)"
+                    "Secret API Key of inviting API endpoint (not required, but either"
+                    " `sourceUserEmail` or `APIKey` needs to be present)"
                 ),
                 "required": False,
             },
@@ -1039,9 +1085,16 @@ APICOMMANDS["revokeSubscriptionInvitation"] = {
     "return": collections.OrderedDict(
         {
             "invalidSubscriptionURL": "The subscription URL is of invalid format.",
-            "invalidSource": "The system could not identify a valid source by either `sourceUserEmail` or `APIKey`.",
-            "unknownTargetEmail": "The email of the invited user is unknown in the system.",
-            "unknownSubscription": "No matching subscription could be identified to be revoked.",
+            "invalidSource": (
+                "The system could not identify a valid source by either"
+                " `sourceUserEmail` or `APIKey`."
+            ),
+            "unknownTargetEmail": (
+                "The email of the invited user is unknown in the system."
+            ),
+            "unknownSubscription": (
+                "No matching subscription could be identified to be revoked."
+            ),
         }
     ),
     "exampleParameters": collections.OrderedDict(
@@ -1325,7 +1378,9 @@ APICOMMANDS["downloadUserSubscriptions"] = {
 
 APICOMMANDS["addAPIEndpointToUserAccount"] = {
     "public": False,
-    "description": "Adds an API endpoint to a user account for the purpose of obtaining an APIkey",
+    "description": (
+        "Adds an API endpoint to a user account for the purpose of obtaining an APIkey"
+    ),
     "parameters": collections.OrderedDict(
         {
             "anonymousUserID": {
@@ -1353,7 +1408,9 @@ APICOMMANDS["addAPIEndpointToUserAccount"] = {
 
 APICOMMANDS["listAPIEndpointsForUserAccount"] = {
     "public": False,
-    "description": "Adds an API endpoint to a user account for the purpose of obtaining an APIkey",
+    "description": (
+        "Adds an API endpoint to a user account for the purpose of obtaining an APIkey"
+    ),
     "parameters": collections.OrderedDict(
         {
             "anonymousUserID": {
@@ -1378,31 +1435,39 @@ APICOMMANDS["listAPIEndpointsForUserAccount"] = {
 APICOMMANDS["updateSubscription"] = {
     "public": True,
     "description": (
-        "Announce to all participating users that this particular subscription has changed and fresh data needs to be"
-        " pulled by the client app from the publisher server.\n\nUsing this command is only available to publishers"
+        "Announce to all participating users that this particular subscription has"
+        " changed and fresh data needs to be pulled by the client app from the"
+        " publisher server.\n\nUsing this command is only available to publishers"
         " participating in the Pro Publisher Plan, available from your user account at"
-        " [https://type.world/account/developer](/account/developer) (after login).\n\nCurrently not yet implemented:"
-        " If you supply the timeStretch parameter, all users of this subscription that are currently online with the"
-        " app will be notified with a delay chosen randomly within your given time window. This way you can spread"
-        " your server load according to the number of users of your subscription. However, since the delay is"
-        " randomized, peaks may still occur."
+        " [https://type.world/account/developer](/account/developer) (after"
+        " login).\n\nCurrently not yet implemented: If you supply the timeStretch"
+        " parameter, all users of this subscription that are currently online with the"
+        " app will be notified with a delay chosen randomly within your given time"
+        " window. This way you can spread your server load according to the number of"
+        " users of your subscription. However, since the delay is randomized, peaks may"
+        " still occur."
     ),
     "parameters": collections.OrderedDict(
         {
             "APIKey": {
                 "description": (
-                    "Secret API Key for an API Endpoint, to be obtained through the Type.World user account"
+                    "Secret API Key for an API Endpoint, to be obtained through the"
+                    " Type.World user account"
                 ),
                 "required": True,
             },
             "subscriptionURL": {
-                "description": "Full subscription link including typeworld:// protocol and secret key and all.",
+                "description": (
+                    "Full subscription link including typeworld:// protocol and secret"
+                    " key and all."
+                ),
                 "required": True,
             },
             "timeStretch": {
                 "description": (
-                    "Number of minutes (0—60) for which client apps will randomly wait to pull updated data from the"
-                    " publisher’s server. (Currently not implemented)"
+                    "Number of minutes (0—60) for which client apps will randomly wait"
+                    " to pull updated data from the publisher’s server. (Currently not"
+                    " implemented)"
                 ),
                 "required": False,
             },
@@ -1414,7 +1479,10 @@ APICOMMANDS["updateSubscription"] = {
             "invalidTimeStretchValue": "Time stretch value is invalid.",
             "unknownAPIKey": "API key in unkown",
             "unknownSubscriptionURL": "No subscription under this URL exists.",
-            "paidSubscriptionRequired": "Please set up your paid publisher subscription at https://type.world/account",
+            "paidSubscriptionRequired": (
+                "Please set up your paid publisher subscription at"
+                " https://type.world/account"
+            ),
         }
     ),
     "exampleParameters": collections.OrderedDict(
@@ -1428,7 +1496,10 @@ APICOMMANDS["updateSubscription"] = {
 
 APICOMMANDS["handleTraceback"] = {
     "public": False,
-    "description": "Record a traceback from an app instance and possibly notify code authors by email",
+    "description": (
+        "Record a traceback from an app instance and possibly notify code authors by"
+        " email"
+    ),
     "parameters": collections.OrderedDict(
         {
             "payload": {
@@ -1498,13 +1569,16 @@ APICOMMANDS["resendEmailVerification"] = {
 APICOMMANDS["reportAPIEndpointError"] = {
     "public": False,
     "description": (
-        "Notify the central server of a API Endpoint error, in order to have the server check the endpoint and notify"
-        " the author."
+        "Notify the central server of a API Endpoint error, in order to have the server"
+        " check the endpoint and notify the author."
     ),
     "parameters": collections.OrderedDict(
         {
             "subscriptionURL": {
-                "description": "Full subscription link including typeworld:// protocol and secret key and all.",
+                "description": (
+                    "Full subscription link including typeworld:// protocol and secret"
+                    " key and all."
+                ),
                 "required": True,
             },
         }
@@ -1521,7 +1595,12 @@ GCPlinks = [
     ],
     [
         "Lagos, Nigeria",
-        [[-0.79606, 0.48066], [-0.79606, -17.01473], [21.42239, -25.18856], [34.85889, -20.26669]],
+        [
+            [-0.79606, 0.48066],
+            [-0.79606, -17.01473],
+            [21.42239, -25.18856],
+            [34.85889, -20.26669],
+        ],
         "Lisbon, Portugal",
     ],
     [
@@ -2016,14 +2095,19 @@ GCPedgenodes = {
 
 # Zones and place names: https://cloud.google.com/compute/docs/regions-zones
 GCPzones = {
-    "us-east": {"name": "Moncks Corner, South Carolina, USA", "geolocation": [33.1960027, -80.01313739999999]},
+    "us-east": {
+        "name": "Moncks Corner, South Carolina, USA",
+        "geolocation": [33.1960027, -80.01313739999999],
+    },
 }
 
 
 SIGNINSCOPES = {
     "account": {
         "name": "Account Information",
-        "description": "Basic user account information such as the display name and email address",
+        "description": (
+            "Basic user account information such as the display name and email address"
+        ),
     },
     "billingaddress": {
         "name": "Billing Address",
@@ -2096,7 +2180,10 @@ PRODUCTS = {
         "name": "Subscription Update <em>(Added Font Versions)</em>",
         "type": "cumulative",
         "visible": True,
-        "definition": "Number of subscription updates that show a new font version for at least one of the fonts",
+        "definition": (
+            "Number of subscription updates that show a new font version for at least"
+            " one of the fonts"
+        ),
         "description": (
             "For a commercial publisher, this normally means no added revenue,"
             " as font updates are normally published free of additional charge"
@@ -2181,18 +2268,26 @@ PRODUCTS = {
         "name": "Type.World Sign-Ins, Basic Scope",
         "type": "maximal",
         "visible": True,
-        "definition": "Number of monthly user data access via Type.World Sign-In, using the <b>Basic</b> scope",
+        "definition": (
+            "Number of monthly user data access via Type.World Sign-In, using the"
+            " <b>Basic</b> scope"
+        ),
         "description": (
-            "If you offer Type.World Sign-In to the users of your app or website <em>accessing <b>only</b> the"
-            " Basic scope (name, email, user ID)</em>, these are the number of times you access the user data"
-            " endpoint using the access token you have previously received from Type.World"
-            " Sign-In.</p><p>Normally, this number should correlate strongly with your monthly font"
-            " sales.</p><p>Tokens that contain both Basic and Extended scopes are counted as Extended only"
-            " (see below). The billed metric is the maximum number of tokens used per month on the user data"
-            " endpoint. Multiple queries per month for the same token are billed only once."
+            "If you offer Type.World Sign-In to the users of your app or website"
+            " <em>accessing <b>only</b> the Basic scope (name, email, user ID)</em>,"
+            " these are the number of times you access the user data endpoint using the"
+            " access token you have previously received from Type.World"
+            " Sign-In.</p><p>Normally, this number should correlate strongly with your"
+            " monthly font sales.</p><p>Tokens that contain both Basic and Extended"
+            " scopes are counted as Extended only (see below). The billed metric is the"
+            " maximum number of tokens used per month on the user data endpoint."
+            " Multiple queries per month for the same token are billed only once."
         ),
         "textfields": [
-            ["signins_basic", "Number of monthly user data access per token, Basic scope"],
+            [
+                "signins_basic",
+                "Number of monthly user data access per token, Basic scope",
+            ],
         ],
         "calculation": "signins_basic",
         "tiers": [
@@ -2218,18 +2313,26 @@ PRODUCTS = {
         "name": "Type.World Sign-Ins, Extended Scopes",
         "type": "maximal",
         "visible": True,
-        "definition": "Number of monthly user data access via Type.World Sign-In, using the <b>Extended</b> scope",
+        "definition": (
+            "Number of monthly user data access via Type.World Sign-In, using the"
+            " <b>Extended</b> scope"
+        ),
         "description": (
-            "If you offer Type.World Sign-In to the users of your app or website <em>accessing the Extended"
-            " scopes (billing address, VAT ID etc.)</em>, these are the number of times you access the user"
-            " data endpoint using the access token you have previously received from Type.World"
-            " Sign-In.</p><p>Normally, this number should correlate strongly with your monthly font"
-            " sales.</p><p>Tokens that contain both Basic and Extended scopes are counted as Extended only."
-            " The billed metric is the maximum number of tokens used per month on the user data endpoint."
-            " Multiple queries per month for the same token are billed only once."
+            "If you offer Type.World Sign-In to the users of your app or website"
+            " <em>accessing the Extended scopes (billing address, VAT ID etc.)</em>,"
+            " these are the number of times you access the user data endpoint using the"
+            " access token you have previously received from Type.World"
+            " Sign-In.</p><p>Normally, this number should correlate strongly with your"
+            " monthly font sales.</p><p>Tokens that contain both Basic and Extended"
+            " scopes are counted as Extended only. The billed metric is the maximum"
+            " number of tokens used per month on the user data endpoint. Multiple"
+            " queries per month for the same token are billed only once."
         ),
         "textfields": [
-            ["signins_extended", "Number of monthly user data access per token, Extended scopes"],
+            [
+                "signins_extended",
+                "Number of monthly user data access per token, Extended scopes",
+            ],
         ],
         "calculation": "signins_extended",
         "tiers": [
