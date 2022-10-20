@@ -1,5 +1,6 @@
 import collections
 
+GC_PROJECT_ID = "typeworld2"
 
 DOMAIN = "mail.type.world"
 MAILGUNACCESSPOINT = "https://api.mailgun.net/v3/%s" % DOMAIN
