@@ -2263,7 +2263,7 @@ class RawSubscription(TWNDBModel):
 
             # start = time.time()
 
-            success, client = self.client()
+            success, client = self.client(withAPIKey=True)
             if not success:
                 return False, client, {}
 
