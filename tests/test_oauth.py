@@ -28,8 +28,12 @@ import flask_unittest
 # Google
 from google.cloud import secretmanager
 
-keyfile = os.path.join(os.path.dirname(__file__), "..", ".secrets", "typeworld2-b3ba737e9bbc.json")
-secretClient = secretmanager.SecretManagerServiceClient.from_service_account_json(keyfile)
+keyfile = os.path.join(
+    os.path.dirname(__file__), "..", ".secrets", "typeworld2-b3ba737e9bbc.json"
+)
+secretClient = secretmanager.SecretManagerServiceClient.from_service_account_json(
+    keyfile
+)
 
 
 def secret(secret_id, version_id="latest"):
@@ -321,7 +325,9 @@ def get_link():
 
     newline = r"(?:\n|\r\n?)"
     compiled = re.compile(
-        rf"Please verify your email address by clicking on the following link:{newline}(.+?){newline}", re.MULTILINE
+        r"Please verify your email address by clicking on the following"
+        rf" link:{newline}(.+?){newline}",
+        re.MULTILINE,
     )
     match = compiled.search(body)
     return match.group(1).strip()
@@ -351,7 +357,11 @@ def before_request_web():
         print("Initial setting of state to", flaskSession["state"])
 
     # Log in user
-    if g.form.get("code") and g.form.get("state") and g.form.get("state") == flaskSession["state"]:
+    if (
+        g.form.get("code")
+        and g.form.get("state")
+        and g.form.get("state") == flaskSession["state"]
+    ):
 
         # Get token with code
         getTokenResponse = requests.post(
@@ -482,7 +492,9 @@ def index():
 
     html = "<html><body>"
     if g.user:
-        html += f"Logged in as {g.user['userdata']['scope']['account']['data']['email']}"
+        html += (
+            f"Logged in as {g.user['userdata']['scope']['account']['data']['email']}"
+        )
         html += '<br /><a href="/account" name="accountButton">User Account</a>'
         html += '<br /><a href="/logout" name="logoutButton">Sign Out</a>'
         print(g.user)
@@ -522,7 +534,10 @@ def account():
 
     if g.user:
         print(g.user)
-        html += f"<h1>Account for {g.user['userdata']['scope']['account']['data']['email']}</h1>"
+        html += (
+            "<h1>Account for"
+            f" {g.user['userdata']['scope']['account']['data']['email']}</h1>"
+        )
 
         for scope in g.user["userdata"]["scope"]:
             html += f'<h3>{g.user["userdata"]["scope"][scope]["name"]}'
@@ -615,7 +630,11 @@ class TestFoo(flask_unittest.LiveTestCase):
 
         # Create Type.World user account
         cls.client = typeworld.client.APIClient(
-            zmqSubscriptions=False, online=True, commercial=True, appID="world.type.app", mothership=MOTHERSHIP + "/v1"
+            liveNotifications=False,
+            online=True,
+            commercial=True,
+            appID="world.type.app",
+            mothership=MOTHERSHIP + "/v1",
         )
         # success, message = cls.client.deleteUserAccount(SIGNINTEST_EMAIL, SIGNINTEST_ACCOUNT_PASSWORD)
 
@@ -677,14 +696,18 @@ class TestFoo(flask_unittest.LiveTestCase):
             self.driver.get(self.root_url + "?testcase=correct_redirect_uri")
         with wait_for_page_load(self.driver):
             self.driver.find_element(By.LINK_TEXT, "Sign In With Type.World").click()
-        self.assertIn("Missing or unknown or unauthorized scope", self.driver.page_source)
+        self.assertIn(
+            "Missing or unknown or unauthorized scope", self.driver.page_source
+        )
 
     def test_authorization_wrong_authorization_scope(self):
         with wait_for_page_load(self.driver):
             self.driver.get(self.root_url + "?testcase=wrong_authorization_scope")
         with wait_for_page_load(self.driver):
             self.driver.find_element(By.LINK_TEXT, "Sign In With Type.World").click()
-        self.assertIn("Missing or unknown or unauthorized scope", self.driver.page_source)
+        self.assertIn(
+            "Missing or unknown or unauthorized scope", self.driver.page_source
+        )
 
     def test_authorization_correct_authorization_scope(self):
         with wait_for_page_load(self.driver):
@@ -697,7 +720,9 @@ class TestFoo(flask_unittest.LiveTestCase):
     def test_authorization_complete(self):
 
         # Delete user account
-        success, message = self.client.deleteUserAccount(SIGNINTEST_EMAIL, SIGNINTEST_ACCOUNT_PASSWORD)
+        success, message = self.client.deleteUserAccount(
+            SIGNINTEST_EMAIL, SIGNINTEST_ACCOUNT_PASSWORD
+        )
         # self.assertTrue(success)
 
         self.assertTrue(delete_all_emails())
@@ -709,7 +734,9 @@ class TestFoo(flask_unittest.LiveTestCase):
 
         with wait_for_page_load(self.driver):
             self.driver.find_element(By.LINK_TEXT, "Sign In With Type.World").click()
-        self.assertIn("Type.World Sign-In (via OAuth UnitTest)", self.driver.page_source)
+        self.assertIn(
+            "Type.World Sign-In (via OAuth UnitTest)", self.driver.page_source
+        )
 
         # Create user account
         success, message = self.client.createUserAccount(
@@ -737,25 +764,35 @@ class TestFoo(flask_unittest.LiveTestCase):
 
         with wait_for_page_load(self.driver):
             self.driver.get(email_confirmation_link)
-        self.assertNotIn("No user could be found to verify for this code.", self.driver.page_source)
+        self.assertNotIn(
+            "No user could be found to verify for this code.", self.driver.page_source
+        )
 
         # Insert missing data
         # print(self.driver.page_source)
         # with wait_for_page_load(self.driver):
         time.sleep(2)
-        self.driver.execute_script("document.getElementById('edit_billingaddress').scrollIntoView();")
-        self.driver.execute_script("document.getElementById('edit_billingaddress').click();")
+        self.driver.execute_script(
+            "document.getElementById('edit_billingaddress').scrollIntoView();"
+        )
+        self.driver.execute_script(
+            "document.getElementById('edit_billingaddress').click();"
+        )
         # self.driver.find_element(By.ID, "edit_billingaddress").click()
         time.sleep(2)
         self.driver.find_element(By.ID, "dialogform_invoiceName").send_keys("Test User")
-        self.driver.find_element(By.ID, "dialogform_invoiceStreet").send_keys("Downing Str 10")
+        self.driver.find_element(By.ID, "dialogform_invoiceStreet").send_keys(
+            "Downing Str 10"
+        )
         self.driver.find_element(By.ID, "dialogform_invoiceZIPCode").send_keys("01234")
         self.driver.find_element(By.ID, "dialogform_invoiceCity").send_keys("Kabul")
         self.driver.find_element(By.LINK_TEXT, "Save").click()
         time.sleep(3)
 
         # with wait_for_page_load(self.driver):
-        self.driver.execute_script("document.getElementsByName('authorizeTokenButton')[1].click();")
+        self.driver.execute_script(
+            "document.getElementsByName('authorizeTokenButton')[1].click();"
+        )
         # self.driver.find_element(By.LINK_TEXT, "Authorize").click()
         # self.driver.find_element(By.NAME, "authorizeTokenButton").click()
         with wait_for_page_load(self.driver):
@@ -821,11 +858,19 @@ class TestFoo(flask_unittest.LiveTestCase):
             self.assertIn("Edit my Type.World account", self.driver.page_source)
 
         # Edit data here
-        self.driver.execute_script("document.getElementById('edit_billingaddress').scrollIntoView();")
-        self.driver.execute_script("document.getElementById('edit_billingaddress').click();")
+        self.driver.execute_script(
+            "document.getElementById('edit_billingaddress').scrollIntoView();"
+        )
+        self.driver.execute_script(
+            "document.getElementById('edit_billingaddress').click();"
+        )
         time.sleep(2)
-        self.driver.find_element(By.ID, "dialogform_invoiceName").send_keys("Test User 2")
-        self.driver.find_element(By.ID, "dialogform_invoiceStreet").send_keys("Downing Str 11")
+        self.driver.find_element(By.ID, "dialogform_invoiceName").send_keys(
+            "Test User 2"
+        )
+        self.driver.find_element(By.ID, "dialogform_invoiceStreet").send_keys(
+            "Downing Str 11"
+        )
         self.driver.find_element(By.ID, "dialogform_invoiceZIPCode").send_keys("01235")
         self.driver.find_element(By.ID, "dialogform_invoiceCity").send_keys("Kabull")
         self.driver.find_element(By.LINK_TEXT, "Save").click()
@@ -842,7 +887,9 @@ class TestFoo(flask_unittest.LiveTestCase):
 
         # Test cases
         with wait_for_page_load(self.driver):
-            self.driver.get(self.root_url + "/account?testcase=account_wrong_redirect_uri")
+            self.driver.get(
+                self.root_url + "/account?testcase=account_wrong_redirect_uri"
+            )
         with wait_for_page_load(self.driver):
             self.driver.find_element(By.NAME, "edit_billingaddress").click()
         self.assertIn("Missing or unknown redirect_uri", self.driver.page_source)
@@ -851,7 +898,9 @@ class TestFoo(flask_unittest.LiveTestCase):
             self.driver.get(self.root_url + "/account?testcase=account_wrong_scope")
         with wait_for_page_load(self.driver):
             self.driver.find_element(By.NAME, "edit_billingaddress").click()
-        self.assertIn("Missing or unknown or unauthorized scope", self.driver.page_source)
+        self.assertIn(
+            "Missing or unknown or unauthorized scope", self.driver.page_source
+        )
 
 
 suite = flask_unittest.LiveTestSuite(app, timeout=60)
