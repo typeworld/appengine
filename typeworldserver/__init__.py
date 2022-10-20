@@ -40,9 +40,13 @@ if GAE:
     translateClient = translate_v2.Client()
 
 else:
-    keyfile = os.path.join(os.path.dirname(__file__), "..", ".secrets", "typeworld2-b3ba737e9bbc.json")
+    keyfile = os.path.join(
+        os.path.dirname(__file__), "..", ".secrets", "typeworld2-b3ba737e9bbc.json"
+    )
     client = ndb.Client.from_service_account_json(keyfile)
-    secretClient = secretmanager.SecretManagerServiceClient.from_service_account_json(keyfile)
+    secretClient = secretmanager.SecretManagerServiceClient.from_service_account_json(
+        keyfile
+    )
     storage_client = storage.Client.from_service_account_json(keyfile)
     translateClient = translate_v2.Client.from_service_account_json(keyfile)
 
@@ -137,7 +141,11 @@ def before_request():
     # logging.warning("####################")
 
     # starttime = time.time()
-    proto = request.headers.get("X-Forwarded-Proto") or request.headers.get("proto") or "http"
+    proto = (
+        request.headers.get("X-Forwarded-Proto")
+        or request.headers.get("proto")
+        or "http"
+    )
     if "type.world" in request.headers["Host"]:
         proto = "https"
     g.rootURL = f"{proto}://{request.headers['Host']}"
@@ -165,7 +173,9 @@ def before_request():
 
     # Get user from edit_token
     if g.form.get("edit_token"):
-        token = classes.OAuthToken.query(classes.OAuthToken.editCode == g.form.get("edit_token")).get()
+        token = classes.OAuthToken.query(
+            classes.OAuthToken.editCode == g.form.get("edit_token")
+        ).get()
         if token:
             # Only attach user is token access is newer than an hour
             if token.lastAccess > datetime.datetime.now() - datetime.timedelta(hours=1):
@@ -176,7 +186,9 @@ def before_request():
         sessionID = flaskSession["sessionID"]
         if sessionID:
 
-            g.session = ndb.Key(urlsafe=flaskSession["sessionID"].encode()).get(read_consistency=ndb.STRONG)
+            g.session = ndb.Key(urlsafe=flaskSession["sessionID"].encode()).get(
+                read_consistency=ndb.STRONG
+            )
 
             # Init user
             if g.session:
@@ -276,7 +288,8 @@ def index():
     g.html._P()
     g.html.P()
     g.html.T(
-        "<em>User accounts are mandatory for so-called <em>protected</em> fonts, such as commercial retail fonts.</em>"
+        "<em>User accounts are mandatory for so-called <em>protected</em> fonts, such"
+        " as commercial retail fonts.</em>"
     )
     g.html._P()
 
@@ -307,7 +320,9 @@ def index():
 
     g.html.DIV(class_="clear", style="width: 100%;")
 
-    g.html.DIV(class_="floatleft", style="width: 50%; background-color: white; height: 600px;")
+    g.html.DIV(
+        class_="floatleft", style="width: 50%; background-color: white; height: 600px;"
+    )
     g.html.DIV(style="padding-left: 30px; padding-right: 10px; padding-top: 20px;")
     g.html.H1(style="margin-top: 0px;")
     # g.html.H2(style="text-align: center;")
@@ -321,10 +336,15 @@ def index():
     g.html.T("Install fonts and receive font updates")
     g.html._LI()
     g.html.LI()
-    g.html.T("Gather font subscriptions in a Type.World user account & easily restore them after a computer crash")
+    g.html.T(
+        "Gather font subscriptions in a Type.World user account & easily restore them"
+        " after a computer crash"
+    )
     g.html._LI()
     g.html.LI()
-    g.html.T("Get invited to share font subscriptions (notification by <b>email</b> only)")
+    g.html.T(
+        "Get invited to share font subscriptions (notification by <b>email</b> only)"
+    )
     g.html._LI()
     g.html._UL()
     g.html._DIV()
@@ -368,7 +388,10 @@ def index():
     if g.user:
         g.html.P(style="text-align: center;")
         g.html.A(class_="button", href="/account")
-        g.html.T('<span class="material-icons-outlined">account_circle</span> See User Account To Sign Up For Pro')
+        g.html.T(
+            '<span class="material-icons-outlined">account_circle</span> See User'
+            " Account To Sign Up For Pro"
+        )
         g.html._A()
         g.html._P()
 
@@ -379,7 +402,9 @@ def index():
         g.html._A()
         g.html.BR()
         g.html.A(class_="button", onclick="showCreateUserAccount();")
-        g.html.T('<span class="material-icons-outlined">account_circle</span> Create Account')
+        g.html.T(
+            '<span class="material-icons-outlined">account_circle</span> Create Account'
+        )
         g.html._A()
         g.html._P()
 
@@ -392,30 +417,38 @@ def index():
     g.html.T("Relationships")
     g.html._H1()
     g.html.P()
-    g.html.IMG(src="/static/images/relationship.svg", style="width: 70%; margin-left: auto; margin-right: auto;")
+    g.html.IMG(
+        src="/static/images/relationship.svg",
+        style="width: 70%; margin-left: auto; margin-right: auto;",
+    )
     g.html._P()
 
     # g.html.H2()
     # g.html.T("1. One-Click Install")
     # g.html._H2()
     g.html.P()
-    g.html.T("The Type.World App is designed around around the principle of <b>decentrality</b>. ")
-    g.html._P()
-    g.html.P()
     g.html.T(
-        "The fonts are <b>distributed directly</b> from the publisher’s servers to the user’s app. Other than"
-        " downloading and using the app and its user account, users never interact with Type.World directly, only with"
-        " the font publishers."
+        "The Type.World App is designed around around the principle of"
+        " <b>decentrality</b>. "
     )
     g.html._P()
     g.html.P()
     g.html.T(
-        "The app only ever calls its own servers to handle the Type.World <b>user accounts</b>, which help users"
-        " organize their various font subscriptions.<br />A user account is not required to handle free fonts. It is"
-        " required, however, for so called <b>protected fonts</b>, such as commercial retail fonts, for a streamlined"
-        " user experience around losing or crashing your computer. A re-installation of all your commercial fonts"
-        " would affect the licenses that you hold, and through the user account you can deauthorize and free that old"
-        " computer’s font licenses in one go."
+        "The fonts are <b>distributed directly</b> from the publisher’s servers to the"
+        " user’s app. Other than downloading and using the app and its user account,"
+        " users never interact with Type.World directly, only with the font publishers."
+    )
+    g.html._P()
+    g.html.P()
+    g.html.T(
+        "The app only ever calls its own servers to handle the Type.World <b>user"
+        " accounts</b>, which help users organize their various font subscriptions.<br"
+        " />A user account is not required to handle free fonts. It is required,"
+        " however, for so called <b>protected fonts</b>, such as commercial retail"
+        " fonts, for a streamlined user experience around losing or crashing your"
+        " computer. A re-installation of all your commercial fonts would affect the"
+        " licenses that you hold, and through the user account you can deauthorize and"
+        " free that old computer’s font licenses in one go."
     )
     g.html._P()
 
