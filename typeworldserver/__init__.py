@@ -20,9 +20,6 @@ import urllib
 import urllib.parse
 
 # Type.World
-import typeworld
-import typeworld.api
-import typeworld.client
 from google.cloud import ndb, storage
 from google.cloud import secretmanager
 from google.cloud import translate_v2
@@ -123,7 +120,7 @@ from . import definitions  # noqa: E402,F401
 from . import developer  # noqa: E402,F401
 from . import helpers  # noqa: E402
 from . import hypertext  # noqa: E402
-from . import mq  # noqa: E402
+from . import mq  # noqa: E402,F401
 from . import translations  # noqa: E402,F401
 from . import web  # noqa: E402,F401
 
@@ -541,30 +538,6 @@ def cron_30minutely():
 
 @app.route("/cron/10minutely", methods=["GET", "POST"])
 def cron_10minutely():
-
-    # MQ test
-    mqInstances = mq.availableMQInstances()
-    if mqInstances:
-        for instance in mqInstances:
-            success, response, responseObject = typeworld.client.request(f"http://{instance.ip}/uptime", method="GET")
-            if type(response) != str:
-                response = response.decode()
-
-            if not success or success and response != "ok":
-                helpers.email(
-                    "Type.World <hq@mail.type.world>",
-                    ["tech@type.world"],
-                    "Type.World: MQ is offline",
-                    f"MQ {instance.ip} is offline. Message: {response}",
-                )
-    else:
-        helpers.email(
-            "Type.World <hq@mail.type.world>",
-            ["tech@type.world"],
-            "Type.World: MQ is offline",
-            "No MQ is currently available",
-        )
-
     return Response("ok", mimetype="text/plain")
 
 
